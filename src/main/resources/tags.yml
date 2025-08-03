@@ -1,0 +1,1522 @@
+# ###########################################################
+# +------------------------------------------------------+ #
+# |                       Tags                           | #
+# +------------------------------------------------------+ #
+# ###########################################################
+#
+# |----| VARIANTS EXAMPLES |----|
+# ## - Variants are sub tags.
+# ## - Variant lores can be edit in guis.yml under 'gui > tag-variants-menu > item > lore'.
+# variants:
+#   vipplus_blue:
+#     enable: true
+#     tag:
+#       - '&a[VIP&b+&a]'
+#     permission: 'supremetags.tag.vip.blue'
+#   vipplus_red:
+#     enable: true
+#     tag:
+#       - '&a[VIP&c+&a]'
+#     permission: 'supremetags.tag.vip.red'
+#
+# Economy Option Feature (PER TAG)
+# economy:
+#   enable: true/false
+#   type: 'VAULT' # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere]
+#   amount: 200
+
+tags:
+  hexsupport: # 1.16+ server is required for hex colors to work.
+    # tags won't animate if there are only one string tag in the list.
+    tag:
+      - '&8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]'
+    permission: supremetags.tag.hex
+    description:
+      - '&7This plugin supports normal/hex colors'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 1
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]
+        &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enable: false
+      type: VAULT # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere]
+      amount: 200
+  santa: # Christmas themed tag, shows in the Xmas category.
+    tag:
+      - '&8[&c&lSanta&8]'
+    permission: supremetags.tag.santa
+    description:
+      - '&7ho ho hooooooo!'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&c&lSanta&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: holiday
+    order: 2
+    withdrawable: false
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants:
+      white-santa:
+        enable: true
+        tag:
+          - '&f[&cSanta&f]'
+        permission: supremetags.tag.santa.white
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[&c&lSanta&8] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  kill_master: # Christmas themed tag, shows in the Xmas category.
+    tag:
+      - '&8[&4&lKiller Master: &f%statistic_player_kills%&8]'
+    permission: supremetags.tag.killer
+    description:
+      - '&cRewarded for being the best pvper!'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&4&lKiller Master&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: achivements
+    order: 3
+    withdrawable: false
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[&4&lKiller Master&8] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  vipplus: # vip plus tag, this comes with multi different varients.
+    tag:
+      - '&a[VIP+]'
+    permission: supremetags.tag.vip
+    description:
+      - '&aVIP donator tag!'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &a[VIP+]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: achivements
+    order: 4
+    withdrawable: false
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    animated-tag-speed: 10 # in ticks
+    variants:
+      vipplus_blue:
+        enable: true
+        tag:
+          - '&a[VIP&b+&a]'
+        description:
+          - '&aAqua VIP for VIP+'
+        permission: supremetags.tag.vip.blue
+      vipplus_red:
+        enable: true
+        tag:
+          - '&a[VIP&c+&a]'
+        description:
+          - '&aRed VIP for VIP+'
+        permission: supremetags.tag.vip.red
+      vipplus_gold:
+        enable: true
+        tag:
+          - '&a[VIP&6+&a]'
+        description:
+          - '&aGold VIP for VIP+'
+        permission: supremetags.tag.vip.gold
+      vipplus_pink:
+        enable: true
+        tag:
+          - '&a[VIP&d+&a]'
+        description:
+          - '&aPink VIP for VIP+'
+        permission: supremetags.tag.vip.pink
+      vipplus_black:
+        enable: true
+        tag:
+          - '&a[VIP&0+&a]'
+        description:
+          - '&aBlack VIP for VIP+'
+        permission: supremetags.tag.vip.black
+      vipplus_yellow:
+        enable: true
+        tag:
+          - '&a[VIP&e+&a]'
+        description:
+          - '&aYellow VIP for VIP+'
+        permission: supremetags.tag.vip.yellow
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&a[VIP+] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  epic:
+    tag:
+      - '&8&l[&5&lEpic&8&l]'
+    permission: supremetags.tag.epic
+    description:
+      - '&7&oClick to select &7&l&oEpic &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&5&lEpic&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 5
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&5&lEpic&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: rare
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  gg:
+    tag:
+      - '&8&l[&e&lGG&8&l]'
+    permission: supremetags.tag.GG
+    description:
+      - '&7&oClick to select &7&l&oGG &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&e&lGGa&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 6
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&e&lGG&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  banned:
+    tag:
+      - '&8&l[&c&lBanned&8&l]'
+    permission: supremetags.tag.Banned
+    description:
+      - '&7&oClick to select &7&l&oBanned &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&c&lBanned&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 7
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&c&lBanned&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  toxic:
+    tag:
+      - '&8&l[&2&lToxic&8&l]'
+    permission: supremetags.tag.Toxic
+    description:
+      - '&7&oClick to select &7&l&oToxic &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8[&2&lToxic&8]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 8
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&2&lToxic&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: legendary
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  heart:
+    tag:
+      - '&8&l<&c&l♥&8&l>'
+    permission: supremetags.tag.Heart
+    description:
+      - '&7&oClick to select &7&l&oHeart &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&c&l♥&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 9
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&c&l♥&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: rare
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  star:
+    tag:
+      - '&8&l<&6&l★&8&l>'
+    permission: supremetags.tag.Star
+    description:
+      - '&7&oClick to select &7&l&oStar &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&6&l★&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 10
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&6&l★&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  star2:
+    tag:
+      - '&8&l<&6&l☆&8&l>'
+    permission: supremetags.tag.Star2
+    description:
+      - '&7&oClick to select &7&l&oStar V2 &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&6&l☆&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 11
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&6&l☆&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  star3:
+    tag:
+      - '&8&l<&6&l✰&8&l>'
+    permission: supremetags.tag.Star3
+    description:
+      - '&7&oClick to select &7&l&oStar V3 &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&6&l✰&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 12
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&6&l✰&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  flower:
+    tag:
+      - '&8&l<&d&l❀&8&l>'
+    permission: supremetags.tag.Flower
+    description:
+      - '&7&oClick to select &7&l&oFlower &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&d&l❀&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 13
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&d&l❀&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  starcircle:
+    tag:
+      - '&8&l<&d&l✪&8&l>'
+    permission: supremetags.tag.StarCircle
+    description:
+      - '&7&oClick to select &7&l&oStarCircle &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&d&l✪&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 14
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&d&l✪&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  hacker:
+    tag:
+      - '&8&l[&a&lHacker&8&l]'
+    permission: supremetags.tag.Hacker
+    description:
+      - '&7&oClick to select &7&l&oHacker &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&a&lHacker&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 15
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&a&lHacker&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  umbrella:
+    tag:
+      - '&8&l<&b&l☂&8&l>'
+    permission: supremetags.tag.Umbrella
+    description:
+      - '&7&oClick to select &7&l&oUmbrella &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&b&l☂&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 16
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&b&l☂&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  fire:
+    tag:
+      - '&8&l[&6&lFi&c&lre&8&l]'
+    permission: supremetags.tag.Fire
+    description:
+      - '&7&oClick to select &7&l&oFire &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&6&lFi&c&lre&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 17
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&6&lFi&c&lre&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: rare
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  water:
+    tag:
+      - '&8&l[&9&lWa&b&lter&8&l]'
+    permission: supremetags.tag.Water
+    description:
+      - '&7&oClick to select &7&l&oWater &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&9&lWa&b&lter&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 18
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&9&lWa&b&lter&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  magic:
+    tag:
+      - '&8&l[&5&lMagic&8&l]'
+    permission: supremetags.tag.Magic
+    description:
+      - '&7&oClick to select &7&l&oMagic &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&5&lMagic&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 19
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&5&lMagic&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: rare
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  l:
+    tag:
+      - '&8&l[&c&lL&8&l]'
+    permission: supremetags.tag.L
+    description:
+      - '&7&oClick to select &7&l&oL &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&c&lL&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 20
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&c&lL&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  vape:
+    tag:
+      - '&8&l[&9&lVape&8&l]'
+    permission: supremetags.tag.Vape
+    description:
+      - '&7&oClick to select &7&l&oVape &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&9&lVape&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 21
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&9&lVape&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  papiphulo:
+    tag:
+      - '&8&l[&d&lPapiChulo&8&l]'
+    permission: supremetags.tag.PapiChulo
+    description:
+      - '&7&oClick to select &7&l&oPapiChulo &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&d&lPapiChulo&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 22
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&d&lPapiChulo&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  yinandyang:
+    tag:
+      - '&8&l<&f&l☯&8&l>'
+    permission: supremetags.tag.YinAndYang
+    description:
+      - '&7&oClick to select &7&l&o☯ &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l<&f&l☯&8&l>'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 23
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l<&f&l☯&8&l> &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: legendary
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  rich:
+    tag:
+      - '&8&l[&2&lRIC&6&lH&8&l]'
+    permission: supremetags.tag.Rich
+    description:
+      - '&7&oClick to select &7&l&oRich &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&2&lRIC&6&lH&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 24
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&2&lRIC&6&lH&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  parkour:
+    tag:
+      - '&8&l[&7&lParkour&8&l]'
+    permission: supremetags.tag.Parkour
+    description:
+      - '&7&oClick to select &7&l&oParkour &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&7&lParkour&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 25
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&7&lParkour&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  ultra:
+    tag:
+      - '&8&l[&b&lUltra&8&l]'
+    permission: supremetags.tag.Ultra
+    description:
+      - '&7&oClick to select &7&l&oUltra &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&b&lUltra&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 26
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&b&lUltra&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  mega:
+    tag:
+      - '&8&l[&d&lMega&8&l]'
+    permission: supremetags.tag.Mega
+    description:
+      - '&7&oClick to select &7&l&oMega &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&d&lMega&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 27
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&d&lMega&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  pro:
+    tag:
+      - '&8&l[&a&lPro&8&l]'
+    permission: supremetags.tag.Pro
+    description:
+      - '&7&oClick to select &7&l&oPro &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&a&lPro&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 28
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&a&lPro&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  professional:
+    tag:
+      - '&8[&b&lProfessional&8]'
+    permission: supremetags.tag.Professional
+    description:
+      - '&7&oClick to select &7&l&oProfessional &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&b&lProfessional&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 29
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&7&oClick to select &7&l&oProfessional &7&oTag &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  donator:
+    tag:
+      - '&8[&aDon&2ator&8]'
+    permission: supremetags.tag.Donator
+    description:
+      - '&7&oClick to select &7&l&oDonator &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&aDon&2ator&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 30
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[&aDon&2ator&8] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  teamkong:
+    tag:
+      - '&8&l[&9&lTeamKong&8&l]'
+    permission: supremetags.tag.TeamKong
+    description:
+      - '&7&oClick to select &7&l&oKong &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&9&lTeamKong&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 31
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&9&lTeamKong&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  teamgodzilla:
+    tag:
+      - '&8&l[&6&lTeamGodzilla&8&l]'
+    permission: supremetags.tag.TeamGodzilla
+    description:
+      - '&7&oClick to select &7&l&oGodzilla &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&6&lTeamGodzilla&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 32
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&6&lTeamGodzilla&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: legendary
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  experienced:
+    tag:
+      - '&8&l[&3&lExperienced&8&l]'
+    permission: supremetags.tag.Experienced
+    description:
+      - '&7&oClick to select &7&l&oExperienced &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&3&lExperience&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 33
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&3&lExperienced&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  flash:
+    tag:
+      - '&8&l[&c&lFla&e&lsh&8&l]'
+    permission: supremetags.tag.Flash
+    description:
+      - '&7&oClick to select &7&l&oFlash &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&c&lFla&e&lsh&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 34
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects:
+      - SPEED:1
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&c&lFla&e&lsh&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  superman:
+    tag:
+      - '&8&l[&9&lSuper&c&lman&8&l]'
+    permission: supremetags.tag.Superman
+    description:
+      - '&7&oClick to select &7&l&oSuperman &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&9&lSuper&c&lman&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 35
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&9&lSuper&c&lman&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  booster:
+    tag:
+      - '&8&l[&d&lBooster&8&l]'
+    permission: supremetags.tag.Booster
+    description:
+      - '&7&oClick to select &7&l&oBooster &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&d&lBooster&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 36
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&d&lBooster&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  elite:
+    tag:
+      - '&8&l[&f&lElite&8&l]'
+    permission: supremetags.tag.Elite
+    description:
+      - '&7&oClick to select &7&l&oElite &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&f&lElite&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 37
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&f&lElite&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  superdonator:
+    tag:
+      - '&8&l[&a&lSuper&e&lDonator&8&l]'
+    permission: supremetags.tag.SuperDonator
+    description:
+      - '&7&oClick to select &7&l&oSuperDonator &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&a&lSuper&e&lDonator&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 38
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&a&lSuper&e&lDonator&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200
+  cool:
+    tag:
+      - '&8&l[&c&lCool&8&l]'
+    permission: supremetags.tag.Cool
+    description:
+      - '&7&oClick to select &7&l&oCool &7&oTag'
+    custom-placeholders:
+      # %custom-placeholder_<placeholder>%
+      # %supremetags_tag_custom-placeholder_<placeholder>%
+      nopermission: '&cYou do not have any permission to use &8&l[&c&lCool&8&l]'
+      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+    category: default
+    order: 39
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8&l[&c&lCool&8&l] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 200

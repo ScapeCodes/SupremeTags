@@ -1,0 +1,73 @@
+############################################################
+# +------------------------------------------------------+ #
+# |                     Settings                         | #
+# +------------------------------------------------------+ #
+############################################################
+
+settings:
+  commands:
+    # set custom aliases for /tags
+    # ** adding/removing these aliases require a restart to take effect! **
+    main-command: 'tags'
+    aliases:
+      - tag
+      - stags
+      - supremetags
+  no-permission-menu-action: false # set true, if the player doesn't have permission to the argument like "/tags reload" it will just open the tags' menu.
+  messaging-platform: 'bungeecord' # 'bungeecord' or 'velocity'
+  bungee-messaging: false # when set to true, this will sync all tags across all servers, without having to manually do this.
+  default-tag: 'none' # set 'none' players start with no tag.
+  forced-tag: false # this will make it force players to have a tag, they won't beable to take the tag off.
+  categories: false # should supremetags use the category system?
+  default-category: 'default' # used to set the tags category value when creating a new tag with the '/tag create' command
+  update-check: true # the plugin will check if there is an update available.
+  auto-merge: false # auto merges all tags from deluxetags into supremetags (DeluxeTags is required on the server)
+  active-tag-glow: true # adds a hidden enchantment to the tag item that is active for the player.
+  cost-system: false # should your players be able to buy tags?
+  tag-command-in-disabled-worlds: true # should /tags command be disabled in 'disabled-worlds'.
+  disabled-worlds: # what worlds should tags be allowed in, tags in this world will not be shown.
+    - 'example'
+    - 'world2'
+  gui-messages: true # setting this to true, will enable 'tag-select-message' & 'reset-message'
+  locked-view: false # this setting allows players to view locked/unlocked tags.
+  personal-tags:
+    enable: true # this setting allows players to make and access their own tags.
+    limits:
+      # permission limits: supremetags.mytags.limit.<group>
+      ## example: supremetags.mytags.limit.default
+      default: 10
+      ## example: supremetags.mytags.limit.vip
+      vip: 20
+    format-replace: '%tag%' # strict format replacer.
+  # layout types: [FULL, BORDER]
+  # FULL - 36 tags
+  # BORDER - 28 tags
+  layout-type: 'BORDER'
+  animated-tag-speed: 10 # in ticks
+  tag-vouchers: true # should tag vouchers withdraw be enabled?
+  prioritise-selected-tag: true # set false if you don't want selected tag to force at first slot.
+  voucher-redeem-permission: true # set false if you don't want permission 'supremetags.voucher.[identifier]' applying to tag vouchers.
+  deactivate-click: true # set false if you don't want function where if you click the active tag item in gui, it will deactivate.
+  only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
+  search-type: 'SIGN' # either 'SIGN' or 'ANVIL'
+  use-minimessage: false # If true the plugin will use MiniMessage exclusively, you will have to remove all legacy hex codes.
+  update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
+  auto-tag-rarity: false # set true, if you want the plugin to auto update tag rarity depending on rarities.yml ranges.
+placeholders:
+  # %supremetags_tag%
+  # & {tag} / {TAG} / {supremetags_tag}
+  tag:
+    none-output: ''
+    format: '%tag%'
+  # %supremetags_chattag%
+  chat:
+    none-output: ''
+    format: '%tag% '
+  # %supremetags_scorebardtag%
+  scoreboard:
+    none-output: ''
+    format: '%tag%'
+  # %supremetags_tabtag%
+  tab:
+    none-output: ''
+    format: '%tag%'

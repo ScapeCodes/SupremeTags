@@ -1,0 +1,115 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+sourceCompatibility = 21
+targetCompatibility = 21
+group = 'net.noscape.project.supremetags'
+version = '2.1.9'
+
+java {
+    disableAutoTargetJvm()
+}
+
+repositories {
+    mavenCentral()
+
+    maven { url 'https://oss.sonatype.org/content/groups/public/' }
+    maven { url 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
+    maven { url 'https://repo.opencollab.dev/maven-snapshots/' }
+    maven { url 'https://repo.codemc.org/repository/maven-public/' }
+    maven { url 'https://repo.codemc.io/repository/maven-snapshots/' }
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://libraries.minecraft.net/' }
+    maven { url 'https://repo1.maven.org/maven2/' }
+    maven { url 'https://repo.rosewooddev.io/repository/public/' }
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url 'https://hub.jeff-media.com/nexus/repository/jeff-media-public/' }
+    maven { url 'https://repo.nexomc.com/releases/' }
+    maven { url 'https://repo.oraxen.com/releases' }
+    maven { url "https://repo.oraxen.com/releases" }
+    maven { url "https://repo.nightexpressdev.com/releases" }
+    maven { url "https://repo.dmulloy2.net/repository/public/" }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT'
+        eachDependency {
+            if (requested.group == 'org.spigotmc' && requested.name == 'spigot-api') {
+                useTarget 'io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT'
+                because 'Force resolution to match Paper 1.21.5 API'
+            }
+        }
+    }
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+    compileOnly "net.milkbowl.vault:VaultUnlockedAPI:2.11"
+
+    compileOnly 'com.h2database:h2:2.1.214'
+    compileOnly 'com.arcaniax:HeadDatabase-API:1.3.2'
+    compileOnly 'com.mojang:authlib:1.5.21'
+    implementation 'mysql:mysql-connector-java:8.0.33'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    compileOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.2'
+    compileOnly 'net.luckperms:api:5.4'
+    compileOnly 'org.black_ixx:playerpoints:3.2.6'
+    compileOnly 'com.github.LoneDev6:itemsadder-api:3.6.3-beta-14'
+    compileOnly 'net.kyori:adventure-text-minimessage:4.17.0'
+    implementation 'de.rapha149.signgui:signgui:2.5.3'
+    compileOnly 'de.tr7zw:item-nbt-api-plugin:2.15.1'
+    compileOnly 'com.nexomc:nexo:1.6.0'
+    compileOnly 'io.th0rgal:oraxen:1.190.0'
+    implementation 'commons-lang:commons-lang:2.6'
+    compileOnly 'su.nightexpress.coinsengine:CoinsEngine:2.4.2'
+    compileOnly 'com.comphenix.protocol:ProtocolLib:5.3.0'
+    compileOnly("com.github.retrooper:packetevents-spigot:2.9.3")
+    implementation 'net.wesjd:anvilgui:1.10.5-SNAPSHOT'
+    compileOnly("io.github.valerashimchuck:simpleitemgenerator-api:1.5.0")
+
+    implementation 'redis.clients:jedis:5.1.0'
+
+    compileOnly files('libs/Score.jar')
+    compileOnly files('libs/ExecutableBlocks.jar')
+}
+
+processResources {
+    def props = [
+            version: project.version,
+            name: project.name
+    ]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+jar {
+    archiveBaseName.set("SupremeTags")
+    archiveVersion.set(project.version.toString())
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+                'Main-Class': 'net.noscape.project.supremetags.SupremeTags',
+                'Implementation-Title': 'SupremeTags',
+                'Implementation-Version': project.version.toString()
+        )
+    }
+
+    // Include all runtime dependencies EXCEPT local jars
+    from {
+        configurations.runtimeClasspath.findAll {
+            !(it.name == 'Score.jar' || it.name == 'ExecutableBlocks.jar')
+        }.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    // Also exclude some META-INF files
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+}

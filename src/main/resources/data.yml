@@ -1,0 +1,38 @@
+############################################################
+# +------------------------------------------------------+ #
+# |                       Data                           | #
+# +------------------------------------------------------+ #
+############################################################
+
+# make sure you can check your panel database info to make sure everything is correct.
+# Note: There are no extra steps needed for H2 or SQLite.
+data:
+
+  # Should SupremeTags cache data? this will optimize the amount of connections being used but will minimize db use across servers.
+  # If disabled, this setting only applies to MySQL type.
+  cache-data: true
+
+  # types: [H2 / SQLite(RECOMMENDED OVER H2) / MYSQL]
+  type: 'SQLite'
+
+  # The address for the database server.
+  # - to enable this part, change type to 'MYSQL'
+  # - some hosts can use your domain or server ip.
+  address: 'host'
+  # The standard DB engine port is used by default
+  port: 3306
+  # The name of the database to store tag data in.
+  database: 'database'
+  # Credentials for the database.
+  username: 'user'
+  password: 'pass'
+  useSSL: false
+
+  # connection pool settings.
+  mysql-pool-settings:
+    minimum-idle: 10
+    maximum-pool-size: 20
+    timeouts:
+      idle: 870000000
+      connection: 870000000
+      max-lifetime: 870000000
