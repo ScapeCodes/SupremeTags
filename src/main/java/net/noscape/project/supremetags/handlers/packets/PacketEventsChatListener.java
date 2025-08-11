@@ -2,25 +2,31 @@ package net.noscape.project.supremetags.handlers.packets;
 
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.chat.message.ChatMessage;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerChatMessage;
+
 import com.google.gson.*;
 
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.Variant;
 import net.noscape.project.supremetags.storage.UserData;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.UUID;
 
-import static net.noscape.project.supremetags.utils.Utils.*;
+import static net.noscape.project.supremetags.utils.Utils.format;
+import static net.noscape.project.supremetags.utils.Utils.replacePlaceholders;
 
 public class PacketEventsChatListener implements PacketListener {
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onPacketSend(PacketSendEvent event) {
         if (event.getPacketType() != PacketType.Play.Server.CHAT_MESSAGE &&
@@ -29,23 +35,35 @@ public class PacketEventsChatListener implements PacketListener {
         WrapperPlayServerChatMessage packet = new WrapperPlayServerChatMessage(event);
 
         try {
-            String json = packet.readComponentJSON();  // deprecated
-            if (json == null) return;
+            // Get the original component from the packet
+            Component originalComponent = packet.getMessage().getChatContent();
+            if (originalComponent == null) return;
 
+            // Serialize component to JSON string
+            String json = GsonComponentSerializer.gson().serialize(originalComponent);
+
+            // Parse JSON string to JsonObject for editing
             JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
 
+            // Extract sender name from JSON
             String senderName = extractSenderFromJson(jsonObject);
             Player sender = senderName != null ? Bukkit.getPlayerExact(senderName) : null;
             UUID senderUUID = (sender != null) ? sender.getUniqueId() : null;
 
+            // Replace placeholders recursively in JSON
             replacePlaceholdersInJson(jsonObject, senderUUID);
 
+            // Serialize modified JSON back to string
             String replacedJson = jsonObject.toString();
 
-            packet.writeComponentJSON(replacedJson);  // deprecated
+            // Deserialize back to Component
+            Component modifiedComponent = GsonComponentSerializer.gson().deserialize(replacedJson);
+
+            // Set the modified component back to the packet
+            packet.setMessage((ChatMessage) modifiedComponent);
+
         } catch (Exception ignored) {}
     }
-
 
     private void replacePlaceholdersInJson(JsonElement element, UUID senderUUID) {
         if (element.isJsonObject()) {

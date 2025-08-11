@@ -6,7 +6,7 @@ plugins {
 sourceCompatibility = 21
 targetCompatibility = 21
 group = 'net.noscape.project.supremetags'
-version = '2.1.9'
+version = '2.1.10'
 
 java {
     disableAutoTargetJvm()
@@ -31,6 +31,10 @@ repositories {
     maven { url "https://repo.oraxen.com/releases" }
     maven { url "https://repo.nightexpressdev.com/releases" }
     maven { url "https://repo.dmulloy2.net/repository/public/" }
+    maven {
+        name "essentialsx-releases"
+        url "https://repo.essentialsx.net/releases/"
+    }
 }
 
 configurations.all {
@@ -73,6 +77,8 @@ dependencies {
     compileOnly("io.github.valerashimchuck:simpleitemgenerator-api:1.5.0")
 
     implementation 'redis.clients:jedis:5.1.0'
+
+    compileOnly 'net.essentialsx:EssentialsX:2.21.2'
 
     compileOnly files('libs/Score.jar')
     compileOnly files('libs/ExecutableBlocks.jar')

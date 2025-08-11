@@ -6,7 +6,7 @@ depend: [NBTAPI]
 softdepend:
   - ProtocolLib
   - PlaceholderAPI
-  - PacketEvents
+  - packetevents
   - HeadDatabase
   - VaultAPI
   - Nexo

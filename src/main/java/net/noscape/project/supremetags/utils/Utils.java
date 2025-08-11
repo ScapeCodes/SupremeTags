@@ -47,10 +47,10 @@ public class Utils {
     private static final int BATCH_DELAY_TICKS = 2; // Delay between batches
 
     private static final Pattern p1 = Pattern.compile("\\{#([0-9A-Fa-f]{6})\\}");
-    private static final Pattern p2 = Pattern.compile("&#([A-Fa-f0-9]){6}");
-    private static final Pattern p3 = Pattern.compile("#([A-Fa-f0-9]){6}");
-    private static final Pattern p4 = Pattern.compile("<#([A-Fa-f0-9])>{6}");
-    private static final Pattern p5 = Pattern.compile("<#&([A-Fa-f0-9])>{6}");
+    private static final Pattern p2 = Pattern.compile("&#([A-Fa-f0-9]{6})");
+    private static final Pattern p3 = Pattern.compile("#([A-Fa-f0-9]{6})");
+    private static final Pattern p4 = Pattern.compile("<#([A-Fa-f0-9]{6})>");
+    private static final Pattern p5 = Pattern.compile("<#&([A-Fa-f0-9]{6})>");
 
     private static final Pattern g1 = Pattern.compile("<gradient:([0-9A-Fa-f]{6})>(.*?)</gradient:([0-9A-Fa-f]{6})>");
     private static final Pattern g2 = Pattern.compile("<gradient:#([A-Fa-f0-9]{6})>(.*?)</gradient:#([A-Fa-f0-9]{6})>");
@@ -75,62 +75,77 @@ public class Utils {
 
         if (useMiniMessage) {
             message = legacyToMiniMessage(message);
-
             MiniMessage miniMessage = MiniMessage.miniMessage();
             Component component = miniMessage.deserialize(message);
             return LegacyComponentSerializer.legacySection().serialize(component);
         } else {
+            // Replace hex color codes with Minecraft §x§R§R§G§G§B§B format
+            message = replacePatternWithMinecraftColor(message, p1);
+            message = replacePatternWithMinecraftColor(message, p2);
+            message = replacePatternWithMinecraftColor(message, p4);
+            message = replacePatternWithMinecraftColor(message, p5);
+            message = replacePatternWithMinecraftColor(message, p3);
 
-            // Legacy formatting path
+            // Replace named color and format tags with legacy color codes
+            message = message.replace("<black>", "&0")
+                    .replace("<dark_blue>", "&1")
+                    .replace("<dark_green>", "&2")
+                    .replace("<dark_aqua>", "&3")
+                    .replace("<dark_red>", "&4")
+                    .replace("<dark_purple>", "&5")
+                    .replace("<gold>", "&6")
+                    .replace("<gray>", "&7")
+                    .replace("<dark_gray>", "&8")
+                    .replace("<blue>", "&9")
+                    .replace("<green>", "&a")
+                    .replace("<aqua>", "&b")
+                    .replace("<red>", "&c")
+                    .replace("<light_purple>", "&d")
+                    .replace("<yellow>", "&e")
+                    .replace("<white>", "&f")
+                    .replace("<obfuscated>", "&k")
+                    .replace("<bold>", "&l")
+                    .replace("<strikethrough>", "&m")
+                    .replace("<underlined>", "&n")
+                    .replace("<italic>", "&o")
+                    .replace("<reset>", "&r");
+
+            // Finally translate all '&' codes to '§' Minecraft color codes
             message = ChatColor.translateAlternateColorCodes('&', message);
-
-            // Handle hex color codes (ensure p1, p2, p3, p4, p5 are properly compiled Pattern instances)
-            Matcher hexMatcher = p1.matcher(message);
-            while (hexMatcher.find()) {
-                message = message.replace(hexMatcher.group(), ChatColor.of(hexMatcher.group().substring(1)).toString());
-            }
-
-            hexMatcher = p2.matcher(message);
-            while (hexMatcher.find()) {
-                message = message.replace(hexMatcher.group(), ChatColor.of(hexMatcher.group().substring(1)).toString());
-            }
-
-            Matcher[] matchers = {p3.matcher(message), p4.matcher(message), p5.matcher(message)};
-            for (Matcher matcher : matchers) {
-                while (matcher.find()) {
-                    String hexColor = matcher.group().replaceAll("[<#&>]", "").substring(0, 6);
-                    message = message.replace(matcher.group(), ChatColor.of(hexColor).toString());
-                }
-            }
-
-            // Replace custom tags with legacy codes
-            message = message.replace("<black>", "§0")
-                    .replace("<dark_blue>", "§1")
-                    .replace("<dark_green>", "§2")
-                    .replace("<dark_aqua>", "§3")
-                    .replace("<dark_red>", "§4")
-                    .replace("<dark_purple>", "§5")
-                    .replace("<gold>", "§6")
-                    .replace("<gray>", "§7")
-                    .replace("<dark_gray>", "§8")
-                    .replace("<blue>", "§9")
-                    .replace("<green>", "§a")
-                    .replace("<aqua>", "§b")
-                    .replace("<red>", "§c")
-                    .replace("<light_purple>", "§d")
-                    .replace("<yellow>", "§e")
-                    .replace("<white>", "§f")
-                    .replace("<obfuscated>", "§k")
-                    .replace("<bold>", "§l")
-                    .replace("<strikethrough>", "§m")
-                    .replace("<underlined>", "§n")
-                    .replace("<italic>", "§o")
-                    .replace("<reset>", "§r");
         }
 
         return message;
     }
 
+    private static String replacePatternWithMinecraftColor(String message, Pattern pattern) {
+        Matcher matcher = pattern.matcher(message);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String hex;
+            if (matcher.groupCount() == 1) {
+                hex = "#" + matcher.group(1);
+            } else if (matcher.groupCount() >= 2) {
+                // For p3 pattern, group(2) is hex without '#'
+                hex = "#" + matcher.group(matcher.groupCount());
+            } else {
+                hex = "#000000"; // Fallback (should never happen)
+            }
+            String replacement = hexToMinecraftColorCode(hex);
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    private static String hexToMinecraftColorCode(String hex) {
+        // hex format: #aabbcc
+        char[] chars = hex.substring(1).toCharArray();
+        StringBuilder sb = new StringBuilder("§x");
+        for (char c : chars) {
+            sb.append('§').append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
     private static String legacyToMiniMessage(String message) {
         return message
                 .replace("&0", "<black>")
@@ -702,50 +717,56 @@ public class Utils {
             UserManager userManager = luckPerms.getUserManager();
             Map<String, Integer> result = new HashMap<>();
 
-            for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values()) {
+            // Snapshots to avoid CME
+            Collection<Tag> tagsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getTags().values());
+            Collection<Variant> variantsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getVariants());
+
+            // Cache LuckPerms Users
+            Map<UUID, User> userCache = new HashMap<>();
+            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                try {
+                    User user = userManager.loadUser(offlinePlayer.getUniqueId()).join();
+                    if (user != null) {
+                        userCache.put(offlinePlayer.getUniqueId(), user);
+                    }
+                } catch (Exception e) {
+                    // Optional: log
+                }
+            }
+
+            // Process Tags
+            for (Tag tag : tagsSnapshot) {
                 String permission = tag.getPermission();
                 int unlocked = 0;
 
-                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                    try {
-                        User user = userManager.loadUser(offlinePlayer.getUniqueId()).join();
-                        if (user != null) {
-                            Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
-                            if (resultperm == Tristate.TRUE) {
-                                unlocked++;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Optional: log the error
+                for (User user : userCache.values()) {
+                    Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
+                    if (resultperm == Tristate.TRUE) {
+                        unlocked++;
                     }
                 }
-
                 result.put(tag.getIdentifier(), unlocked);
             }
 
-            for (Variant var : SupremeTags.getInstance().getTagManager().getVariants()) {
+            // Process Variants
+            for (Variant var : variantsSnapshot) {
                 String permission = var.getPermission();
                 int unlocked = 0;
 
-                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                    try {
-                        User user = userManager.loadUser(offlinePlayer.getUniqueId()).join();
-                        if (user != null) {
-                            Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
-                            if (resultperm == Tristate.TRUE) {
-                                unlocked++;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Optional: log the error
+                for (User user : userCache.values()) {
+                    Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
+                    if (resultperm == Tristate.TRUE) {
+                        unlocked++;
                     }
                 }
-
                 result.put(var.getIdentifier(), unlocked);
             }
 
-            TagManager.tagUnlockCounts.clear();
-            TagManager.tagUnlockCounts.putAll(result);
+            // Update safely on main thread
+            runMain(() -> {
+                TagManager.tagUnlockCounts.clear();
+                TagManager.tagUnlockCounts.putAll(result);
+            });
         });
     }
 
@@ -835,6 +856,48 @@ public class Utils {
             String rarity = type.replace("rarity:", "");
 
             for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values()) {
+                if (tag.getRarity().equalsIgnoreCase(rarity)) {
+                    if (player.hasPermission(tag.getPermission())) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
+
+    public static int getVariantTypeAmount(Player player, String type) {
+        int count = 0;
+
+        if (type.equalsIgnoreCase("yourtags")) {
+            for (Variant tag : SupremeTags.getInstance().getTagManager().getVariants()) {
+                if (player.hasPermission(tag.getPermission())) {
+                    count++;
+                }
+            }
+        }
+
+        if (type.equalsIgnoreCase("all")) {
+            count = SupremeTags.getInstance().getTagManager().getVariants().size();
+        }
+
+        if (type.startsWith("category:")) {
+            String category = type.replace("category:", "");
+
+            for (Variant tag : SupremeTags.getInstance().getTagManager().getVariants()) {
+                if (tag.getSisterTag().getCategory().equalsIgnoreCase(category)) {
+                    if (player.hasPermission(tag.getPermission())) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        if (type.startsWith("rarity:")) {
+            String rarity = type.replace("rarity:", "");
+
+            for (Variant tag : SupremeTags.getInstance().getTagManager().getVariants()) {
                 if (tag.getRarity().equalsIgnoreCase(rarity)) {
                     if (player.hasPermission(tag.getPermission())) {
                         count++;

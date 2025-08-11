@@ -33,7 +33,7 @@ public class SystemChatPacketListener extends PacketAdapter {
     @Override
     public void onPacketSending(PacketEvent event) {
         PacketContainer packet = event.getPacket();
-        Player viewer = event.getPlayer(); // player receiving the packet
+        Player viewer = event.getPlayer(); // Player receiving the packet
 
         WrappedChatComponent chatComponent = packet.getChatComponents().readSafely(0);
         if (chatComponent != null) {
@@ -41,13 +41,15 @@ public class SystemChatPacketListener extends PacketAdapter {
             try {
                 JsonObject jsonObject = JsonParser.parseString(messageJson).getAsJsonObject();
 
-                // Extract sender name from JSON
+                // Try to detect sender
                 String senderName = extractSenderFromJson(jsonObject);
                 Player sender = senderName != null ? Bukkit.getPlayerExact(senderName) : null;
-                UUID senderUUID = (sender != null) ? sender.getUniqueId() : null;
+                UUID senderUUID = sender != null ? sender.getUniqueId() : null;
 
-                replacePlaceholdersInJson(jsonObject, senderUUID);
+                // Always replace placeholders (fallback to viewer if sender unknown)
+                replacePlaceholdersInJson(jsonObject, senderUUID, viewer);
 
+                // Write modified JSON back
                 String replacedJson = jsonObject.toString();
                 packet.getChatComponents().write(0, WrappedChatComponent.fromJson(replacedJson));
             } catch (Exception e) {
@@ -56,27 +58,27 @@ public class SystemChatPacketListener extends PacketAdapter {
         }
     }
 
-    private void replacePlaceholdersInJson(JsonElement element, UUID senderUUID) {
+    private void replacePlaceholdersInJson(JsonElement element, UUID senderUUID, Player viewer) {
         if (element.isJsonObject()) {
             JsonObject obj = element.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 if (entry.getValue().isJsonPrimitive() && entry.getValue().getAsJsonPrimitive().isString()) {
                     String original = entry.getValue().getAsString();
-                    String replaced = replaceTagPlaceholders(original, senderUUID);
+                    String replaced = replaceTagPlaceholders(original, senderUUID, viewer);
                     obj.addProperty(entry.getKey(), replaced);
                 } else {
-                    replacePlaceholdersInJson(entry.getValue(), senderUUID); // recurse
+                    replacePlaceholdersInJson(entry.getValue(), senderUUID, viewer);
                 }
             }
         } else if (element.isJsonArray()) {
             for (JsonElement item : element.getAsJsonArray()) {
-                replacePlaceholdersInJson(item, senderUUID);
+                replacePlaceholdersInJson(item, senderUUID, viewer);
             }
         }
     }
 
-    private String replaceTagPlaceholders(String text, UUID uuid) {
-        if (uuid == null) return text;
+    private String replaceTagPlaceholders(String text, UUID uuid, Player viewer) {
+        if (uuid == null) uuid = viewer.getUniqueId(); // Fallback to viewer
 
         String activeTag = UserData.getActive(uuid);
         String displayTag = SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output");
@@ -99,14 +101,14 @@ public class SystemChatPacketListener extends PacketAdapter {
         String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
         formatted = formatted.replace("%tag%", displayTag);
 
-        return text
+        return format(text
                 .replace("{tag}", formatted)
                 .replace("{TAG}", formatted)
-                .replace("{supremetags_tag}", formatted);
+                .replace("{supremetags_tag}", formatted));
     }
 
     private String extractSenderFromJson(JsonObject jsonObject) {
-        // Attempt to get the sender's name from common structures
+        // Try extra[] array first
         if (jsonObject.has("extra") && jsonObject.get("extra").isJsonArray()) {
             JsonArray extras = jsonObject.getAsJsonArray("extra");
             for (JsonElement element : extras) {
@@ -122,7 +124,7 @@ public class SystemChatPacketListener extends PacketAdapter {
             }
         }
 
-        // Fallback for "text": "<Name>: message"
+        // Fallback for "<Name>: message" style
         if (jsonObject.has("text")) {
             String raw = jsonObject.get("text").getAsString();
             if (raw.contains(":")) {
@@ -133,6 +135,6 @@ public class SystemChatPacketListener extends PacketAdapter {
             }
         }
 
-        return null; // Unable to determine sender
+        return null;
     }
 }

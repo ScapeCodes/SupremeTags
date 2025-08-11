@@ -347,12 +347,26 @@ public abstract class Paged extends Menu {
                     } else {
                         noneLabel = guis.getString("gui.items.sort.sorts.unselected.no-filter", "&7None");
                     }
-                    int amountAll = getTypeAmount(player, "all");
+                    int amountAll = 0;
+
+                    if (!variantsMenu) {
+                        amountAll = getTypeAmount(player, "all");
+                    } else {
+                        amountAll = getVariantTypeAmount(player, "all");
+                    }
+
                     newLore.add(ChatColor.translateAlternateColorCodes('&', noneLabel + " &7(" + amountAll + ")"));
 
                     for (String rarity : rarities) {
                         boolean isSelected = sort.equalsIgnoreCase("rarity:" + rarity);
-                        int amountByRarity = getTypeAmount(player, "rarity:" + rarity);
+
+                        int amountByRarity = 0;
+
+                        if (!variantsMenu) {
+                            amountByRarity = getTypeAmount(player, "rarity:" + rarity);
+                        } else {
+                            amountByRarity = getVariantTypeAmount(player, "rarity:" + rarity);
+                        }
 
                         String label = deformat(rarity); // fallback label
 

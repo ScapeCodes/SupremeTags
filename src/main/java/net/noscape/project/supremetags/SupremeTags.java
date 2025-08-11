@@ -9,8 +9,11 @@ import net.noscape.project.supremetags.checkers.UpdateChecker;
 import net.noscape.project.supremetags.commands.tags.TagsCommand;
 import net.noscape.project.supremetags.handlers.Editor;
 import net.noscape.project.supremetags.handlers.SetupTag;
+import net.noscape.project.supremetags.handlers.hooks.EssentialsChatListener;
 import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.handlers.packets.PacketEventsHandler;
+import net.noscape.project.supremetags.handlers.packets.ProtocolLibHandler;
 import net.noscape.project.supremetags.managers.*;
 import net.noscape.project.supremetags.storage.*;
 import net.noscape.project.supremetags.utils.BungeeMessaging;
@@ -112,7 +115,9 @@ public final class SupremeTags extends JavaPlugin {
             } catch (Exception e) {
                 //logger.warning("Failed to register ProtocolLib listener: " + e.getMessage());
             }
-        } else if (isPacketEvents()) {
+        }
+
+        if (isPacketEvents()) {
             try {
                 Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.PacketEventsHandler");
                 Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
@@ -182,26 +187,35 @@ public final class SupremeTags extends JavaPlugin {
         ClassRegistrationUtils.loadCommands("net.noscape.project.supremetags.commands", this);
         ClassRegistrationUtils.loadListeners("net.noscape.project.supremetags.listeners", this);
 
-        if (isProtocolLib()) {
-            try {
-                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.ProtocolLibHandler");
-                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
-                clazz.getMethod("register").invoke(handler);
-                logger.info("ProtocolLib found! Registered packet listener.");
-            } catch (Exception e) {
-                logger.warning("Failed to register ProtocolLib listener: " + e.getMessage());
-            }
-        } else if (isPacketEvents()) {
-            try {
-                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.PacketEventsHandler");
-                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
-                clazz.getMethod("register").invoke(handler);
-                logger.info("PacketEvents found! Registered packet listener.");
-            } catch (Exception e) {
-                logger.warning("Failed to register PacketEvents listener: " + e.getMessage());
-            }
+//        if (isProtocolLib()) {
+//            try {
+////                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.ProtocolLibHandler");
+////                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
+////                clazz.getMethod("register").invoke(handler);
+//                new ProtocolLibHandler(this).register();
+//                logger.info("> ProtocolLib found! Registered packet listener.");
+//            } catch (Exception e) {
+//                logger.warning("Failed to register ProtocolLib listener: " + e.getMessage());
+//            }
+//        } else if (isPacketEvents()) {
+//            try {
+////                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.PacketEventsHandler");
+////                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
+////                clazz.getMethod("register").invoke(handler);
+//                new PacketEventsHandler().register();
+//                logger.info("> PacketEvents found! Registered packet listener.");
+//            } catch (Exception e) {
+//                logger.warning("Failed to register PacketEvents listener: " + e.getMessage());
+//            }
+//        } else {
+//            logger.info("> No packet lib found! Skipping packet listeners.");
+//        }
+
+        if (isEssentials()) {
+            getLogger().info("> EssentialsX + EssentialsXChat detected! Registering Essentials listeners...");
+            getServer().getPluginManager().registerEvents(new EssentialsChatListener(), this);
         } else {
-            logger.info("> No packet lib found! Skipping packet listeners.");
+            getLogger().warning("> EssentialsX or EssentialsXChat not found. Skipping Essentials listener registration.");
         }
 
         legacy_format = getConfig().getBoolean("settings.color-formatting.legacy-hex-format");
@@ -498,7 +512,7 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     private void callMetrics() {
-        int pluginId = 19397;
+        int pluginId = 18038;
         Metrics metrics = new Metrics(this, pluginId);
 
         metrics.addCustomChart(new Metrics.SimplePie("used_language", () -> getConfig().getString("language", "en")));
@@ -602,13 +616,11 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     public boolean isProtocolLib() {
-        Plugin plugin = getServer().getPluginManager().getPlugin("ProtocolLib");
-        return plugin != null && plugin.isEnabled();
+        return getServer().getPluginManager().getPlugin("ProtocolLib") != null;
     }
 
     public boolean isPacketEvents() {
-        Plugin plugin = getServer().getPluginManager().getPlugin("PacketEvents");
-        return plugin != null && plugin.isEnabled();
+        return getServer().getPluginManager().getPlugin("packetevents") != null;
     }
 
     public boolean isItemsAdder() {
@@ -650,4 +662,10 @@ public final class SupremeTags extends JavaPlugin {
     public ItemStack getHead() {
         return head != null ? head : new ItemStack(Material.DIRT, 1);
     }
+
+    public static boolean isEssentials() {
+        return Bukkit.getPluginManager().getPlugin("Essentials") != null
+                && Bukkit.getPluginManager().getPlugin("EssentialsChat") != null;
+    }
+
 }
