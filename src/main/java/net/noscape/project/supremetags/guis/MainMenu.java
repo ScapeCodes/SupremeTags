@@ -97,7 +97,12 @@ public class MainMenu extends Menu {
         String category = dataItem.get(e.getSlot());
 
         if (category != null) {
-            int slot = SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + category + ".slot");
+            List<Integer> slots = new ArrayList<>();
+            if (SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + category + ".slot") != 0) {
+                slots = List.of(SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + category + ".slot"));
+            } else {
+                slots = SupremeTags.getInstance().getCategoryManager().getCatConfig().getIntegerList("categories." + category + ".slots");
+            }
             String permission = SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + category + ".permission");
 
             String prefix = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix");
@@ -112,7 +117,7 @@ public class MainMenu extends Menu {
                 }
             }
 
-            if (e.getSlot() == slot) {
+            if (slots.contains(e.getSlot())) {
                 if (hasMinTags) {
                     if (permission != null && player.hasPermission(permission)) {
                         menuUtil.setCategory(category);
@@ -136,7 +141,12 @@ public class MainMenu extends Menu {
                 boolean glow = SupremeTags.getInstance().getCategoryManager().getCatConfig().getBoolean("categories." + cats + ".glow");
                 String permission = SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + cats + ".permission");
                 String material = SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + cats + ".material");
-                int slot = SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + cats + ".slot");
+                List<Integer> slots = new ArrayList<>();
+                if (SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + cats + ".slot") != 0) {
+                    slots = List.of(SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + cats + ".slot"));
+                } else {
+                    slots = SupremeTags.getInstance().getCategoryManager().getCatConfig().getIntegerList("categories." + cats + ".slots");
+                }
                 int custom_model_data = SupremeTags.getInstance().getCategoryManager().getCatConfig().getInt("categories." + cats + ".custom-model-data");
                 String displayname = SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + cats + ".id_display");
 
@@ -206,9 +216,10 @@ public class MainMenu extends Menu {
 
                     cat_item.setItemMeta(cat_itemMeta);
 
-                    dataItem.put(slot, cats);
-
-                    inventory.setItem(slot, cat_item);
+                    slots.forEach(slot -> {
+                        dataItem.put(slot, cats);
+                        inventory.setItem(slot, cat_item);
+                    });
                 } else if (permission != null && !menuUtil.getOwner().hasPermission(permission) && !canSee) {
                     assert material != null;
                     ItemStack cat_item;
@@ -267,9 +278,10 @@ public class MainMenu extends Menu {
 
                     cat_item.setItemMeta(cat_itemMeta);
 
-                    dataItem.put(slot, cats);
-
-                    inventory.setItem(slot, cat_item);
+                    slots.forEach(slot -> {
+                        dataItem.put(slot, cats);
+                        inventory.setItem(slot, cat_item);
+                    });
                 } else if (permission != null && menuUtil.getOwner().hasPermission(permission) && !canSee) {
                     assert material != null;
                     ItemStack cat_item;
@@ -323,9 +335,10 @@ public class MainMenu extends Menu {
 
                     cat_item.setItemMeta(cat_itemMeta);
 
-                    dataItem.put(slot, cats);
-
-                    inventory.setItem(slot, cat_item);
+                    slots.forEach(slot -> {
+                        dataItem.put(slot, cats);
+                        inventory.setItem(slot, cat_item);
+                    });
                 }
             }
         }
