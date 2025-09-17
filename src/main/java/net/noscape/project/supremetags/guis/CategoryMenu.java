@@ -11,6 +11,7 @@ import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.menu.*;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.*;
+import net.noscape.project.supremetags.utils.CompatUtils;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.*;
@@ -23,6 +24,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -60,6 +62,14 @@ public class CategoryMenu extends Paged {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
+
+        if (e.getClickedInventory().getType() == InventoryType.PLAYER) {
+            e.setCancelled(true);
+            return;
+        }
+
+        ItemStack clickedItem = e.getCurrentItem();
+        if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
         String back = guis.getString("gui.items.back.displayname");
         String close = guis.getString("gui.items.close.displayname");
@@ -165,8 +175,7 @@ public class CategoryMenu extends Paged {
                 return;
             }
 
-            boolean isCostCategory = SupremeTags.getInstance().getCategoryManager().getCatConfig().getBoolean("categories." + menuUtil.getCategory() + ".cost-category");
-            boolean isCostTag = t.getEconomy().isEnabled();
+            boolean isCostTag = t.isEcoEnabled();
             boolean hasPerm = player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none");
             boolean isActive = UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier);
             boolean canDeactivate = SupremeTags.getInstance().isDeactivateClick();
@@ -177,23 +186,30 @@ public class CategoryMenu extends Paged {
                 } else if (isActive && canDeactivate) {
                     handleTagReset(player, t);
                 }
-            } else {
-                if ((isCostTag || isCostCategory) && hasAmount(player, t.getEconomy().getType(), t.getEconomy().getAmount())) {
-                    TagBuyEvent tagevent = new TagBuyEvent(player, identifier, t.getEconomy().getAmount(), false);
+            } else if (isCostTag) { // Only check cost if it's actually a cost tag
+                if (hasAmount(player, t.getEcoType(), t.getEcoAmount())) {
+                    TagBuyEvent tagevent = new TagBuyEvent(player, identifier, t.getEcoAmount(), false);
                     Bukkit.getPluginManager().callEvent(tagevent);
                     if (tagevent.isCancelled()) return;
 
-                    take(player, t.getEconomy().getType(), t.getEconomy().getAmount());
+                    take(player, t.getEcoType(), t.getEcoAmount());
                     addPerm(player, t.getPermission());
 
-                    msgPlayer(player, unlocked
-                            .replaceAll("%identifier%", t.getIdentifier())
-                            .replaceAll("%tag%", t.getCurrentTag()));
+                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                        msgPlayer(player, unlocked
+                                .replaceAll("%identifier%", t.getIdentifier())
+                                .replaceAll("%tag%", t.getCurrentTag()));
+                    }
                     super.open();
                 } else {
-                    insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
-                    msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEconomy().getAmount())));
+                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                        insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
+                        msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEcoAmount())));
+                    }
                 }
+            } else {
+                // Non-cost tag but no permission → treat as locked
+                sendLockedMessage(player);
             }
         }
 
@@ -397,8 +413,6 @@ public class CategoryMenu extends Paged {
                     continue;
                 }
 
-                boolean isCostTag = t.isCostTag();
-
                 String permission = t.getPermission();
 
                 if (SupremeTags.getInstance().getConfig().getBoolean("settings.only-show-player-access-tags")) {
@@ -422,7 +436,7 @@ public class CategoryMenu extends Paged {
                         displayname = format("&7Tag: " + t.getCurrentTag());
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname") == null) {
+                    if (guis.getString("gui.tag-menu.global-locked-tag.displayname") == null) {
                         if (t.getCurrentTag() != null) {
                             displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname")).replace("%tag%", t.getCurrentTag());
                         } else {
@@ -430,9 +444,9 @@ public class CategoryMenu extends Paged {
                         }
                     } else {
                         if (t.getCurrentTag() != null) {
-                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname")).replace("%tag%", t.getCurrentTag());
+                            displayname = Objects.requireNonNull(guis.getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", t.getCurrentTag());
                         } else {
-                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname")).replace("%tag%", t.getTag().get(0));
+                            displayname = Objects.requireNonNull(guis.getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", t.getTag().get(0));
                         }
                     }
                 }
@@ -448,8 +462,8 @@ public class CategoryMenu extends Paged {
                         material = "NAME_TAG";
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.display-item") != null) {
-                        material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.display-item");
+                    if (guis.getString("gui.tag-menu.global-locked-tag.display-item") != null) {
+                        material = guis.getString("gui.tag-menu.global-locked-tag.display-item");
                     } else {
                         material = "NAME_TAG";
                     }
@@ -457,7 +471,7 @@ public class CategoryMenu extends Paged {
 
                 assert permission != null;
 
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(material);
+                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
                 ItemStack tagItem = resolved.item();
                 ItemMeta tagMeta = resolved.meta();
                 NBTItem nbt = new NBTItem(tagItem);
@@ -471,8 +485,8 @@ public class CategoryMenu extends Paged {
                             tagMeta.setCustomModelData(modelData);
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".locked-tag.custom-model-data") > 0) {
-                        int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".locked-tag.custom-model-data");
+                    if (guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data") > 0) {
+                        int modelData = guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data");
                         if (tagMeta != null)
                             tagMeta.setCustomModelData(modelData);
                     }
@@ -527,7 +541,7 @@ public class CategoryMenu extends Paged {
                             .collect(Collectors.joining("\n"));
 
                     effects_list = t.getEffects().keySet().stream()
-                            .map(effectType -> effectType.getKey().getKey().toUpperCase()) // or .getName() if not using namespaced keys
+                            .map(CompatUtils::getEffectKey)
                             .collect(Collectors.joining(", "));
                 } else {
                     joinedEffects = format(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-effects"));

@@ -84,14 +84,8 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                 case "removetagp":
                     handleRemoveTagP(sender, player, args);
                     break;
-                case "settag":
-                    handleSetTag(sender, args);
-                    break;
                 case "givevoucher":
                     handleGiveVoucher(sender, args);
-                    break;
-                case "setcategory":
-                    handleSetCategory(sender, args);
                     break;
                 case "set":
                     handleSet(sender, args);
@@ -569,7 +563,6 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    // SetCategory Command - Set a category for a tag
     private void handleSetCategory(CommandSender sender, String[] args) {
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
@@ -595,8 +588,6 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         SupremeTags.getInstance().getTagManager().setCategory(sender, name, category);
     }
-
-    // Set Command - Set a tag for a specific player
     private void handleSet(CommandSender sender, String[] args) {
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {

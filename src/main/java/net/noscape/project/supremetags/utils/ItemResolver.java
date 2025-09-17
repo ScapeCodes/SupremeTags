@@ -6,7 +6,9 @@ import com.ssomar.score.api.executableitems.ExecutableItemsAPI;
 import com.ssomar.score.api.executableitems.config.ExecutableItemInterface;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.noscape.project.supremetags.SupremeTags;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ua.valeriishymchuk.simpleitemgenerator.api.SimpleItemGenerator;
@@ -18,7 +20,12 @@ import static net.noscape.project.supremetags.utils.Utils.getItemWithOraxen;
 
 public class ItemResolver {
 
-    public static ResolvedItem resolveCustomItem(String material) {
+    public static ResolvedItem resolveCustomItem(Player player, String material) {
+        // Replace placeholder
+        if (material.contains("%player_name%")) {
+            material = material.replace("%player_name%", player.getName());
+        }
+
         ItemStack item = null;
         ItemMeta meta;
 
@@ -55,6 +62,19 @@ public class ItemResolver {
             String id = material.replace("executableblocks-", "");
             Optional<ExecutableBlockInterface> ebOpt = ExecutableBlocksAPI.getExecutableBlocksManager().getExecutableBlock(id);
             if(ebOpt.isPresent()) item = ebOpt.get().buildItem(1, Optional.empty());
+        } else if (material.toLowerCase().startsWith("head-")) {
+            String playerName = material.replace("head-", "");
+
+            if (playerName.equalsIgnoreCase("%player_name%")) {
+                playerName = player.getName();
+            }
+
+            item = new ItemStack(Material.PLAYER_HEAD, 1);
+            ItemMeta headMeta = item.getItemMeta();
+            if (headMeta instanceof org.bukkit.inventory.meta.SkullMeta skullMeta) {
+                skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(playerName));
+                item.setItemMeta(skullMeta);
+            }
         } else if (material.contains(":")) {
             String[] parts = material.split(":");
             Material mat = Material.valueOf(parts[0].toUpperCase());

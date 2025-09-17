@@ -14,6 +14,7 @@ import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.utils.CompatUtils;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.Bukkit;
@@ -95,12 +96,15 @@ public class SearchResultMenu extends Paged {
             Tag t = SupremeTags.getInstance().getTagManager().getTag(identifier);
 
             boolean tagActionsEnabled = guis.getBoolean("gui.tag-actions-menu.enable");
+            boolean isCostTag = t.getEconomy().isEnabled();
 
             if (tagActionsEnabled) {
                 if (!menuUtil.getOwner().hasPermission(t.getPermission()) && !t.isCostTag()) {
-                    String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-                    locked = replacePlaceholders(menuUtil.getOwner(), locked);
-                    msgPlayer(player, locked);
+                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                        String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+                        locked = replacePlaceholders(menuUtil.getOwner(), locked);
+                        msgPlayer(player, locked);
+                    }
                     return;
                 }
 
@@ -115,7 +119,7 @@ public class SearchResultMenu extends Paged {
                 return;
             } else {
 
-                if (!SupremeTags.getInstance().getTagManager().isCost()) {
+                if (!isCostTag) {
                     if (player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none")) {
                         if (!UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier) && identifier != null) {
 
@@ -152,9 +156,11 @@ public class SearchResultMenu extends Paged {
                             }
                         }
                     } else {
-                        String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-                        locked = replacePlaceholders(menuUtil.getOwner(), locked);
-                        msgPlayer(player, locked);
+                        if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                            String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+                            locked = replacePlaceholders(menuUtil.getOwner(), locked);
+                            msgPlayer(player, locked);
+                        }
                     }
                 } else {
                     if (player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none")) {
@@ -191,9 +197,11 @@ public class SearchResultMenu extends Paged {
                                     msgPlayer(player, messages.getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
                                 }
                             } else {
-                                String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-                                locked = replacePlaceholders(menuUtil.getOwner(), locked);
-                                msgPlayer(player, locked);
+                                if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                                    String locked = messages.getString("messages.locked-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+                                    locked = replacePlaceholders(menuUtil.getOwner(), locked);
+                                    msgPlayer(player, locked);
+                                }
                             }
                         }
                     } else {
@@ -210,11 +218,17 @@ public class SearchResultMenu extends Paged {
 
                             take(player, t.getEconomy().getType(), t.getEconomy().getAmount());
                             addPerm(player, t.getPermission());
-                            msgPlayer(player, unlocked.replaceAll("%identifier%", t.getIdentifier()).replaceAll("%tag%", SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag()));
+
+                            if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                                msgPlayer(player, unlocked.replaceAll("%identifier%", t.getIdentifier()).replaceAll("%tag%", SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag()));
+                            }
+
                             super.open();
                         } else {
-                            insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
-                            msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEconomy().getAmount())));
+                            if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                                insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
+                                msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEconomy().getAmount())));
+                            }
                         }
                     }
                 }
@@ -408,7 +422,7 @@ public class SearchResultMenu extends Paged {
                         displayname = format("&7Tag: " + t.getCurrentTag());
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname") == null) {
+                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("gui.tag-menu.global-locked-tag.displayname") == null) {
                         if (t.getCurrentTag() != null) {
                             displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname")).replace("%tag%", t.getCurrentTag());
                         } else {
@@ -416,9 +430,9 @@ public class SearchResultMenu extends Paged {
                         }
                     } else {
                         if (t.getCurrentTag() != null) {
-                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname")).replace("%tag%", t.getCurrentTag());
+                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", t.getCurrentTag());
                         } else {
-                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.displayname")).replace("%tag%", t.getTag().get(0));
+                            displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", t.getTag().get(0));
                         }
                     }
                 }
@@ -440,8 +454,8 @@ public class SearchResultMenu extends Paged {
                         material = "NAME_TAG";
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.display-item") != null) {
-                        material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".locked-tag.display-item");
+                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("gui.tag-menu.global-locked-tag.display-item") != null) {
+                        material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("gui.tag-menu.global-locked-tag.display-item");
                     } else {
                         material = "NAME_TAG";
                     }
@@ -449,7 +463,7 @@ public class SearchResultMenu extends Paged {
 
                 assert permission != null;
 
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(material);
+                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
                 ItemStack tagItem = resolved.item();
                 ItemMeta tagMeta = resolved.meta();
                 NBTItem nbt = new NBTItem(tagItem);
@@ -463,8 +477,8 @@ public class SearchResultMenu extends Paged {
                             tagMeta.setCustomModelData(modelData);
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".locked-tag.custom-model-data") > 0) {
-                        int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".locked-tag.custom-model-data");
+                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("gui.tag-menu.global-locked-tag.custom-model-data") > 0) {
+                        int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("gui.tag-menu.global-locked-tag.custom-model-data");
                         if (tagMeta != null)
                             tagMeta.setCustomModelData(modelData);
                     }
@@ -519,7 +533,7 @@ public class SearchResultMenu extends Paged {
                             .collect(Collectors.joining("\n"));
 
                     effects_list = t.getEffects().keySet().stream()
-                            .map(effectType -> effectType.getKey().getKey().toUpperCase()) // or .getName() if not using namespaced keys
+                            .map(CompatUtils::getEffectKey)
                             .collect(Collectors.joining(", "));
                 } else {
                     joinedEffects = format(messages.getString("messages.no-effects"));

@@ -23,7 +23,6 @@ settings:
   update-check: true # the plugin will check if there is an update available.
   auto-merge: false # auto merges all tags from deluxetags into supremetags (DeluxeTags is required on the server)
   active-tag-glow: true # adds a hidden enchantment to the tag item that is active for the player.
-  cost-system: false # should your players be able to buy tags?
   tag-command-in-disabled-worlds: true # should /tags command be disabled in 'disabled-worlds'.
   disabled-worlds: # what worlds should tags be allowed in, tags in this world will not be shown.
     - 'example'
@@ -60,9 +59,10 @@ placeholders:
     none-output: ''
     format: '%tag%'
   # %supremetags_chattag%
+  # is used for other built in placeholders as well.
   chat:
     none-output: ''
-    format: '%tag% '
+    format: '%tag%'
   # %supremetags_scorebardtag%
   scoreboard:
     none-output: ''

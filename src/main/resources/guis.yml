@@ -105,6 +105,10 @@ gui:
         - 32
         - 33
         - 34 # ending slot
+    global-locked-tag:
+      displayname: '&7Tag: %tag%'
+      display-item: BARRIER
+      custom-model-data: 0
     global-tag-lores:
       unlocked-lore:
         - '%description%'

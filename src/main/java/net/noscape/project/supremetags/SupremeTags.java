@@ -12,8 +12,6 @@ import net.noscape.project.supremetags.handlers.SetupTag;
 import net.noscape.project.supremetags.handlers.hooks.EssentialsChatListener;
 import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
-import net.noscape.project.supremetags.handlers.packets.PacketEventsHandler;
-import net.noscape.project.supremetags.handlers.packets.ProtocolLibHandler;
 import net.noscape.project.supremetags.managers.*;
 import net.noscape.project.supremetags.storage.*;
 import net.noscape.project.supremetags.utils.BungeeMessaging;
@@ -172,7 +170,7 @@ public final class SupremeTags extends JavaPlugin {
 
         sendConsoleLog();
 
-        tagManager = new TagManager(getConfig().getBoolean("settings.cost-system"));
+        tagManager = new TagManager();
         categoryManager = new CategoryManager();
         playerManager = new PlayerManager();
         voucherManager = new VoucherManager();
@@ -186,30 +184,6 @@ public final class SupremeTags extends JavaPlugin {
 
         ClassRegistrationUtils.loadCommands("net.noscape.project.supremetags.commands", this);
         ClassRegistrationUtils.loadListeners("net.noscape.project.supremetags.listeners", this);
-
-//        if (isProtocolLib()) {
-//            try {
-////                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.ProtocolLibHandler");
-////                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
-////                clazz.getMethod("register").invoke(handler);
-//                new ProtocolLibHandler(this).register();
-//                logger.info("> ProtocolLib found! Registered packet listener.");
-//            } catch (Exception e) {
-//                logger.warning("Failed to register ProtocolLib listener: " + e.getMessage());
-//            }
-//        } else if (isPacketEvents()) {
-//            try {
-////                Class<?> clazz = Class.forName("net.noscape.project.supremetags.handlers.packets.PacketEventsHandler");
-////                Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
-////                clazz.getMethod("register").invoke(handler);
-//                new PacketEventsHandler().register();
-//                logger.info("> PacketEvents found! Registered packet listener.");
-//            } catch (Exception e) {
-//                logger.warning("Failed to register PacketEvents listener: " + e.getMessage());
-//            }
-//        } else {
-//            logger.info("> No packet lib found! Skipping packet listeners.");
-//        }
 
         if (isEssentials()) {
             getLogger().info("> EssentialsX + EssentialsXChat detected! Registering Essentials listeners...");
@@ -371,8 +345,6 @@ public final class SupremeTags extends JavaPlugin {
 
         tagManager.getDataItem().clear();
 
-        tagManager.setCost(SupremeTags.getInstance().getConfig().getBoolean("settings.cost-system"));
-
         categoryManager.initCategories();
 
         configManager.reloadConfig("messages.yml");
@@ -478,17 +450,12 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     public boolean isFoliaFound() {
-        if (this.isFoliaFound != null) {
-            return this.isFoliaFound;
-        }
         try {
-            this.getLogger().info("[FOLIA] Found: " + Class.forName("io.papermc.paper.threadedregions.RegionizedServer"));
-            this.getLogger().info("[ST-Folia-Version] Please report any compatibility issues with folia schedulers/features not working properly to ScapeHelp discord.");
-            this.isFoliaFound = true;
-        } catch (Exception ex) {
-            this.isFoliaFound = false;
+            Class.forName("io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
-        return this.isFoliaFound;
     }
 
     public Boolean isH2() {
@@ -667,5 +634,4 @@ public final class SupremeTags extends JavaPlugin {
         return Bukkit.getPluginManager().getPlugin("Essentials") != null
                 && Bukkit.getPluginManager().getPlugin("EssentialsChat") != null;
     }
-
 }

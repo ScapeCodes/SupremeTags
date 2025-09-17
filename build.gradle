@@ -6,7 +6,7 @@ plugins {
 sourceCompatibility = 21
 targetCompatibility = 21
 group = 'net.noscape.project.supremetags'
-version = '2.1.10'
+version = '2.1.12'
 
 java {
     disableAutoTargetJvm()
@@ -62,15 +62,15 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.1.0'
     compileOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.2'
     compileOnly 'net.luckperms:api:5.4'
-    compileOnly 'org.black_ixx:playerpoints:3.2.6'
+    compileOnly 'org.black_ixx:playerpoints:3.3.2'
     compileOnly 'com.github.LoneDev6:itemsadder-api:3.6.3-beta-14'
-    compileOnly 'net.kyori:adventure-text-minimessage:4.17.0'
+    implementation 'net.kyori:adventure-text-minimessage:4.17.0'
     implementation 'de.rapha149.signgui:signgui:2.5.3'
     compileOnly 'de.tr7zw:item-nbt-api-plugin:2.15.1'
     compileOnly 'com.nexomc:nexo:1.6.0'
     compileOnly 'io.th0rgal:oraxen:1.190.0'
     implementation 'commons-lang:commons-lang:2.6'
-    compileOnly 'su.nightexpress.coinsengine:CoinsEngine:2.4.2'
+    compileOnly 'su.nightexpress.coinsengine:CoinsEngine:2.5.0'
     compileOnly 'com.comphenix.protocol:ProtocolLib:5.3.0'
     compileOnly("com.github.retrooper:packetevents-spigot:2.9.3")
     implementation 'net.wesjd:anvilgui:1.10.5-SNAPSHOT'

@@ -26,8 +26,6 @@ public class Tag {
     private boolean isWithdrawable;
     private List<Variant> variants;
 
-    private boolean isCostTag;
-
     private String rarity;
 
     //          key      value
@@ -41,7 +39,12 @@ public class Tag {
     // economy
     private TagEconomy economy;
 
-    public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, boolean isCostTag, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy) {
+    // economy
+    private String ecoType;
+    private double ecoAmount;
+    private boolean ecoEnabled;
+
+    public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy) {
         this.identifier = identifier;
         this.tag = tag;
         this.category = category;
@@ -49,20 +52,18 @@ public class Tag {
         this.description = description;
         this.order = order;
         this.isWithdrawable = isWithdrawable;
-        this.isCostTag = isCostTag;
         this.rarity = rarity;
         this.effects = effects;
         this.economy = economy;
     }
 
-    public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, boolean isWithdrawable, boolean isCostTag, String rarity, TagEconomy economy) {
+    public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, boolean isWithdrawable, String rarity, TagEconomy economy) {
         this.identifier = identifier;
         this.tag = tag;
         this.category = category;
         this.permission = permission;
         this.description = description;
         this.isWithdrawable = isWithdrawable;
-        this.isCostTag = isCostTag;
         this.rarity = rarity;
         this.economy = economy;
     }
@@ -211,11 +212,7 @@ public class Tag {
     }
 
     public boolean isCostTag() {
-        return isCostTag;
-    }
-
-    public void setCostTag(boolean costTag) {
-        isCostTag = costTag;
+        return ecoEnabled;
     }
 
     public String getCustomPlaceholder(String identifier, String placeholder) {
@@ -270,5 +267,29 @@ public class Tag {
 
     public TagEconomy getEconomy() {
         return economy;
+    }
+
+    public String getEcoType() {
+        return ecoType;
+    }
+
+    public void setEcoType(String ecoType) {
+        this.ecoType = ecoType;
+    }
+
+    public double getEcoAmount() {
+        return ecoAmount;
+    }
+
+    public void setEcoAmount(double ecoAmount) {
+        this.ecoAmount = ecoAmount;
+    }
+
+    public boolean isEcoEnabled() {
+        return ecoEnabled;
+    }
+
+    public void setEcoEnabled(boolean ecoEnabled) {
+        this.ecoEnabled = ecoEnabled;
     }
 }

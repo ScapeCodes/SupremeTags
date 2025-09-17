@@ -29,6 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import su.nightexpress.coinsengine.api.CoinsEngineAPI;
 
 import java.awt.*;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
@@ -67,6 +68,7 @@ public class Utils {
 
     public static String format(String message) {
         if (isVersionLessThan("1.16")) {
+            // Old Minecraft versions only support legacy color codes
             return ChatColor.translateAlternateColorCodes('&', message);
         }
 
@@ -74,10 +76,14 @@ public class Utils {
                 SupremeTags.getInstance().getConfig().getBoolean("settings.use-minimessage");
 
         if (useMiniMessage) {
+            // Convert legacy (&) into MiniMessage-friendly input
             message = legacyToMiniMessage(message);
-            MiniMessage miniMessage = MiniMessage.miniMessage();
-            Component component = miniMessage.deserialize(message);
-            return LegacyComponentSerializer.legacySection().serialize(component);
+            try {
+                Component component = MiniMessage.miniMessage().deserialize(message);
+                return LegacyComponentSerializer.legacySection().serialize(component);
+            } catch (NoClassDefFoundError | Exception e) {
+                return ChatColor.translateAlternateColorCodes('&', message);
+            }
         } else {
             // Replace hex color codes with Minecraft §x§R§R§G§G§B§B format
             message = replacePatternWithMinecraftColor(message, p1);
@@ -86,7 +92,7 @@ public class Utils {
             message = replacePatternWithMinecraftColor(message, p5);
             message = replacePatternWithMinecraftColor(message, p3);
 
-            // Replace named color and format tags with legacy color codes
+            // Replace named color/format tags with legacy
             message = message.replace("<black>", "&0")
                     .replace("<dark_blue>", "&1")
                     .replace("<dark_green>", "&2")
@@ -110,11 +116,9 @@ public class Utils {
                     .replace("<italic>", "&o")
                     .replace("<reset>", "&r");
 
-            // Finally translate all '&' codes to '§' Minecraft color codes
-            message = ChatColor.translateAlternateColorCodes('&', message);
+            // Finally, translate & → §
+            return ChatColor.translateAlternateColorCodes('&', message);
         }
-
-        return message;
     }
 
     private static String replacePatternWithMinecraftColor(String message, Pattern pattern) {
@@ -146,6 +150,7 @@ public class Utils {
         }
         return sb.toString();
     }
+
     private static String legacyToMiniMessage(String message) {
         return message
                 .replace("&0", "<black>")
@@ -274,14 +279,6 @@ public class Utils {
         } catch (ClassNotFoundException e) {
             return false;
         }
-    }
-
-    public static String parseMiniMessage(String message) {
-        // Handle MiniMessage parsing and legacy conversion
-        Component legacy = LegacyComponentSerializer.legacyAmpersand().deserialize(message);
-        String miniMessage = MiniMessage.miniMessage().serialize(legacy).replace("\\", "");
-        Component component = MiniMessage.miniMessage().deserialize(miniMessage);
-        return LegacyComponentSerializer.legacySection().serialize(component);
     }
 
     public static String colorizeRGB(String input) {

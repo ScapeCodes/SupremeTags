@@ -56,10 +56,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enable: false
@@ -98,10 +94,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -135,10 +127,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -221,10 +209,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -258,10 +242,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: rare
     economy:
       enabled: false
@@ -295,10 +275,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -332,10 +308,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -369,10 +341,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: legendary
     economy:
       enabled: false
@@ -406,10 +374,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: rare
     economy:
       enabled: false
@@ -443,10 +407,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -480,10 +440,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -517,10 +473,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -554,10 +506,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -591,10 +539,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -628,10 +572,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -665,10 +605,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -702,10 +638,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: rare
     economy:
       enabled: false
@@ -739,10 +671,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -776,10 +704,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: rare
     economy:
       enabled: false
@@ -813,10 +737,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -850,10 +770,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -887,10 +803,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -924,10 +836,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: legendary
     economy:
       enabled: false
@@ -961,10 +869,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -998,10 +902,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1072,10 +972,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1109,10 +1005,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1146,10 +1038,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1183,10 +1071,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1220,10 +1104,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1257,10 +1137,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: legendary
     economy:
       enabled: false
@@ -1294,10 +1170,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1332,10 +1204,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1369,10 +1237,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1406,10 +1270,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1443,10 +1303,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1480,10 +1336,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false
@@ -1517,10 +1369,6 @@ tags:
         - '&7&m-----------------------------'
         - '&eClick to equip!'
         - '&7&m-----------------------------'
-    locked-tag:
-      displayname: '&7Tag: %tag%'
-      display-item: BARRIER
-      custom-model-data: 0
     rarity: common
     economy:
       enabled: false

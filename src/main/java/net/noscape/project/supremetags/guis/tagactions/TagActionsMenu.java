@@ -242,7 +242,7 @@ public class TagActionsMenu extends Menu {
 
             String item_displayname = guis.getString("gui.tag-actions-menu.functions." + name + ".displayname");
 
-            ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(item_material);
+            ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
             ItemStack item = resolved.item();
             ItemMeta itemMeta = resolved.meta();
             NBTItem nbt = new NBTItem(item);

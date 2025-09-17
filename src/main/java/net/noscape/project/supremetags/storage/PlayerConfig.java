@@ -91,7 +91,7 @@ public class PlayerConfig {
                     List<String> desc = new ArrayList<>();
                     desc.add(description);
 
-                    Tag t = new Tag(identifier, tabList, "", "", desc, false, false, "&f&lCOMMON", null);
+                    Tag t = new Tag(identifier, tabList, "", "", desc, false, "common", null);
                     tags.add(t);
                 }
 

@@ -257,11 +257,11 @@ public class TagVariantsMenu extends Paged {
                     if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.displayname") == null) {
                         item_displayname = this.guis.getString("gui.tag-variants-menu.item.displayname").replace("%tag%", var.getTag().get(0));
                     } else {
-                        item_displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.displayname")).replace("%tag%", var.getTag().get(0));
+                        item_displayname = Objects.requireNonNull(guis.getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", var.getTag().get(0));
                     }
                 }
 
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(material);
+                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
                 ItemStack variantItem = resolved.item();
                 ItemMeta variantMeta = resolved.meta();
                 NBTItem nbt = new NBTItem(variantItem);
@@ -273,8 +273,8 @@ public class TagVariantsMenu extends Paged {
                         material = "NAME_TAG";
                     }
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.display-item") != null) {
-                        material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.display-item");
+                    if (guis.getString("gui.tag-menu.global-locked-tag.display-item") != null) {
+                        material = guis.getString("gui.tag-menu.global-locked-tag.display-item");
                     } else {
                         material = "NAME_TAG";
                     }
@@ -287,8 +287,8 @@ public class TagVariantsMenu extends Paged {
                         }
                     }
                 } else {
-                        if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.custom-model-data") > 0) {
-                            int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.custom-model-data");
+                        if (guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data") > 0) {
+                            int modelData = guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data");
                             if (variantMeta != null) {
                                 variantMeta.setCustomModelData(modelData);
                             }

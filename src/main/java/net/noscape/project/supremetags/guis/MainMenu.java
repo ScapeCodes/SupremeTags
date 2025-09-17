@@ -356,7 +356,7 @@ public class MainMenu extends Menu {
                     item_lore = guis.getStringList("gui.main-menu.custom-items." + name + ".lore");
                 }
 
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(item_material);
+                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
                 ItemStack item = resolved.item();
                 ItemMeta itemMeta = resolved.meta();
 

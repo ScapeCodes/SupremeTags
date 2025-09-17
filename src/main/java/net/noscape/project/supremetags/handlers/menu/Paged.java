@@ -178,7 +178,7 @@ public abstract class Paged extends Menu {
                     item_slot = guis.getInt("gui.items." + str + ".slot");
                 }
 
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(item_material);
+                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
                 ItemStack item = resolved.item();
                 ItemMeta itemMeta = resolved.meta();
                 NBTItem nbt = new NBTItem(item);
@@ -432,85 +432,89 @@ public abstract class Paged extends Menu {
                     String item_material = guis.getString("gui.tag-menu.custom-items." + cSTR + ".material");
                     String item_displayname = guis.getString("gui.tag-menu.custom-items." + cSTR + ".displayname");
                     int item_custom_model_data = guis.getInt("gui.tag-menu.custom-items." + cSTR + ".custom-model-data");
-                    int item_slot = 0;
 
                     boolean hideToolTip = guis.getBoolean("gui.tag-menu.custom-items." + cSTR + ".hide-tooltip");
 
+                    int item_slot = 0;
                     boolean isSlots = false;
-
                     List<Integer> slots = new ArrayList<>();
 
-                    if (guis.getConfigurationSection("gui.tag-menu.custom-items." + str + ".slots") != null) {
-                        slots = guis.getIntegerList("gui.tag-menu.custom-items." + str + ".slots");
+                    // Handle slots
+                    if (guis.contains("gui.tag-menu.custom-items." + cSTR + ".slots")) {
+                        slots = guis.getIntegerList("gui.tag-menu.custom-items." + cSTR + ".slots");
                         isSlots = true;
                     }
 
-                    if (guis.getConfigurationSection("gui.tag-menu.custom-items." + str + ".slot") != null) {
-                        item_slot = guis.getInt("gui.tag-menu.custom-items." + str + ".slot");
+                    // Handle single slot if slots not defined
+                    if (!isSlots && guis.contains("gui.tag-menu.custom-items." + cSTR + ".slot")) {
+                        item_slot = guis.getInt("gui.tag-menu.custom-items." + cSTR + ".slot");
                     }
 
-                    List<String> item_lore = new ArrayList<>();
+                    // Lore
+                    List<String> item_lore = guis.getStringList("gui.tag-menu.custom-items." + cSTR + ".lore");
 
-                    if (guis.getConfigurationSection("gui.tag-menu.custom-items." + cSTR + ".lore") != null) {
-                        item_lore = guis.getStringList("gui.tag-menu.custom-items." + cSTR + ".lore");
-                    }
-
-                    ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(item_material);
+                    // Resolve item
+                    ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
                     ItemStack item = resolved.item();
                     ItemMeta itemMeta = resolved.meta();
 
-                    if (item_custom_model_data > 0) {
-                        if (itemMeta != null)
-                            itemMeta.setCustomModelData(item_custom_model_data);
+                    // Custom model data
+                    if (item_custom_model_data > 0 && itemMeta != null) {
+                        itemMeta.setCustomModelData(item_custom_model_data);
                     }
 
-                    if (isPaperVersionAtLeast(1, 21, 5)) {
-                        if (guis.contains("gui.tag-menu.custom-items." + cSTR + ".hide-tooltip") && hideToolTip) {
-                            itemMeta.setHideTooltip(true);
-                        }
+                    // Hide tooltip
+                    if (isPaperVersionAtLeast(1, 21, 5) && hideToolTip) {
+                        itemMeta.setHideTooltip(true);
                     }
 
+                    // Replace placeholders in display name
                     item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
-
                     String identifier = UserData.getActive(menuUtil.getOwner().getUniqueId());
 
                     if (!identifier.equalsIgnoreCase("None")) {
-                        item_displayname = item_displayname.replace("%identifier%", UserData.getActive(menuUtil.getOwner().getUniqueId()));
+                        item_displayname = item_displayname.replace("%identifier%", identifier);
                     } else {
-                        item_displayname = item_displayname.replace("%identifier%", SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output"));
+                        item_displayname = item_displayname.replace("%identifier%",
+                                SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output"));
                     }
 
-                    if (SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())) != null) {
-                        if (SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getCurrentTag() != null) {
-                            item_displayname = item_displayname.replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getCurrentTag());
+                    if (SupremeTags.getInstance().getTagManager().getTag(identifier) != null) {
+                        if (SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag() != null) {
+                            item_displayname = item_displayname.replace("%tag%",
+                                    SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag());
                         } else {
-                            item_displayname = item_displayname.replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getTag().get(0));
+                            item_displayname = item_displayname.replace("%tag%",
+                                    SupremeTags.getInstance().getTagManager().getTag(identifier).getTag().get(0));
                         }
                     } else {
-                        item_displayname = item_displayname.replace("%tag%", SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output"));
+                        item_displayname = item_displayname.replace("%tag%",
+                                SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output"));
                     }
 
                     item_displayname = globalPlaceholders(menuUtil.getOwner(), item_displayname);
 
-                    if (item_lore != null || !item_lore.isEmpty()) {
-                        item_lore.replaceAll(s -> s.replace("%identifier%", UserData.getActive(menuUtil.getOwner().getUniqueId())));
-                        if (SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())) != null) {
-                            if (SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getCurrentTag() != null) {
-                                item_lore.replaceAll(s -> s.replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getCurrentTag()));
+                    // Lore placeholders
+                    if (item_lore != null && !item_lore.isEmpty()) {
+                        item_lore.replaceAll(s -> s.replace("%identifier%", identifier));
+                        if (SupremeTags.getInstance().getTagManager().getTag(identifier) != null) {
+                            if (SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag() != null) {
+                                item_lore.replaceAll(s -> s.replace("%tag%",
+                                        SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag()));
                             } else {
-                                item_lore.replaceAll(s -> s.replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(menuUtil.getOwner().getUniqueId())).getTag().get(0)));
+                                item_lore.replaceAll(s -> s.replace("%tag%",
+                                        SupremeTags.getInstance().getTagManager().getTag(identifier).getTag().get(0)));
                             }
                         } else {
                             item_lore.replaceAll(s -> s.replace("%tag%", ""));
                         }
-
                         item_lore.replaceAll(s -> globalPlaceholders(menuUtil.getOwner(), s));
                     } else {
                         item_lore = new ArrayList<>();
                     }
 
+                    // Apply meta
                     itemMeta.setLore(color(item_lore));
-
                     itemMeta.setDisplayName(format(item_displayname));
 
                     itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -518,18 +522,25 @@ public abstract class Paged extends Menu {
                         ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                         itemMeta.addItemFlags(hideDye);
                     } catch (IllegalArgumentException ignored) {
-                        // HIDE_DYE not available in this version — skip
+                        // Not supported in this version
                     }
                     itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                     itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                     itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
                     item.setItemMeta(itemMeta);
+
+                    // Add NBT identifier so we know which custom item it is
+                    NBTItem nbt = new NBTItem(item);
+                    nbt.setString("custom-item", cSTR);
+                    item = nbt.getItem();
+
+                    // Place item in inventory
                     if (!isSlots) {
                         inventory.setItem(item_slot, item);
                     } else {
                         for (int slot : slots) {
-                            inventory.setItem(slot, item);
+                            inventory.setItem(slot, item.clone()); // clone so each slot is independent
                         }
                     }
                 }
@@ -985,10 +996,12 @@ public abstract class Paged extends Menu {
     }
 
     protected void sendLockedMessage(Player player) {
-        String locked = messages.getString("messages.locked-tag")
-                .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        locked = replacePlaceholders(menuUtil.getOwner(), locked);
-        msgPlayer(player, locked);
+        if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+            String locked = messages.getString("messages.locked-tag")
+                    .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+            locked = replacePlaceholders(menuUtil.getOwner(), locked);
+            msgPlayer(player, locked);
+        }
     }
 
     protected void handleTagAssign(Player player, String identifier, Tag t) {
@@ -1036,7 +1049,7 @@ public abstract class Paged extends Menu {
 
     protected List<String> getFormattedLore(Tag t, String permission) {
         List<String> lore;
-        boolean isCostEnabled = t.getEconomy().isEnabled();
+        boolean isCostEnabled = t.isEcoEnabled();
         boolean hasPermission = menuUtil.getOwner().hasPermission(permission) || permission.equalsIgnoreCase("none");
         boolean isSelected = UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(t.getIdentifier());
 
