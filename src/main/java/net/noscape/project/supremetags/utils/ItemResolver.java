@@ -1,9 +1,6 @@
 package net.noscape.project.supremetags.utils;
 
-import com.ssomar.executableblocks.api.ExecutableBlocksAPI;
-import com.ssomar.score.api.executableblocks.config.ExecutableBlockInterface;
-import com.ssomar.score.api.executableitems.ExecutableItemsAPI;
-import com.ssomar.score.api.executableitems.config.ExecutableItemInterface;
+import com.cryptomorin.xseries.XMaterial;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.noscape.project.supremetags.SupremeTags;
 import org.bukkit.Bukkit;
@@ -13,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ua.valeriishymchuk.simpleitemgenerator.api.SimpleItemGenerator;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static net.noscape.project.supremetags.utils.Utils.getItemWithIA;
@@ -26,7 +24,7 @@ public class ItemResolver {
             material = material.replace("%player_name%", player.getName());
         }
 
-        ItemStack item = null;
+        ItemStack item;
         ItemMeta meta;
 
         if (material.contains("hdb-")) {
@@ -54,14 +52,6 @@ public class ItemResolver {
             } else {
                 item = resultOpt.orElseGet(() -> new ItemStack(Material.DIRT, 1));
             }
-        } else if (material.contains("executableitems-")) {
-            String id = material.replace("executableitems-", "");
-            Optional<ExecutableItemInterface> eiOpt = ExecutableItemsAPI.getExecutableItemsManager().getExecutableItem(id);
-            if(eiOpt.isPresent()) item = eiOpt.get().buildItem(1, Optional.empty());
-        } else if (material.contains("executableblocks-")) {
-            String id = material.replace("executableblocks-", "");
-            Optional<ExecutableBlockInterface> ebOpt = ExecutableBlocksAPI.getExecutableBlocksManager().getExecutableBlock(id);
-            if(ebOpt.isPresent()) item = ebOpt.get().buildItem(1, Optional.empty());
         } else if (material.toLowerCase().startsWith("head-")) {
             String playerName = material.replace("head-", "");
 
@@ -81,7 +71,7 @@ public class ItemResolver {
             short data = Short.parseShort(parts[1]);
             item = new ItemStack(mat, 1, data);
         } else {
-            item = new ItemStack(Material.valueOf(material.toUpperCase()), 1);
+            item = new ItemStack(Objects.requireNonNull(XMaterial.matchXMaterial(material).get().get()), 1);
         }
 
         meta = item.getItemMeta();

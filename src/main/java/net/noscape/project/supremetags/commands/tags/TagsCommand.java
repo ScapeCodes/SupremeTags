@@ -36,6 +36,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     private String given_voucher = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.given-voucher").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
     private String received_voucher = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.received-voucher").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
     private String reset = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-command").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+    private String tag_removed = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-removed").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -162,6 +163,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (!player.hasPermission("supremetags.player")) {
             msgPlayer(player, noperm);
+            playConfigSound(player, "error-message");
             return;
         }
 
@@ -173,17 +175,23 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             if ((!lockedView && !costSystem)) {
                 if (!hasTags(player)) {
                     msgPlayer(player, notags);
+                    playConfigSound(player, "error-message");
                 } else {
                     if (useCategories) {
                         new MainMenu(SupremeTags.getMenuUtil(player)).open();
+                        playConfigSound(player, "open-menus");
                     } else {
                         new TagMenu(SupremeTags.getMenuUtil(player)).open();
+                        playConfigSound(player, "open-menus");
                     }
                 }
             } else {
-                if (useCategories) new MainMenu(SupremeTags.getMenuUtil(player)).open();
-                else {
+                if (useCategories)  {
+                    new MainMenu(SupremeTags.getMenuUtil(player)).open();
+                    playConfigSound(player, "open-menus");
+                }  else {
                     new TagMenu(SupremeTags.getMenuUtil(player)).open();
+                    playConfigSound(player, "open-menus");
                 }
             }
         } else {
@@ -199,17 +207,22 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                         if (hasTags(player)) {
                             if (useCategories) {
                                 new MainMenu(SupremeTags.getMenuUtil(player)).open();
+                                playConfigSound(player, "open-menus");
                             } else {
                                 new TagMenu(SupremeTags.getMenuUtil(player)).open();
+                                playConfigSound(player, "open-menus");
                             }
                         } else {
                             msgPlayer(player, notags);
+                            playConfigSound(player, "error-message");
                         }
                     } else {
                         if (useCategories) {
                             new MainMenu(SupremeTags.getMenuUtil(player)).open();
+                            playConfigSound(player, "open-menus");
                         } else {
                             new TagMenu(SupremeTags.getMenuUtil(player)).open();
+                            playConfigSound(player, "open-menus");
                         }
                     }
                 }
@@ -260,8 +273,10 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             }
             return;
         }
+
         if (player != null) {
             new ConfigOneMenu(SupremeTags.getMenuUtil(player)).open();
+            playConfigSound((Player) sender, "open-menus");
         } else {
             sender.sendMessage("Only players can use this command");
         }
@@ -304,6 +319,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
+                playConfigSound((Player) sender, "error-message");
             } else {
                 handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
             }
@@ -312,6 +328,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (player != null) {
             new EditorSelectorMenu(SupremeTags.getMenuUtil(player)).open();
+            playConfigSound(player, "open-menus");
         } else {
             sender.sendMessage("Only players can use this command");
         }
@@ -322,6 +339,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             if (!sender.hasPermission("supremetags.admin")) {
                 if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                     msgPlayer(sender, noperm);
+                    playConfigSound((Player) sender, "error-message");
                 } else {
                     handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
                 }
@@ -329,11 +347,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        if (!isFree) {
-            SupremeTags.getInstance().getMergeManager().mergeForced(sender);
-        } else {
-            SupremeTags.getInstance().getMergeManager().mergeFromFree(sender);
-        }
+        SupremeTags.getInstance().getMergeManager().merge(sender, !isFree);
     }
 
     private void handleDelete(CommandSender sender, Player player, String[] args) {
@@ -341,9 +355,11 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             sendHelp(sender);
             return;
         }
+
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
+                playConfigSound((Player) sender, "error-message");
             } else {
                 handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
             }
@@ -374,6 +390,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
+                playConfigSound((Player) sender, "error-message");
             } else {
                 handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
             }
@@ -381,6 +398,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length < 2) {
             msgPlayer(sender, "&cUsage: /tags reset <player>");
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
@@ -429,11 +447,13 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (args.length < 3) {
             msgPlayer(sender, "&cUsage: /" + SupremeTags.getInstance().getConfig().getString("settings.commands.main-command") + " create <name> <tag>");
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
         if (args.length > 3) {
             msgPlayer(sender, "&cUsage: /" + SupremeTags.getInstance().getConfig().getString("settings.commands.main-command") + " create <name> <tag>");
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
@@ -441,6 +461,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (SupremeTags.getInstance().getTagManager().tagExists(name)) {
             msgPlayer(sender, validtag);
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
@@ -456,6 +477,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         if (!sender.hasPermission("supremetags.admin")) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
+                playConfigSound((Player) sender, "error-message");
             } else {
                 handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
             }
@@ -463,6 +485,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length < 3) {
             msgPlayer(sender, "&cUsage: /tags removetagp <player> <tag>");
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
@@ -473,6 +496,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (!SupremeTags.getInstance().getTagManager().tagExists(tag)) {
             msgPlayer(sender, invalidtag);
+            playConfigSound((Player) sender, "error-message");
             return;
         }
 
@@ -490,39 +514,13 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                 UserData.setActive(Bukkit.getOfflinePlayer(playerName), "None");
             }
 
-            msgPlayer(player, "&8[&6&lTag&8] &7You have removed the tag from " + Bukkit.getOfflinePlayer(playerName).getName() + "!");
+            msgPlayer(sender, tag_removed.replace("%player%", Bukkit.getOfflinePlayer(playerName).getName()));
         }
 
         if (!hasTag) {
             msgPlayer(player, player_no_tag);
+            playConfigSound(player, "error-message");
         }
-    }
-
-    // SetTag Command - Set a specific tag for the player
-    private void handleSetTag(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
-            if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
-                msgPlayer(sender, noperm);
-            } else {
-                handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
-            }
-            return;
-        }
-        if (args.length < 2) {
-            msgPlayer(sender, "&cUsage: /tags settag <identifier> <tag>");
-            return;
-        }
-
-        String name = args[1];
-
-        if (!SupremeTags.getInstance().getTagManager().tagExists(name)) {
-            msgPlayer(sender, invalidtag);
-            return;
-        }
-
-        String tag = args[2];
-
-        SupremeTags.getInstance().getTagManager().setTag(sender, name, tag);
     }
 
     // GiveVoucher Command - Give a tag voucher to a player
@@ -553,13 +551,14 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (SupremeTags.getInstance().getTagManager().getTag(name) != null) {
             SupremeTags.getInstance().getVoucherManager().giveVoucher(target, name);
-            msgPlayer(sender, given_voucher.replaceAll("%target%", target.getName()).replaceAll("%identifier%", name));
+            msgPlayer(sender, given_voucher.replace("%target%", target.getName()).replace("%identifier%", name).replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(name).getTag().getFirst()));
 
-            if (!received_voucher.equals("")) {
-                msgPlayer(target, received_voucher.replaceAll("%identifier%", name));
+            if (!received_voucher.isEmpty()) {
+                msgPlayer(target, received_voucher.replace("%identifier%", name).replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(name).getTag().getFirst()));
             }
         } else {
             msgPlayer(sender, invalidtag);
+            playConfigSound((Player) sender, "error-message");
         }
     }
 
@@ -766,6 +765,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         msgPlayer(player, "");
         msgPlayer(player, "&7Version: &f" + SupremeTags.getInstance().getDescription().getVersion());
         msgPlayer(player, "&7Author: &fDevScape (aka. Scape)");
+        msgPlayer(player, "&7Discord:&f https://discord.gg/AnPwty8asP");
         msgPlayer(player, "");
         msgPlayer(player, "&7Tags loaded: &f" + SupremeTags.getInstance().getTagManager().getTags().size());
         msgPlayer(player, "&7Categories loaded: &f" + SupremeTags.getInstance().getCategoryManager().getCatorgies().size());
@@ -778,31 +778,19 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         msgPlayer(player, "");
         msgPlayer(player, "&e&lPlugins Hooked:");
         if (SupremeTags.getInstance().isVaultAPI()) {
-            if (SupremeTags.getInstance().getConfig().getString("settings.economy").equalsIgnoreCase("VAULT")) {
-                msgPlayer(player, " &8● &7Vault: &fFound. (Economy Type)");
-            } else {
-                msgPlayer(player, " &8● &7Vault: &fFound.");
-            }
+            msgPlayer(player, " &8● &7Vault: &fFound.");
         } else {
             msgPlayer(player, " &8● &7Vault: &fNot found.");
         }
 
         if (Bukkit.getPluginManager().getPlugin("PlayerPoints") != null) {
-            if (SupremeTags.getInstance().getConfig().getString("settings.economy").equalsIgnoreCase("PLAYERPOINTS")) {
-                msgPlayer(player, " &8● &7PlayerPoints: &fFound. (Economy Type)");
-            } else {
-                msgPlayer(player, " &8● &7PlayerPoints: &fFound.");
-            }
+            msgPlayer(player, " &8● &7PlayerPoints: &fFound.");
         } else {
             msgPlayer(player, " &8● &7PlayerPoints: &fNot found.");
         }
 
         if (SupremeTags.getInstance().isCoinsEngine()) {
-            if (SupremeTags.getInstance().getConfig().getString("settings.economy").startsWith("COINSENGINE-")) {
-                msgPlayer(player, " &8● &7CoinsEngine: &fFound. (Economy Type)");
-            } else {
-                msgPlayer(player, " &8● &7CoinsEngine: &fFound.");
-            }
+            msgPlayer(player, " &8● &7CoinsEngine: &fFound.");
         } else {
             msgPlayer(player, " &8● &7CoinsEngine: &fNot found.");
         }

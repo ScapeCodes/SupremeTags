@@ -1,5 +1,6 @@
 package net.noscape.project.supremetags.handlers.menu;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.*;
@@ -13,6 +14,16 @@ public abstract class Menu implements InventoryHolder {
 
     protected Inventory inventory;
     protected MenuUtil menuUtil;
+
+    private final ItemStack LIME_DYE_ITEM = XMaterial.LIME_DYE.parseItem();
+    private final ItemStack GRAY_DYE_ITEM = XMaterial.GRAY_DYE.parseItem();
+    private final ItemStack WHITE_GLASS_ITEM = XMaterial.WHITE_STAINED_GLASS_PANE.parseItem();
+    private final ItemStack GRAY_GLASS_ITEM = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
+
+    private final Material LIME_DYE = XMaterial.matchXMaterial(LIME_DYE_ITEM).get();
+    private final Material GRAY_DYE = XMaterial.matchXMaterial(GRAY_DYE_ITEM).get();
+    private final Material WHITE_GLASS = XMaterial.matchXMaterial(WHITE_GLASS_ITEM).get();
+    private final Material GRAY_GLASS = XMaterial.matchXMaterial(GRAY_GLASS_ITEM).get();
 
     public Menu(MenuUtil menuUtil) {
         this.menuUtil = menuUtil;
@@ -74,7 +85,7 @@ public abstract class Menu implements InventoryHolder {
     public void fillEmpty() {
         for (int i = 0; i < inventory.getSize(); i++) {
             if (inventory.getItem(i) == null) {
-                inventory.setItem(i, makeItem(Material.GRAY_STAINED_GLASS_PANE, "&6", 0, true));
+                inventory.setItem(i, makeItem(GRAY_GLASS, "&6", 0, true));
             }
         }
     }

@@ -1,12 +1,15 @@
 package net.noscape.project.supremetags.guis.configeditor;
 
+import com.cryptomorin.xseries.XMaterial;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.menu.Menu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.utils.XMaterialUtil;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,13 @@ import static net.noscape.project.supremetags.utils.Utils.format;
 
 public class ConfigTwoMenu extends Menu {
 
-    private FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
+    private final FileConfiguration guis = SupremeTags.getInstance()
+            .getConfigManager().getConfig("guis.yml").get();
+
+    private final ItemStack LIME_DYE_ITEM = XMaterial.LIME_DYE.parseItem();
+    private final ItemStack GRAY_DYE_ITEM = XMaterial.GRAY_DYE.parseItem();
+    private final Material LIME_DYE = XMaterial.matchXMaterial(LIME_DYE_ITEM).get();
+    private final Material GRAY_DYE = XMaterial.matchXMaterial(GRAY_DYE_ITEM).get();
 
     public ConfigTwoMenu(MenuUtil menuUtil) {
         super(menuUtil);
@@ -36,153 +45,121 @@ public class ConfigTwoMenu extends Menu {
     @Override
     public void handleMenu(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
+        ItemStack item = e.getCurrentItem();
+        if (item == null || item.getType() == Material.AIR) return;
 
-        if (Objects.requireNonNull(e.getCurrentItem()).getType().equals(Material.valueOf(Objects.requireNonNull(guis.getString("gui.items.glass.material")).toUpperCase()))) {
+        // Prevent editing glass filler
+        if (item.getType().equals(XMaterialUtil.match(
+                guis.getString("gui.items.glass.material"),
+                "STAINED_GLASS_PANE:7"
+        ))) {
             e.setCancelled(true);
+            return;
         }
 
-        if (e.getSlot() == 53) {
-            e.setCancelled(true);
-            player.closeInventory();
+        int slot = e.getSlot();
+        e.setCancelled(true);
+
+        SupremeTags plugin = SupremeTags.getInstance();
+
+        switch (slot) {
+            case 53 -> player.closeInventory();
+            case 0 -> new ConfigOneMenu(SupremeTags.getMenuUtil(player)).open();
+            case 20 -> toggleConfig(plugin, "settings.tag-vouchers", item);
+            case 22 -> toggleConfigFile("categories.yml", "categories-menu-fill-empty", item);
+            case 24 -> toggleConfigFile("guis.yml", "gui.tag-actions-menu.enable", item);
+            case 48 -> toggleConfig(plugin, "settings.update-check", item);
+            case 50 -> toggleConfig(plugin, "settings.use-global-lore", item);
         }
+    }
 
-        // tag vouchers
-        if (e.getSlot() == 23) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.tag-vouchers", false);
-                SupremeTags.getInstance().saveConfig();
+    private void toggleConfig(SupremeTags plugin, String path, ItemStack clickedItem) {
+        boolean enable = clickedItem.getType().equals(GRAY_DYE);
+        plugin.getConfig().set(path, enable);
+        plugin.saveConfig();
+        plugin.reload();
+        super.open();
+    }
 
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.tag-vouchers", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // category fill empty
-        if (e.getSlot() == 25) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("categories-menu-fill-empty", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("categories-menu-fill-empty", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // update checker
-        if (e.getSlot() == 47) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.update-check", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.update-check", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // global tag lores
-        if (e.getSlot() == 49) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.use-global-lore", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.use-global-lore", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        if (e.getSlot() == 0) {
-            if (e.getCurrentItem().getType().equals(Material.ARROW)) {
-                new ConfigOneMenu(SupremeTags.getMenuUtil(player)).open();
-            }
-        }
+    private void toggleConfigFile(String file, String path, ItemStack clickedItem) {
+        boolean enable = clickedItem.getType().equals(GRAY_DYE);
+        var manager = SupremeTags.getInstance().getConfigManager();
+        manager.getConfig(file).get().set(path, enable);
+        manager.saveConfig(file);
+        manager.reloadConfig(file);
+        super.open();
     }
 
     @Override
     public void setMenuItems() {
+        SupremeTags plugin = SupremeTags.getInstance();
 
-        /// add all items needed.
-        List<String> tag_vouchers = new ArrayList<>();
-        tag_vouchers.add("&7Tag vouchers allows players to withdraw ");
-        tag_vouchers.add("&7a tag, providing the ability to gift public ");
-        tag_vouchers.add("&7tags. ");
-        tag_vouchers.add("");
-        tag_vouchers.add("&7On withdrawing a tag, an tag voucher item ");
-        tag_vouchers.add("&7is given to the player.");
-        inventory.setItem(14, makeItem(Material.PAPER, format("&e&lTag Vouchers"), color(tag_vouchers)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.tag-vouchers")) {
-            inventory.setItem(23, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(23, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        // Tag Vouchers
+        List<String> tagVouchers = List.of(
+                "&7Tag vouchers allow players to withdraw a tag,",
+                "&7providing the ability to gift public tags.",
+                "",
+                "&7On withdrawing a tag, a voucher item is given."
+        );
+        inventory.setItem(11, makeItem(Material.PAPER, format("&e&lTag Vouchers"), color(tagVouchers)));
+        inventory.setItem(20, makeToggleItem(plugin.getConfig().getBoolean("settings.tag-vouchers")));
 
-        List<String> cat_empty = new ArrayList<>();
-        cat_empty.add("&7Category Empty Fill simply fills the category ");
-        cat_empty.add("&7main menu with the glass material stated in config. ");
-        inventory.setItem(16, makeItem(Material.PAPER, format("&a&lCategory Empty Fill"), color(cat_empty)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("categories-menu-fill-empty")) {
-            inventory.setItem(25, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(25, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        // Category Empty Fill
+        List<String> catEmpty = List.of(
+                "&7Category Empty Fill fills the main category menu",
+                "&7with the glass material defined in config."
+        );
+        inventory.setItem(13, makeItem(Material.PAPER, format("&a&lCategory Empty Fill"), color(catEmpty)));
+        inventory.setItem(22, makeToggleItem(plugin.getConfigManager()
+                .getConfig("categories.yml").get().getBoolean("categories-menu-fill-empty")));
 
-        List<String> update_check = new ArrayList<>();
-        update_check.add("&7Update Checker allows admins/ops to ");
-        update_check.add("&7be notified when a new update is out. ");
-        inventory.setItem(38, makeItem(Material.PAPER, format("&a&lUpdate Checker"), color(update_check)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.update-check")) {
-            inventory.setItem(47, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(47, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        // Tag Actions Menu
+        List<String> tagActions = List.of(
+                "&7Tag Actions Menu lets players use interactive tag actions,",
+                "&7including Bedrock-supported click actions."
+        );
+        inventory.setItem(15, makeItem(Material.PAPER, format("&a&lTag Actions Menu"), color(tagActions)));
+        inventory.setItem(24, makeToggleItem(plugin.getConfigManager()
+                .getConfig("guis.yml").get().getBoolean("gui.tag-actions-menu.enable")));
 
-        List<String> use_global_lores = new ArrayList<>();
-        use_global_lores.add("&7Global tag lores can be edit in guis.yml, ");
-        use_global_lores.add("&7this makes all tags apply the same styled lores ");
-        use_global_lores.add("&7without having to edit them all. ");
-        inventory.setItem(40, makeItem(Material.PAPER, format("&b&lUse Global Tag Lores"), color(use_global_lores)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.use-global-lore")) {
-            inventory.setItem(49, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(49, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        // Update Checker
+        List<String> updateCheck = List.of(
+                "&7Update Checker notifies admins when a new",
+                "&7version of SupremeTags is available."
+        );
+        inventory.setItem(39, makeItem(Material.PAPER, format("&a&lUpdate Checker"), color(updateCheck)));
+        inventory.setItem(48, makeToggleItem(plugin.getConfig().getBoolean("settings.update-check")));
 
-        String back = guis.getString("gui.items.back.displayname");
-        int back_custom_model_data = guis.getInt("gui.items.next.custom-model-data");
-        String back_material = guis.getString("gui.items.back.material");
-        List<String> back_lore = guis.getStringList("gui.items.back.lore");
+        // Global Tag Lores
+        List<String> globalLores = List.of(
+                "&7Global Tag Lores apply the same lore style to all tags.",
+                "&7Editable in guis.yml, removing the need to edit each tag manually."
+        );
+        inventory.setItem(41, makeItem(Material.PAPER, format("&b&lUse Global Tag Lores"), color(globalLores)));
+        inventory.setItem(50, makeToggleItem(plugin.getConfig().getBoolean("settings.use-global-lore")));
 
-        String close = guis.getString("gui.items.close.displayname");
-        String close_material = guis.getString("gui.items.close.material");
-        int close_custom_model_data = guis.getInt("gui.items.next.custom-model-data");
-        List<String> close_lore = guis.getStringList("gui.items.close.lore");
-        
-        inventory.setItem(42, makeItem(Material.RED_DYE, format("&c"), 0, false));
+        // Navigation Buttons
+        addNavItems();
+    }
 
-        inventory.setItem(0, makeItem(Material.valueOf(back_material.toUpperCase()), format(back), back_custom_model_data, back_lore));
-        inventory.setItem(53, makeItem(Material.valueOf(close_material.toUpperCase()), format(close), close_custom_model_data, close_lore));
+    private ItemStack makeToggleItem(boolean enabled) {
+        return enabled
+                ? makeItem(LIME_DYE, format("&a&lEnabled"), 0, false)
+                : makeItem(GRAY_DYE, format("&7&lDisabled"), 0, false);
+    }
+
+    private void addNavItems() {
+        String backName = guis.getString("gui.items.back.displayname");
+        String backMat = guis.getString("gui.items.back.material");
+        int backCmd = guis.getInt("gui.items.back.custom-model-data");
+        List<String> backLore = guis.getStringList("gui.items.back.lore");
+
+        String closeName = guis.getString("gui.items.close.displayname");
+        String closeMat = guis.getString("gui.items.close.material");
+        int closeCmd = guis.getInt("gui.items.close.custom-model-data");
+        List<String> closeLore = guis.getStringList("gui.items.close.lore");
+
+        inventory.setItem(0, makeItem(XMaterialUtil.match(backMat, backMat), format(backName), backCmd, backLore));
+        inventory.setItem(53, makeItem(XMaterialUtil.match(closeMat, closeMat), format(closeName), closeCmd, closeLore));
     }
 }

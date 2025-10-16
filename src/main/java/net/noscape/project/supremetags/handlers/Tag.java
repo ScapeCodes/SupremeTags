@@ -39,10 +39,8 @@ public class Tag {
     // economy
     private TagEconomy economy;
 
-    // economy
-    private String ecoType;
-    private double ecoAmount;
-    private boolean ecoEnabled;
+    // abilities
+    private List<String> abilities;
 
     public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy) {
         this.identifier = identifier;
@@ -212,7 +210,7 @@ public class Tag {
     }
 
     public boolean isCostTag() {
-        return ecoEnabled;
+        return this.economy.isEnabled();
     }
 
     public String getCustomPlaceholder(String identifier, String placeholder) {
@@ -270,26 +268,34 @@ public class Tag {
     }
 
     public String getEcoType() {
-        return ecoType;
+        return this.economy.getType();
     }
 
     public void setEcoType(String ecoType) {
-        this.ecoType = ecoType;
+        this.economy.setType(ecoType);
     }
 
     public double getEcoAmount() {
-        return ecoAmount;
+        return this.economy.getAmount();
     }
 
     public void setEcoAmount(double ecoAmount) {
-        this.ecoAmount = ecoAmount;
+        this.economy.setAmount(ecoAmount);
     }
 
     public boolean isEcoEnabled() {
-        return ecoEnabled;
+        return this.economy.isEnabled();
     }
 
     public void setEcoEnabled(boolean ecoEnabled) {
-        this.ecoEnabled = ecoEnabled;
+        this.economy.setEnabled(ecoEnabled);
+    }
+
+    public List<String> getAbilities() {
+        return abilities;
+    }
+
+    public void setAbilities(List<String> abilities) {
+        this.abilities = abilities;
     }
 }

@@ -1,12 +1,15 @@
 package net.noscape.project.supremetags.guis.configeditor;
 
+import com.cryptomorin.xseries.XMaterial;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.menu.Menu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.utils.XMaterialUtil;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,19 @@ import static net.noscape.project.supremetags.utils.Utils.format;
 
 public class ConfigOneMenu extends Menu {
 
-    private FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
+    private final FileConfiguration guis = SupremeTags.getInstance()
+            .getConfigManager().getConfig("guis.yml").get();
+
+    // Cross-version item definitions
+    private final ItemStack LIME_DYE_ITEM = XMaterial.LIME_DYE.parseItem();
+    private final ItemStack GRAY_DYE_ITEM = XMaterial.GRAY_DYE.parseItem();
+    private final ItemStack WHITE_GLASS_ITEM = XMaterial.WHITE_STAINED_GLASS_PANE.parseItem();
+    private final ItemStack GRAY_GLASS_ITEM = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
+
+    private final Material LIME_DYE = XMaterial.matchXMaterial(LIME_DYE_ITEM).get();
+    private final Material GRAY_DYE = XMaterial.matchXMaterial(GRAY_DYE_ITEM).get();
+    private final Material WHITE_GLASS = XMaterial.matchXMaterial(WHITE_GLASS_ITEM).get();
+    private final Material GRAY_GLASS = XMaterial.matchXMaterial(GRAY_GLASS_ITEM).get();
 
     public ConfigOneMenu(MenuUtil menuUtil) {
         super(menuUtil);
@@ -37,244 +52,152 @@ public class ConfigOneMenu extends Menu {
     public void handleMenu(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
 
-        if (Objects.requireNonNull(e.getCurrentItem()).getType().equals(Material.valueOf(Objects.requireNonNull(guis.getString("gui.items.glass.material")).toUpperCase()))) {
+        // Prevent editing filler panes
+        if (Objects.requireNonNull(e.getCurrentItem()).getType()
+                .equals(XMaterialUtil.match(guis.getString("gui.items.glass.material"), "STAINED_GLASS_PANE:7"))) {
             e.setCancelled(true);
+            return;
         }
 
+        // Close button
         if (e.getSlot() == 53) {
             e.setCancelled(true);
             player.closeInventory();
+            return;
         }
 
-        // categories
-        if (e.getSlot() == 19) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.categories", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.categories", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // cost system
-        if (e.getSlot() == 21) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.cost-system", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.cost-system", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // locked view
-        if (e.getSlot() == 23) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.locked-view", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.locked-view", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // personal tags
-        if (e.getSlot() == 25) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.personal-tags.enable", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.personal-tags.enable", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // active tag glow
-        if (e.getSlot() == 47) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.active-tag-glow", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.active-tag-glow", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // layout type
-        if (e.getSlot() == 49) {
-            if (e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE)) {
-                SupremeTags.getInstance().getConfig().set("settings.layout-type", "BORDER");
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_STAINED_GLASS_PANE)) {
-                SupremeTags.getInstance().getConfig().set("settings.layout-type", "FULL");
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        // forced tag
-        if (e.getSlot() == 51) {
-            if (e.getCurrentItem().getType().equals(Material.LIME_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.forced-tag", false);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            } else if (e.getCurrentItem().getType().equals(Material.GRAY_DYE)) {
-                SupremeTags.getInstance().getConfig().set("settings.forced-tag", true);
-                SupremeTags.getInstance().saveConfig();
-
-                SupremeTags.getInstance().reload();
-                super.open();
-            }
-        }
-
-        if (e.getSlot() == 8) {
-            if (e.getCurrentItem().getType().equals(Material.ARROW)) {
-                new ConfigTwoMenu(SupremeTags.getMenuUtil(player)).open();
+        // Toggle buttons
+        switch (e.getSlot()) {
+            case 19 -> handleToggle(e, "settings.categories");
+            case 21 -> handleToggle(e, "settings.cost-system");
+            case 23 -> handleToggle(e, "settings.locked-view");
+            case 25 -> handleToggle(e, "settings.personal-tags.enable");
+            case 47 -> handleToggle(e, "settings.active-tag-glow");
+            case 51 -> handleToggle(e, "settings.forced-tag");
+            case 49 -> handleLayoutToggle(e);
+            case 8 -> {
+                if (e.getCurrentItem().getType() != Material.AIR)
+                    new ConfigTwoMenu(SupremeTags.getMenuUtil(player)).open();
             }
         }
     }
 
+    private void handleToggle(InventoryClickEvent e, String path) {
+        e.setCancelled(true);
+        boolean enable = e.getCurrentItem().getType().equals(GRAY_DYE);
+        SupremeTags plugin = SupremeTags.getInstance();
+        plugin.getConfig().set(path, enable);
+        plugin.saveConfig();
+        plugin.reload();
+        super.open();
+    }
+
+    private void handleLayoutToggle(InventoryClickEvent e) {
+        e.setCancelled(true);
+        SupremeTags plugin = SupremeTags.getInstance();
+        if (e.getCurrentItem().getType().equals(WHITE_GLASS)) {
+            plugin.getConfig().set("settings.layout-type", "BORDER");
+        } else if (e.getCurrentItem().getType().equals(GRAY_GLASS)) {
+            plugin.getConfig().set("settings.layout-type", "FULL");
+        }
+        plugin.saveConfig();
+        plugin.reload();
+        super.open();
+    }
+
     @Override
     public void setMenuItems() {
+        SupremeTags plugin = SupremeTags.getInstance();
 
-        /// add all items needed.
-
-        List<String> cat = new ArrayList<>();
-        cat.add("&7Categories enhance your tagging system, ");
-        cat.add("&7providing an organized and professional look.");
+        // CATEGORIES
+        List<String> cat = List.of(
+                "&7Categories enhance your tagging system,",
+                "&7providing an organized and professional look."
+        );
         inventory.setItem(10, makeItem(Material.PAPER, format("&c&lCategories"), color(cat)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.categories")) {
-            inventory.setItem(19, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(19, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        inventory.setItem(19, makeToggleItem("settings.categories"));
 
-        List<String> cost = new ArrayList<>();
-        cost.add("&7Cost System allows tags to become buyable, ");
-        cost.add("&7providing players to purchase tags.");
+        // COST SYSTEM
+        List<String> cost = List.of(
+                "&7Cost System allows tags to become buyable,",
+                "&7providing players to purchase tags."
+        );
         inventory.setItem(12, makeItem(Material.PAPER, format("&6&lCost System"), color(cost)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.cost-system")) {
-            inventory.setItem(21, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(21, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        inventory.setItem(21, makeToggleItem("settings.cost-system"));
 
-        List<String> locked = new ArrayList<>();
-        locked.add("&7Locked View allows all tags to become visible ");
-        locked.add("&7in the gui, providing players to see tags before ");
-        locked.add("&7unlocked them. ");
+        // LOCKED VIEW
+        List<String> locked = List.of(
+                "&7Locked View allows all tags to be visible in the GUI,",
+                "&7letting players preview tags before unlocking them."
+        );
         inventory.setItem(14, makeItem(Material.PAPER, format("&e&lLocked View"), color(locked)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.locked-view")) {
-            inventory.setItem(23, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(23, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        inventory.setItem(23, makeToggleItem("settings.locked-view"));
 
-        List<String> personal = new ArrayList<>();
-        personal.add("&7Personal tags allows players to build their ");
-        personal.add("&7own tags with /mytags, you can set player limits ");
-        personal.add("&7in you config.yml. ");
+        // PERSONAL TAGS
+        List<String> personal = List.of(
+                "&7Personal tags allow players to build their own tags",
+                "&7with /mytags. Player limits can be set in config.yml."
+        );
         inventory.setItem(16, makeItem(Material.PAPER, format("&a&lPersonal Tags"), color(personal)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.enable")) {
-            inventory.setItem(25, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(25, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        inventory.setItem(25, makeToggleItem("settings.personal-tags.enable"));
 
-        List<String> activeglow = new ArrayList<>();
-        activeglow.add("&7Active Tag Glow allows the player's selected tag ");
-        activeglow.add("&7to assign an enchanted effect in the gui, ");
-        activeglow.add("&7indicating their active tag. ");
-        inventory.setItem(38, makeItem(Material.PAPER, format("&b&lActive Tag Glow"), color(activeglow)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.active-tag-glow")) {
-            inventory.setItem(47, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(47, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        // ACTIVE TAG GLOW
+        List<String> activeGlow = List.of(
+                "&7Active Tag Glow adds an enchanted effect",
+                "&7to the selected tag in the GUI."
+        );
+        inventory.setItem(38, makeItem(Material.PAPER, format("&b&lActive Tag Glow"), color(activeGlow)));
+        inventory.setItem(47, makeToggleItem("settings.active-tag-glow"));
 
-        List<String> layoutype = new ArrayList<>();
-        layoutype.add("&7There are 2 layout styles you can pick from, ");
-        layoutype.add("&7I designed these 2 layout types to fit ");
-        layoutype.add("&7professionalism and similar experience. ");
-        layoutype.add("");
-        layoutype.add("&fOptions:");
-        if (SupremeTags.getInstance().getConfig().getString("settings.layout-type").equalsIgnoreCase("FULL")) {
-            layoutype.add("&a➟ &fFull");
-            layoutype.add("   &7Border");
+        // LAYOUT TYPE
+        List<String> layoutType = new ArrayList<>();
+        layoutType.add("&7Choose between layout styles for better aesthetics:");
+        layoutType.add("");
+        layoutType.add("&fOptions:");
+        boolean isFull = plugin.getConfig().getString("settings.layout-type").equalsIgnoreCase("FULL");
+        if (isFull) {
+            layoutType.add("&a➟ &fFull");
+            layoutType.add("   &7Border");
         } else {
-            layoutype.add("   &7Full");
-            layoutype.add("&a➟ &fBorder");
+            layoutType.add("   &7Full");
+            layoutType.add("&a➟ &fBorder");
         }
-        inventory.setItem(40, makeItem(Material.PAPER, format("&3&lLayout Type"), color(layoutype)));
-        if (SupremeTags.getInstance().getConfig().getString("settings.layout-type").equalsIgnoreCase("FULL")) {
-            inventory.setItem(49, makeItem(Material.WHITE_STAINED_GLASS_PANE, format("&7Type: &f&lFull"), 0, false));
-        } else {
-            inventory.setItem(49, makeItem(Material.GRAY_STAINED_GLASS_PANE, format("&7Type: &f&lBorder"), 0, false));
-        }
+        inventory.setItem(40, makeItem(Material.PAPER, format("&3&lLayout Type"), color(layoutType)));
+        inventory.setItem(49, isFull
+                ? makeItem(WHITE_GLASS, format("&7Type: &f&lFull"), 0, false)
+                : makeItem(GRAY_GLASS, format("&7Type: &f&lBorder"), 0, false));
 
-        List<String> forced = new ArrayList<>();
-        forced.add("&7Forced tag allow you to essentially force ");
-        forced.add("&7tags upon players, this means that the reset ");
-        forced.add("&7gui button will not displayed. ");
+        // FORCED TAG
+        List<String> forced = List.of(
+                "&7Forced tags make the reset button disappear",
+                "&7and force tags onto players automatically."
+        );
         inventory.setItem(42, makeItem(Material.PAPER, format("&4&lForced Tag"), color(forced)));
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag")) {
-            inventory.setItem(51, makeItem(Material.LIME_DYE, format("&a&lEnabled"), 0, false));
-        } else {
-            inventory.setItem(51, makeItem(Material.GRAY_DYE, format("&7&lDisabled"), 0, false));
-        }
+        inventory.setItem(51, makeToggleItem("settings.forced-tag"));
 
-        String close = guis.getString("gui.items.close.displayname");
-        String close_material = guis.getString("gui.items.close.material");
-        int close_custom_model_data = guis.getInt("gui.items.next.custom-model-data");
-        List<String> close_lore = guis.getStringList("gui.items.close.lore");
+        // Navigation items (Next / Close)
+        addNavItems();
+    }
 
-        String next = guis.getString("gui.items.next.displayname");
-        String next_material = guis.getString("gui.items.next.material");
-        int next_custom_model_data = guis.getInt("gui.items.next.custom-model-data");
-        List<String> next_lore = guis.getStringList("gui.items.next.lore");
+    private ItemStack makeToggleItem(String configPath) {
+        boolean enabled = SupremeTags.getInstance().getConfig().getBoolean(configPath);
+        return enabled
+                ? makeItem(LIME_DYE, format("&a&lEnabled"), 0, false)
+                : makeItem(GRAY_DYE, format("&7&lDisabled"), 0, false);
+    }
 
-        inventory.setItem(8, makeItem(Material.valueOf(next_material.toUpperCase()), format(next), next_custom_model_data, next_lore));
-        inventory.setItem(53, makeItem(Material.valueOf(close_material.toUpperCase()), format(close), close_custom_model_data, close_lore));
+    private void addNavItems() {
+        String closeName = guis.getString("gui.items.close.displayname");
+        String closeMat = guis.getString("gui.items.close.material");
+        int closeCmd = guis.getInt("gui.items.close.custom-model-data");
+        List<String> closeLore = guis.getStringList("gui.items.close.lore");
 
-        ///fillEmpty();
+        String nextName = guis.getString("gui.items.next.displayname");
+        String nextMat = guis.getString("gui.items.next.material");
+        int nextCmd = guis.getInt("gui.items.next.custom-model-data");
+        List<String> nextLore = guis.getStringList("gui.items.next.lore");
+
+        inventory.setItem(8, makeItem(XMaterialUtil.match(nextMat, nextMat), format(nextName), nextCmd, nextLore));
+        inventory.setItem(53, makeItem(XMaterialUtil.match(closeMat, closeMat), format(closeName), closeCmd, closeLore));
     }
 }

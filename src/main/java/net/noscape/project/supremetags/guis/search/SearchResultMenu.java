@@ -138,6 +138,8 @@ public class SearchResultMenu extends Paged {
                                 select = replacePlaceholders(menuUtil.getOwner(), select);
                                 msgPlayer(player, select.replace("%identifier%", identifier).replaceAll("%tag%", SupremeTags.getInstance().getTagManager().getTag(identifier).getCurrentTag()));
                             }
+
+                            playConfigSound(player, "selected-tag");
                         } else if (UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier) && SupremeTags.getInstance().isDeactivateClick()) {
 
                             TagResetEvent tagEvent = new TagResetEvent(player, false);
@@ -154,6 +156,8 @@ public class SearchResultMenu extends Paged {
                             if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                                 msgPlayer(player, messages.getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
                             }
+
+                            playConfigSound(player, "reset-tag");
                         }
                     } else {
                         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -161,6 +165,8 @@ public class SearchResultMenu extends Paged {
                             locked = replacePlaceholders(menuUtil.getOwner(), locked);
                             msgPlayer(player, locked);
                         }
+
+                        playConfigSound(player, "error-message");
                     }
                 } else {
                     if (player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none")) {

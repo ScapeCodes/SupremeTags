@@ -52,6 +52,13 @@ settings:
   use-minimessage: false # If true the plugin will use MiniMessage exclusively, you will have to remove all legacy hex codes.
   update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
   auto-tag-rarity: false # set true, if you want the plugin to auto update tag rarity depending on rarities.yml ranges.
+
+############################################################
+# +------------------------------------------------------+ #
+# |                   Placeholders                       | #
+# +------------------------------------------------------+ #
+############################################################
+
 placeholders:
   # %supremetags_tag%
   # & {tag} / {TAG} / {supremetags_tag}
@@ -71,3 +78,38 @@ placeholders:
   tab:
     none-output: ''
     format: '%tag%'
+
+############################################################
+# +------------------------------------------------------+ #
+# |                       Sounds                         | #
+# +------------------------------------------------------+ #
+############################################################
+# These default generated sounds are for 1.19+, make sure to look up your versions sounds:
+# latest: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+# 1.19: https://helpch.at/docs/1.19/org/bukkit/Sound.html
+# 1.12: https://helpch.at/docs/1.12.2/org/bukkit/Sound.html
+# 1.8: https://helpch.at/docs/1.8.8/org/bukkit/Sound.html
+#
+# Google search: "spigot sounds <version>".
+
+sounds:
+  open-menus:
+    enable: true
+    sound: 'item.book.page_turn'
+    volume: 1.0
+    pitch: 1.0
+  selected-tag:
+    enable: true
+    sound: 'entity.player.levelup'
+    volume: 0.6
+    pitch: 1.2
+  reset-tag:
+    enable: true
+    sound: 'block.composter.fill_success'
+    volume: 0.9
+    pitch: 1.0
+  error-message:
+    enable: true
+    sound: 'entity.villager.no'
+    volume: 1.0
+    pitch: 0.9

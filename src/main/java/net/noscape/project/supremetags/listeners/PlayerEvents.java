@@ -3,14 +3,17 @@ package net.noscape.project.supremetags.listeners;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.checkers.UpdateChecker;
 import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.storage.PlayerConfig;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import net.noscape.project.supremetags.storage.UserData;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.Map;
 
@@ -20,6 +23,8 @@ public class PlayerEvents implements Listener {
 
     private final Map<String, Tag> tags;
 
+    private FileConfiguration messages = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get();
+
     public PlayerEvents() {
         tags = SupremeTags.getInstance().getTagManager().getTags();
     }
@@ -27,39 +32,48 @@ public class PlayerEvents implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        UserData.createPlayer(player);
 
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.enable")) {
-            SupremeTags.getInstance().getPlayerConfig().loadPlayer(player);
-        }
+        if (SupremeTags.getInstance().dev_build) {
+            if (player.isOp()) {
+                String version = SupremeTags.getInstance().getDescription().getVersion() + "-DEV-" + SupremeTags.getInstance().build;
+                String link = "https://www.spigotmc.org/resources/103140";
 
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag")) {
-            String activeTag = UserData.getActive(player.getUniqueId());
-            if (activeTag.equalsIgnoreCase("None")) {
-                String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag");
-                UserData.setActive(player, defaultTag);
+                for (String msg : configMessageList("dev-build-alert", messages)) {
+                    msgPlayer(player, msg.replace("%version%", version).replace("%link%", link));
+                }
             }
         }
 
-        if (SupremeTags.getInstance().isDataCache()) {
-            SupremeTags.getInstance().getDataCache().removeFromCache(player.getUniqueId().toString());
-            UserData.getActive(player.getUniqueId());
+        // 1. Load player data safely
+        UserData.createPlayer(player);
+        SupremeTags plugin = SupremeTags.getInstance();
+
+        // 2. Load personal/player-specific data before changing anything
+        if (plugin.getConfig().getBoolean("settings.personal-tags.enable")) {
+            plugin.getPlayerConfig().loadPlayer(player);
         }
 
-        /*
-         * CHECK IF TAG STILL EXIST!
-         */
-        if (!tags.containsKey(UserData.getActive(player.getUniqueId())) && !SupremeTags.getInstance().getPlayerManager().listAllStringTags(player.getUniqueId()).contains(UserData.getActive(player.getUniqueId()))) {
+        // 3. Load active tag from cache or file
+        String activeTag = UserData.getActive(player.getUniqueId());
+
+        // 4. Apply forced tag only if no tag found AFTER loading
+        if (plugin.getConfig().getBoolean("settings.forced-tag") &&
+                (activeTag == null || activeTag.equalsIgnoreCase("None"))) {
+            String defaultTag = plugin.getConfig().getString("settings.default-tag");
+            UserData.setActive(player, defaultTag);
+        }
+
+        // 5. Validate and reapply tag effects
+        activeTag = UserData.getActive(player.getUniqueId());
+        if (!tags.containsKey(activeTag) && !SupremeTags.getInstance().getTagManager().isVariant(activeTag)) {
             UserData.setActive(player, "None");
-        }
-
-        if (tags.containsKey(UserData.getActive(player.getUniqueId())) && !player.hasPermission(tags.get(UserData.getActive(player.getUniqueId())).getPermission())) {
-            UserData.setActive(player, "None");
-        }
-
-        if (tags.containsKey(UserData.getActive(player.getUniqueId())) && !UserData.getActive(player.getUniqueId()).equalsIgnoreCase("none")) {
-            Tag tag = tags.get(UserData.getActive(player.getUniqueId()));
-            tag.applyEffects(player);
+        } else {
+            Tag tag = tags.get(activeTag);
+            if (!player.hasPermission(tag.getPermission())) {
+                UserData.setActive(player, "None");
+            } else {
+                tag.applyEffects(player);
+            }
         }
 
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.update-check")) {
@@ -101,6 +115,35 @@ public class PlayerEvents implements Listener {
         SupremeTags.getInstance().getSetupList().remove(player);
         SupremeTags.getInstance().getEditorList().remove(player);
         SupremeTags.getInstance().getVoucherManager().remove(player);
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
+
+        reapplyEffects(player);
+    }
+
+    @EventHandler
+    public void onMilkDrink(PlayerItemConsumeEvent e) {
+        Player player = e.getPlayer();
+
+        if (e.getItem().getType().name().equalsIgnoreCase("MILK_BUCKET")) {
+            // Delay 1 tick so effects are actually cleared first
+            Bukkit.getScheduler().runTaskLater(SupremeTags.getInstance(), () -> {
+                reapplyEffects(player);
+            }, 1L);
+        }
+    }
+
+    private void reapplyEffects(Player player) {
+        if (tags.containsKey(UserData.getActive(player.getUniqueId()))
+                && !UserData.getActive(player.getUniqueId()).equalsIgnoreCase("none")) {
+            Tag tag = tags.get(UserData.getActive(player.getUniqueId()));
+            if (tag != null) {
+                tag.applyEffects(player);
+            }
+        }
     }
 
     public Map<String, Tag> getTags() {

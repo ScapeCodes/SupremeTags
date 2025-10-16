@@ -64,16 +64,15 @@ public class VoucherManager {
         UUID playerId = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
 
-        String inventory_full = messages.getString("messages.inventory-full").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String withdraw_failed_selected = messages.getString("messages.withdraw-failed-selected").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String vault_not_found = messages.getString("messages.vault-not-found").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String invalidtag = messages.getString("messages.invalid-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String not_owned_tag = messages.getString("messages.not-owned-tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String not_withdrawable = messages.getString("messages.tag-not-withdrawable").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String tag_withdrawn = messages.getString("messages.tag-withdrawn").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String noperm = messages.getString("messages.no-permission").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-
-        String voucher_spam = messages.getString("messages.voucher-spam-warning").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String inventory_full = configMessage("messages.inventory-full", messages);
+        String withdraw_failed_selected = configMessage("messages.withdraw-failed-selected", messages);
+        String vault_not_found = configMessage("messages.vault-not-found", messages);
+        String invalidtag = configMessage("messages.invalid-tag", messages);
+        String not_owned_tag = configMessage("messages.not-owned-tag", messages);
+        String not_withdrawable = configMessage("messages.tag-not-withdrawable", messages);
+        String tag_withdrawn = configMessage("messages.tag-withdrawn", messages);
+        String noperm = configMessage("messages.no-permission", messages);
+        String voucher_spam = configMessage("messages.voucher-spam-warning", messages);
 
         if (!player.hasPermission("supremetags.withdraw")) {
             msgPlayer(player, noperm);
@@ -136,7 +135,7 @@ public class VoucherManager {
 
         giveVoucher(player, t.getIdentifier());
 
-        msgPlayer(player, tag_withdrawn.replaceAll("%identifier%", t.getIdentifier()));
+        msgPlayer(player, tag_withdrawn.replace("%identifier%", t.getIdentifier()).replace("%tag%", t.getTag().getFirst()));
     }
 
     public boolean isInventoryFull(Player player) {
@@ -148,8 +147,7 @@ public class VoucherManager {
     public void giveVoucher(Player player, String name) {
         Tag t = SupremeTags.getInstance().getTagManager().getTag(name);
 
-        String invalidtag = messages.getString("messages.invalid-tag")
-                .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String invalidtag = configMessage("messages.invalid-tag", messages);
 
         if (t == null) {
             msgPlayer(player, invalidtag);
@@ -166,7 +164,7 @@ public class VoucherManager {
             tag = new ItemStack(Material.NAME_TAG, 1);
             lore = new ArrayList<>();
             lore.add("&7Right-Click to assign tag: &f" + t.getIdentifier());
-            displayname = "&7Tag: " + t.getTag().get(0);
+            displayname = "&7Tag: " + t.getTag().getFirst();
             glow = false;
             custom_model_data = 0;
         } else {
@@ -177,7 +175,7 @@ public class VoucherManager {
             custom_model_data = tags.getInt("tags." + name + ".custom-model-data");
         }
 
-        displayname = displayname.replace("%tag%", t.getTag().get(0));
+        displayname = displayname.replace("%tag%", t.getTag().getFirst());
         displayname = displayname.replace("%identifier%", t.getIdentifier());
         displayname = replacePlaceholders(player, displayname);
 

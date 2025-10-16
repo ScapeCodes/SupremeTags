@@ -177,6 +177,22 @@ gui:
           - '[message] &7Balance: &a$%vault_eco_balance%'
           #- '[player] balance'
           #- '[console] eco give %player% 100'
+  confirmation-menu:
+    title: 'Confirm Action'
+    size: 27
+    items:
+      accept:
+        material: 'LIME_STAINED_GLASS_PANE'
+        displayname: '&aAccept'
+        slot: 11
+        custom-model-data: 0
+        hide-tooltip: false # 1.21.5+ only
+      deny:
+        material: 'LIME_STAINED_GLASS_PANE'
+        displayname: '&cDeny'
+        slot: 14
+        custom-model-data: 0
+        hide-tooltip: false # 1.21.5+ only
   # Each action is auto synced, meaning they are hidden depending on the tag permissions/cost/active options.
   # Don't change the item names as this will remove functionality.
   tag-actions-menu:

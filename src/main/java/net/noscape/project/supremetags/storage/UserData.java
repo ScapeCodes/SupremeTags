@@ -1,6 +1,9 @@
 package net.noscape.project.supremetags.storage;
 
 import net.noscape.project.supremetags.*;
+import net.noscape.project.supremetags.storage.user.H2UserData;
+import net.noscape.project.supremetags.storage.user.MySQLUserData;
+import net.noscape.project.supremetags.storage.user.SQLiteUserData;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 

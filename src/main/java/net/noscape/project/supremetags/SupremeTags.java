@@ -14,6 +14,10 @@ import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.managers.*;
 import net.noscape.project.supremetags.storage.*;
+import net.noscape.project.supremetags.storage.user.H2UserData;
+import net.noscape.project.supremetags.storage.user.MySQLUserData;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
+import net.noscape.project.supremetags.storage.user.SQLiteUserData;
 import net.noscape.project.supremetags.utils.BungeeMessaging;
 import net.noscape.project.supremetags.utils.ClassRegistrationUtils;
 import net.noscape.project.supremetags.utils.commands.CommandFramework;
@@ -22,21 +26,30 @@ import org.black_ixx.playerpoints.PlayerPointsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static net.noscape.project.supremetags.utils.Utils.*;
 
 public final class SupremeTags extends JavaPlugin {
+
+    /*
+     * Specified by Scape if the plugin is in development build or is a release.
+     */
+    public final boolean dev_build;
+    public final int build;
+    {
+        dev_build = false;
+        build = 12;
+    }
 
     private static SupremeTags instance;
     private ConfigManager configManager;
@@ -69,6 +82,7 @@ public final class SupremeTags extends JavaPlugin {
     private boolean cmi_hex;
     private boolean disabledWorldsTag;
     private boolean deactivateClick;
+    private boolean isDBTags;
 
     private PlayerManager playerManager;
     private PlayerConfig playerConfig;
@@ -81,8 +95,6 @@ public final class SupremeTags extends JavaPlugin {
     private boolean useSSL;
 
     private String layout = getConfig().getString("setting.layout-type");
-
-    private Boolean isFoliaFound;
 
     private final CommandFramework commandFramework = new CommandFramework(this);
 
@@ -174,7 +186,7 @@ public final class SupremeTags extends JavaPlugin {
         categoryManager = new CategoryManager();
         playerManager = new PlayerManager();
         voucherManager = new VoucherManager();
-        mergeManager = new MergeManager();
+        mergeManager = new MergeManager(this);
         playerConfig = new PlayerConfig();
         rarityManager = new RarityManager();
 
@@ -198,6 +210,7 @@ public final class SupremeTags extends JavaPlugin {
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
+        //isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         merge(logger);
 
@@ -237,6 +250,8 @@ public final class SupremeTags extends JavaPlugin {
         if (getConfig().getBoolean("settings.bungee-messaging")) {
             BungeeMessaging.registerChannels();
         }
+
+        validateDefaultSounds();
     }
 
     public static SupremeTags getInstance() { return instance; }
@@ -336,6 +351,7 @@ public final class SupremeTags extends JavaPlugin {
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
+        //isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         rarityManager.unloadRarities();
         rarityManager.loadRarities();
@@ -371,7 +387,7 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     public void merge(Logger log) {
-        mergeManager.merge(log);
+        mergeManager.merge(null, true);
     }
 
     private void sendConsoleLog() {
@@ -384,6 +400,10 @@ public final class SupremeTags extends JavaPlugin {
         logger.info("  ___) | |_| |  __/|  _ <| |___| |  | | |___  | |/ ___ \\ |_| |___) |");
         logger.info(" |____/ \\___/|_|   |_| \\_\\_____|_|  |_|_____| |_/_/   \\_\\____|____/ ");
         logger.info(" Allow players to show off their supreme tags!");
+        logger.info("");
+        if (dev_build) {
+            logger.info("You're using a development build of supremetags! build: #" + build);
+        }
         logger.info("");
 
         isFoliaFound();
@@ -423,21 +443,23 @@ public final class SupremeTags extends JavaPlugin {
             logger.info("> Database: SQLite!");
         }
 
-        if (getConfig().getBoolean("settings.update-check")) {
-            new UpdateChecker(this, 111481).getVersion(version -> {
-                if (version == null) {
-                    logger.warning("> Updater: Failed to retrieve latest version of SupremeTags.");
-                    return;
-                }
+        if (!dev_build) {
+            if (getConfig().getBoolean("settings.update-check")) {
+                new UpdateChecker(this, 111481).getVersion(version -> {
+                    if (version == null) {
+                        logger.warning("> Updater: Failed to retrieve latest version of SupremeTags.");
+                        return;
+                    }
 
-                String currentVersion = this.getDescription().getVersion();
-                if (compareVersions(version, currentVersion) > 0) {
-                    logger.info("> Updater: An update is available! " + version);
-                    logger.info("Download at https://www.spigotmc.org/resources/111481/updates");
-                } else {
-                    logger.info("> Updater: Plugin up to date!");
-                }
-            });
+                    String currentVersion = this.getDescription().getVersion();
+                    if (compareVersions(version, currentVersion) > 0) {
+                        logger.info("> Updater: An update is available! " + version);
+                        logger.info("Download at https://www.spigotmc.org/resources/111481/updates");
+                    } else {
+                        logger.info("> Updater: Plugin up to date!");
+                    }
+                });
+            }
         }
     }
 
@@ -633,5 +655,43 @@ public final class SupremeTags extends JavaPlugin {
     public static boolean isEssentials() {
         return Bukkit.getPluginManager().getPlugin("Essentials") != null
                 && Bukkit.getPluginManager().getPlugin("EssentialsChat") != null;
+    }
+
+    public boolean isDBTags() {
+        return false;
+    }
+
+    private void validateDefaultSounds() {
+        FileConfiguration config = SupremeTags.getInstance().getConfig();
+
+        Map<String, Object> defaults = new LinkedHashMap<>();
+        defaults.put("open-menus.enable", true);
+        defaults.put("open-menus.sound", "block.note_block.pling");
+        defaults.put("open-menus.volume", 1.0);
+        defaults.put("open-menus.pitch", 1.0);
+
+        defaults.put("selected-tag.enable", true);
+        defaults.put("selected-tag.sound", "entity.player.levelup");
+        defaults.put("selected-tag.volume", 1.0);
+        defaults.put("selected-tag.pitch", 1.2);
+
+        defaults.put("reset-tag.enable", true);
+        defaults.put("reset-tag.sound", "block.anvil.use");
+        defaults.put("reset-tag.volume", 0.9);
+        defaults.put("reset-tag.pitch", 1.0);
+
+        defaults.put("error-message.enable", true);
+        defaults.put("error-message.sound", "entity.villager.no");
+        defaults.put("error-message.volume", 1.0);
+        defaults.put("error-message.pitch", 0.9);
+
+        for (Map.Entry<String, Object> entry : defaults.entrySet()) {
+            String key = "sounds." + entry.getKey();
+            if (!config.isSet(key)) {
+                config.set(key, entry.getValue());
+            }
+        }
+
+        SupremeTags.getInstance().saveConfig();
     }
 }

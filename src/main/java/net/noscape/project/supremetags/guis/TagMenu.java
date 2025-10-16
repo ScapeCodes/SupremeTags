@@ -136,8 +136,8 @@ public class TagMenu extends Paged {
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         msgPlayer(player, unlocked
-                                .replaceAll("%identifier%", t.getIdentifier())
-                                .replaceAll("%tag%", t.getCurrentTag()));
+                                .replace("%identifier%", t.getIdentifier())
+                                .replace("%tag%", t.getCurrentTag()));
                     }
                     super.open();
                 } else {
@@ -293,6 +293,8 @@ public class TagMenu extends Paged {
                         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                             msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
                         }
+
+                        playConfigSound(player, "reset-tag");
                     } else {
                         TagResetEvent tagEvent = new TagResetEvent(player, false);
                         Bukkit.getPluginManager().callEvent(tagEvent);
@@ -315,6 +317,7 @@ public class TagMenu extends Paged {
                         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                             msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
                         }
+                        playConfigSound(player, "reset-tag");
                     }
                 }
 

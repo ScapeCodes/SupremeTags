@@ -2,6 +2,7 @@ package net.noscape.project.supremetags.guis.tageditor;
 
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.enums.EditingType;
+import net.noscape.project.supremetags.guis.confirm.ConfirmationMenu;
 import net.noscape.project.supremetags.handlers.Editor;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.menu.Menu;
@@ -49,21 +50,23 @@ public class SpecificTagMenu extends Menu {
         if (i.getItemMeta() == null) return;
         if (SupremeTags.getInstance().getEditorList().containsKey(player)) return;
 
-        String tag = messages.getString("messages.editor.tag").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String desc = messages.getString("messages.editor.description").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String category = messages.getString("messages.editor.category").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String permission = messages.getString("messages.editor.permission").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String deleted = messages.getString("messages.editor.deleted").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String withdrawable = messages.getString("messages.editor.withdrawable").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        String cost = messages.getString("messages.editor.cost").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String tag = messages.getString("messages.editor.tag").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String desc = messages.getString("messages.editor.description").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String category = messages.getString("messages.editor.category").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String permission = messages.getString("messages.editor.permission").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String deleted = messages.getString("messages.editor.deleted").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String withdrawable = messages.getString("messages.editor.withdrawable").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String cost = messages.getString("messages.editor.cost").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String rarity = messages.getString("messages.editor.rarity").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+
+        Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
 
         if (e.getSlot() == 13) {
             Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_TAG, false);
             SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, tag.replace("%current%", t.getTag().getFirst()));
             player.closeInventory();
-            msgPlayer(player, tag);
         } else if (e.getSlot() == 22) {
-            Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
 
             if (t.isWithdrawable()) {
                 t.setWithdrawable(false);
@@ -82,27 +85,32 @@ public class SpecificTagMenu extends Menu {
         } else if (e.getSlot() == 14) {
             Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_DESCRIPTION, false);
             SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, desc.replace("%current%", t.getDescription().getFirst()));
             player.closeInventory();
-            msgPlayer(player, desc);
         } else if (e.getSlot() == 15) {
             Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_CATEGORY, false);
             SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, category.replace("%current%", t.getCategory()));
             player.closeInventory();
-            msgPlayer(player, category);
         } else if (e.getSlot() == 16) {
             Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_PERMISSION, false);
             SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, permission.replace("%current%", t.getPermission()));
             player.closeInventory();
-            msgPlayer(player, permission);
         } else if (e.getSlot() == 23) {
             Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_COST, false);
             SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, cost.replace("%current%", String.valueOf(t.getEcoAmount())));
             player.closeInventory();
-            msgPlayer(player, cost);
+        } else if (e.getSlot() == 24) {
+            Editor editor = new Editor(menuUtil.getIdentifier(), EditingType.CHANGING_RARITY, false);
+            SupremeTags.getInstance().getEditorList().put(player, editor);
+            msgPlayer(player, rarity.replace("%current%", t.getRarity()), "&7Rarities: " + SupremeTags.getInstance().getRarityManager().getRarityMap().keySet().toString().replace("[", "").replace("]", ""));
+            player.closeInventory();
         } else if (e.getSlot() == 49) {
-            SupremeTags.getInstance().getTagManager().deleteTag(player, menuUtil.getIdentifier());
+            String identifier = menuUtil.getIdentifier();
             player.closeInventory();
-            msgPlayer(player, deleted);
+            new ConfirmationMenu(SupremeTags.getMenuUtil(player), "delete-tag:" + identifier).open();
         } else {
             e.setCancelled(true);
         }
@@ -125,6 +133,7 @@ public class SpecificTagMenu extends Menu {
                 lore.add("&7Cost: &6" + t.getEconomy().getAmount());
                 lore.add("&7Withdrawable: &6" + t.isWithdrawable());
                 lore.add("&7Order: &6" + t.getOrder());
+                lore.add("&7Rarity: &6" + t.getRarity());
                 lore.add("&7Description:");
                 lore.add("&6" + t.getDescription());
                 lore.add("");
@@ -198,13 +207,20 @@ public class SpecificTagMenu extends Menu {
 
                 List<String> c_cost = new ArrayList<>();
                 c_cost.add("&7Current: &6" + t.getEconomy().getAmount());
-                c_withdraw.add("");
-                c_withdraw.add("&8[&e➜&8] &fThe amount it will cost when buyable tags are enabled (economy)");
-                c_withdraw.add("");
-                c_withdraw.add("&f[&6★&f] &eClick to change!");
+                c_cost.add("");
+                c_cost.add("&8[&e➜&8] &fThe amount it will cost when buyable tags are enabled (economy)");
+                c_cost.add("");
+                c_cost.add("&f[&6★&f] &eClick to change!");
                 getInventory().setItem(23, makeItem(Material.SUNFLOWER, format("&e&lCost!"), c_cost));
 
-                getInventory().setItem(24, makeItem(Material.BARRIER, format("&c&lComing Soon!"), 0, false));
+                List<String> c_rarity = new ArrayList<>();
+                c_rarity.add("&7Current: &6" + t.getRarity());
+                c_rarity.add("");
+                c_rarity.add("&8[&e➜&8] &fThe rarity its valued/categorized into.");
+                c_rarity.add("");
+                c_rarity.add("&f[&6★&f] &eClick to change!");
+                getInventory().setItem(24, makeItem(Material.EMERALD, format("&b&lRarity"), c_rarity));
+
                 getInventory().setItem(25, makeItem(Material.BARRIER, format("&c&lComing Soon!"), 0, false));
                 getInventory().setItem(31, makeItem(Material.BARRIER, format("&c&lComing Soon!"), 0, false));
                 getInventory().setItem(32, makeItem(Material.BARRIER, format("&c&lComing Soon!"), 0, false));

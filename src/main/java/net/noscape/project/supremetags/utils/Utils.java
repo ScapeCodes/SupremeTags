@@ -1,5 +1,6 @@
 package net.noscape.project.supremetags.utils;
 
+import com.cryptomorin.xseries.XSound;
 import dev.lone.itemsadder.api.CustomStack;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import io.th0rgal.oraxen.api.OraxenItems;
@@ -21,11 +22,13 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import su.nightexpress.coinsengine.api.CoinsEngineAPI;
 
 import java.awt.*;
@@ -33,9 +36,13 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.ssomar.score.utils.backward_compatibility.SoundUtils.getSound;
 
 public class Utils {
 
@@ -66,60 +73,143 @@ public class Utils {
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.#");
 
+    /**
+     * Automatically formats a string depending on server version and configuration.
+     * Supports both MiniMessage (modern) and legacy (&) color formats.
+     *
+     * @param message Raw input string (may contain MiniMessage or & codes)
+     * @return Formatted string (legacy-compatible)
+     */
     public static String format(String message) {
+        if (message == null || message.isEmpty()) return "";
+
+        // Always handle legacy for older servers
         if (isVersionLessThan("1.16")) {
-            // Old Minecraft versions only support legacy color codes
             return ChatColor.translateAlternateColorCodes('&', message);
         }
 
-        boolean useMiniMessage = SupremeTags.getInstance().isMiniMessage() &&
-                SupremeTags.getInstance().getConfig().getBoolean("settings.use-minimessage");
+        // Detect user preference and Adventure support
+        boolean useMiniMessage = SupremeTags.getInstance().isMiniMessage();
+        boolean adventureSupported = isAdventureAvailable();
 
-        if (useMiniMessage) {
-            // Convert legacy (&) into MiniMessage-friendly input
-            message = legacyToMiniMessage(message);
+        if (useMiniMessage && adventureSupported) {
             try {
-                Component component = MiniMessage.miniMessage().deserialize(message);
+                Component component = formatComponent(message);
+                // Convert back to legacy string for backward compatibility
                 return LegacyComponentSerializer.legacySection().serialize(component);
-            } catch (NoClassDefFoundError | Exception e) {
+            } catch (Exception e) {
+                // Graceful fallback to legacy
                 return ChatColor.translateAlternateColorCodes('&', message);
             }
-        } else {
-            // Replace hex color codes with Minecraft §x§R§R§G§G§B§B format
-            message = replacePatternWithMinecraftColor(message, p1);
-            message = replacePatternWithMinecraftColor(message, p2);
-            message = replacePatternWithMinecraftColor(message, p4);
-            message = replacePatternWithMinecraftColor(message, p5);
-            message = replacePatternWithMinecraftColor(message, p3);
+        }
 
-            // Replace named color/format tags with legacy
-            message = message.replace("<black>", "&0")
-                    .replace("<dark_blue>", "&1")
-                    .replace("<dark_green>", "&2")
-                    .replace("<dark_aqua>", "&3")
-                    .replace("<dark_red>", "&4")
-                    .replace("<dark_purple>", "&5")
-                    .replace("<gold>", "&6")
-                    .replace("<gray>", "&7")
-                    .replace("<dark_gray>", "&8")
-                    .replace("<blue>", "&9")
-                    .replace("<green>", "&a")
-                    .replace("<aqua>", "&b")
-                    .replace("<red>", "&c")
-                    .replace("<light_purple>", "&d")
-                    .replace("<yellow>", "&e")
-                    .replace("<white>", "&f")
-                    .replace("<obfuscated>", "&k")
-                    .replace("<bold>", "&l")
-                    .replace("<strikethrough>", "&m")
-                    .replace("<underlined>", "&n")
-                    .replace("<italic>", "&o")
-                    .replace("<reset>", "&r");
+        // Otherwise, fallback to legacy system with hex code replacements
+        message = replacePatternWithMinecraftColor(message, p1);
+        message = replacePatternWithMinecraftColor(message, p2);
+        message = replacePatternWithMinecraftColor(message, p4);
+        message = replacePatternWithMinecraftColor(message, p5);
+        message = replacePatternWithMinecraftColor(message, p3);
 
-            // Finally, translate & → §
-            return ChatColor.translateAlternateColorCodes('&', message);
+        message = message
+                .replace("<black>", "&0")
+                .replace("<dark_blue>", "&1")
+                .replace("<dark_green>", "&2")
+                .replace("<dark_aqua>", "&3")
+                .replace("<dark_red>", "&4")
+                .replace("<dark_purple>", "&5")
+                .replace("<gold>", "&6")
+                .replace("<gray>", "&7")
+                .replace("<dark_gray>", "&8")
+                .replace("<blue>", "&9")
+                .replace("<green>", "&a")
+                .replace("<aqua>", "&b")
+                .replace("<red>", "&c")
+                .replace("<light_purple>", "&d")
+                .replace("<yellow>", "&e")
+                .replace("<white>", "&f")
+                .replace("<obfuscated>", "&k")
+                .replace("<bold>", "&l")
+                .replace("<strikethrough>", "&m")
+                .replace("<underlined>", "&n")
+                .replace("<italic>", "&o")
+                .replace("<reset>", "&r");
+
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    /**
+     * Returns a formatted Adventure Component, automatically choosing MiniMessage or legacy.
+     */
+    public static Component formatComponent(String message) {
+        if (message == null || message.isEmpty()) return Component.empty();
+
+        boolean useMiniMessage = SupremeTags.getInstance().isMiniMessage();
+
+        try {
+            if (useMiniMessage) {
+                // Convert legacy codes into MiniMessage-compatible input
+                message = legacyToMiniMessage(message);
+                return MiniMessage.miniMessage().deserialize(message);
+            } else {
+                return LegacyComponentSerializer.legacyAmpersand().deserialize(message);
+            }
+        } catch (Exception e) {
+            // Fallback to plain text if MiniMessage parsing fails
+            return Component.text(ChatColor.stripColor(message));
         }
     }
+
+    /**
+     * Checks whether Adventure API is available on the current server.
+     * (Prevents NoClassDefFoundError on legacy versions)
+     */
+    private static boolean isAdventureAvailable() {
+        try {
+            Class.forName("net.kyori.adventure.text.Component");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    public static void msgPlayer(CommandSender sender, String... messages) {
+        if (messages == null || messages.length == 0) return;
+
+        boolean adventureAvailable = isAdventureAvailable();
+
+        for (String msg : messages) {
+            if (msg == null || msg.isEmpty()) continue;
+
+            try {
+                // If MiniMessage + Adventure API are supported, send as a Component
+                if (adventureAvailable && SupremeTags.getInstance().isMiniMessage()) {
+                    Component component = formatComponent(msg);
+
+                    // If it's a Player, send Adventure component directly
+                    if (sender instanceof Player player) {
+                        player.sendMessage(component);
+                    } else {
+                        // Console, command blocks, etc. — convert to legacy safely
+                        sender.sendMessage(LegacyComponentSerializer.legacySection().serialize(component));
+                    }
+                    continue;
+                }
+            } catch (Throwable ignored) {
+                // fallback below
+            }
+
+            // Fallback for non-Adventure servers or MiniMessage disabled
+            sender.sendMessage(format(msg));
+        }
+    }
+
+    /**
+     * Backward-compatible overload for Player, calls main method.
+     */
+    public static void msgPlayer(Player player, String... messages) {
+        msgPlayer((CommandSender) player, messages);
+    }
+
 
     private static String replacePatternWithMinecraftColor(String message, Pattern pattern) {
         Matcher matcher = pattern.matcher(message);
@@ -334,18 +424,6 @@ public class Utils {
         return ChatColor.stripColor(format(str));
     }
 
-    public static void msgPlayer(Player player, String... str) {
-        for (String msg : str) {
-            player.sendMessage(format(msg));
-        }
-    }
-
-    public static void msgPlayer(CommandSender player, String... str) {
-        for (String msg : str) {
-            player.sendMessage(format(msg));
-        }
-    }
-
     public static void titlePlayer(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
         player.sendTitle(format(title), format(subtitle), fadeIn, stay, fadeOut);
     }
@@ -458,30 +536,43 @@ public class Utils {
     public static int isCustomGUIItemSlot(Player player, ItemStack itemStack) {
         FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
 
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return -1;
+        }
+
+        ItemMeta meta = itemStack.getItemMeta();
+
         for (String key : guis.getConfigurationSection("gui.tag-menu.custom-items").getKeys(false)) {
-            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-                String displayName = deformat(itemStack.getItemMeta().getDisplayName());
-                int customModelData;
-                if (itemStack.getItemMeta().hasCustomModelData()) {
-                    customModelData = itemStack.getItemMeta().getCustomModelData();
-                } else {
-                    customModelData = 0;
+            if (!meta.hasDisplayName()) continue;
+
+            String displayName = deformat(meta.getDisplayName());
+            String configDisplayName = deformat(guis.getString("gui.tag-menu.custom-items." + key + ".displayname", ""));
+            String material = guis.getString("gui.tag-menu.custom-items." + key + ".material", "");
+
+            int customModelData = 0;
+            int configCustomModelData = guis.getInt("gui.tag-menu.custom-items." + key + ".custom-model-data", 0);
+
+
+            try {
+                // Older Bukkit / Paper versions (pre-1.21.5)
+                if (meta.hasCustomModelData()) {
+                    customModelData = meta.getCustomModelData();
                 }
+            } catch (NoSuchMethodError ignored) {
+                // 1.12–1.13 (no custom model data support)
+            }
+            configDisplayName = replacePlaceholders(player, configDisplayName);
 
-                String material = guis.getString("gui.tag-menu.custom-items." + key + ".material");
-                String displaynameConfig = deformat(guis.getString("gui.tag-menu.custom-items." + key + ".displayname"));
-                int configCustomModelData = guis.getInt("gui.tag-menu.custom-items." + key + ".custom-model-data");
-
-                displaynameConfig = replacePlaceholders(player, displaynameConfig);
-
-                if (material != null && displayName.equals(displaynameConfig) && customModelData == configCustomModelData) {
-                    return guis.getInt("gui.tag-menu.custom-items." + key + ".slot");
-                }
+            if (material != null
+                    && displayName.equals(configDisplayName)
+                    && customModelData == configCustomModelData) {
+                return guis.getInt("gui.tag-menu.custom-items." + key + ".slot");
             }
         }
 
-        return -1; // Indicates no match found
+        return -1; // No match
     }
+
 
     public static String isCustomGUIItemName(Player player, ItemStack itemStack) {
         FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
@@ -712,57 +803,71 @@ public class Utils {
         runAsync(() -> {
             LuckPerms luckPerms = LuckPermsProvider.get();
             UserManager userManager = luckPerms.getUserManager();
-            Map<String, Integer> result = new HashMap<>();
+            Map<String, Integer> result = new ConcurrentHashMap<>();
 
-            // Snapshots to avoid CME
-            Collection<Tag> tagsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getTags().values());
-            Collection<Variant> variantsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getVariants());
+            List<Tag> tagsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getTags().values());
+            List<Variant> variantsSnapshot = new ArrayList<>(SupremeTags.getInstance().getTagManager().getVariants());
 
-            // Cache LuckPerms Users
-            Map<UUID, User> userCache = new HashMap<>();
-            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-                try {
-                    User user = userManager.loadUser(offlinePlayer.getUniqueId()).join();
-                    if (user != null) {
-                        userCache.put(offlinePlayer.getUniqueId(), user);
-                    }
-                } catch (Exception e) {
-                    // Optional: log
-                }
+            OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
+            Map<UUID, User> userCache = new ConcurrentHashMap<>();
+
+            // Batch size: adjust if needed
+            final int batchSize = 200;
+
+            // Split offline players into batches
+            List<List<OfflinePlayer>> batches = new ArrayList<>();
+            for (int i = 0; i < offlinePlayers.length; i += batchSize) {
+                batches.add(Arrays.asList(Arrays.copyOfRange(
+                        offlinePlayers,
+                        i,
+                        Math.min(i + batchSize, offlinePlayers.length)
+                )));
             }
 
-            // Process Tags
-            for (Tag tag : tagsSnapshot) {
-                String permission = tag.getPermission();
-                int unlocked = 0;
+            // Process batches sequentially
+            CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
 
-                for (User user : userCache.values()) {
-                    Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
-                    if (resultperm == Tristate.TRUE) {
-                        unlocked++;
-                    }
-                }
-                result.put(tag.getIdentifier(), unlocked);
+            for (List<OfflinePlayer> batch : batches) {
+                chain = chain.thenCompose(v ->
+                        CompletableFuture.allOf(
+                                batch.stream()
+                                        .map(player ->
+                                                userManager.loadUser(player.getUniqueId())
+                                                        .thenAccept(user -> {
+                                                            if (user != null) {
+                                                                userCache.put(player.getUniqueId(), user);
+                                                            }
+                                                        })
+                                                        .exceptionally(ex -> null) // skip errors silently
+                                        )
+                                        .toArray(CompletableFuture[]::new)
+                        )
+                );
             }
 
-            // Process Variants
-            for (Variant var : variantsSnapshot) {
-                String permission = var.getPermission();
-                int unlocked = 0;
-
-                for (User user : userCache.values()) {
-                    Tristate resultperm = user.getCachedData().getPermissionData().checkPermission(permission);
-                    if (resultperm == Tristate.TRUE) {
-                        unlocked++;
-                    }
+            // After all batches are done
+            chain.thenRun(() -> {
+                // Process tags
+                for (Tag tag : tagsSnapshot) {
+                    long unlocked = userCache.values().stream()
+                            .filter(user -> user.getCachedData().getPermissionData().checkPermission(tag.getPermission()) == Tristate.TRUE)
+                            .count();
+                    result.put(tag.getIdentifier(), (int) unlocked);
                 }
-                result.put(var.getIdentifier(), unlocked);
-            }
 
-            // Update safely on main thread
-            runMain(() -> {
-                TagManager.tagUnlockCounts.clear();
-                TagManager.tagUnlockCounts.putAll(result);
+                // Process variants
+                for (Variant var : variantsSnapshot) {
+                    long unlocked = userCache.values().stream()
+                            .filter(user -> user.getCachedData().getPermissionData().checkPermission(var.getPermission()) == Tristate.TRUE)
+                            .count();
+                    result.put(var.getIdentifier(), (int) unlocked);
+                }
+
+                // Push result back to main thread
+                runMain(() -> {
+                    TagManager.tagUnlockCounts.clear();
+                    TagManager.tagUnlockCounts.putAll(result);
+                });
             });
         });
     }
@@ -904,5 +1009,47 @@ public class Utils {
         }
 
         return count;
+    }
+
+    public static String configMessage(String key, FileConfiguration messages) {
+        String prefix = Objects.requireNonNull(messages.getString("messages.prefix"));
+        String raw = Objects.requireNonNull(messages.getString(key));
+        return raw.replace("%prefix%", prefix);
+    }
+
+    public static List<String> configMessageList(String key, FileConfiguration messages) {
+        String prefix = messages.getString("messages.prefix", "");
+        List<String> rawList = messages.getStringList("messages." + key);
+
+        List<String> formattedList = new ArrayList<>();
+
+        for (String line : rawList) {
+            formattedList.add(line.replace("%prefix%", prefix));
+        }
+
+        return formattedList;
+    }
+
+
+    public static void playConfigSound(Player player, String value) {
+        if (player == null || value == null) return;
+
+        var config = SupremeTags.getInstance().getConfig();
+        String basePath = "sounds." + value;
+
+        if (!config.getBoolean(basePath + ".enable", false)) return;
+
+        String soundName = config.getString(basePath + ".sound", "");
+        double volume = config.getDouble(basePath + ".volume", 1.0);
+        double pitch = config.getDouble(basePath + ".pitch", 1.0);
+
+        Sound sound = XSound.of(soundName).get().get();
+
+        if (sound == null) {
+            SupremeTags.getInstance().getLogger().warning("Invalid sound: " + soundName + " (" + value + ")");
+            return;
+        }
+
+        player.playSound(player.getLocation(), sound, (float) volume, (float) pitch);
     }
 }

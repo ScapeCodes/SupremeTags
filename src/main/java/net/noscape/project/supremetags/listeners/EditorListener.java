@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static net.noscape.project.supremetags.utils.Utils.deformat;
 import static net.noscape.project.supremetags.utils.Utils.msgPlayer;
 
 public class EditorListener implements Listener {
@@ -35,71 +36,97 @@ public class EditorListener implements Listener {
         if (!SupremeTags.getInstance().getEditorList().containsKey(player)) return;
 
         String message = e.getMessage();
-
+        String deformat_message = deformat(message);
         Editor editor = SupremeTags.getInstance().getEditorList().get(player);
         EditingType type = editor.getType();
 
         e.setCancelled(true);
 
-        if (!editor.isPersonalEdit()) {
-            Tag tag = SupremeTags.getInstance().getTagManager().getTag(editor.getIdentifier());
-            switch (type) {
-                case CHANGING_TAG:
-                    List<String> tagList = tag.getTag();
-                    tagList.add(message);
-                    tag.setTag(tagList);
-                    break;
-                case CHANGING_PERMISSION:
-                    tag.setPermission(message);
-                    break;
-                case CHANGING_CATEGORY:
-                    tag.setCategory(message);
-                    break;
-                case CHANGING_COST:
-                    tag.getEconomy().setAmount(Double.parseDouble(message));
-                    break;
-                case CHANGING_DESCRIPTION:
-                    List<String> desc = tag.getDescription();
-                    desc.add(message);
-                    tag.setDescription(desc);
-                    break;
-                case CHANGING_ORDER:
-                    tag.setOrder(Integer.parseInt(message));
-                    break;
+        // === Handle cancel input ===
+        if (deformat_message.equalsIgnoreCase("cancel")) {
+            SupremeTags.getInstance().getEditorList().remove(player);
+
+            // Return to correct menu depending on edit type
+            if (!editor.isPersonalEdit()) {
+                runTaskLater(() -> new SpecificTagMenu(
+                        SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+            } else {
+                runTaskLater(() -> new PersonalTagEditorMenu(
+                        SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
             }
 
-            SupremeTags.getInstance().getTagManager().saveTag(tag);
-            SupremeTags.getInstance().getTagManager().unloadTags();
-            SupremeTags.getInstance().getTagManager().loadTags(true);
-
-            SupremeTags.getInstance().getCategoryManager().initCategories();
-
-            runTaskLater(() -> new SpecificTagMenu(SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
-
+            String cancelled = messages.getString("messages.editor.cancelled", "%prefix% &7edit cancelled, no changes have taken place.")
+                    .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+            msgPlayer(player, cancelled);
+            return;
         } else {
-            Tag tag = SupremeTags.getInstance().getPlayerManager().getTag(player.getUniqueId(), editor.getIdentifier());
-            switch (type) {
-                case CHANGING_TAG:
-                    List<String> tagList = new ArrayList<>();
-                    tagList.add(message);
-                    tag.setTag(tagList);
-                    break;
-                case CHANGING_DESCRIPTION:
-                    List<String> desc = tag.getDescription();
-                    desc.add(message);
-                    tag.setDescription(desc);
-                    break;
+
+            // === Continue normal editing ===
+            if (!editor.isPersonalEdit()) {
+                Tag tag = SupremeTags.getInstance().getTagManager().getTag(editor.getIdentifier());
+                switch (type) {
+                    case CHANGING_TAG:
+                        List<String> tagList = tag.getTag();
+                        tagList.add(message);
+                        tag.setTag(tagList);
+                        break;
+                    case CHANGING_PERMISSION:
+                        tag.setPermission(deformat_message);
+                        break;
+                    case CHANGING_CATEGORY:
+                        tag.setCategory(deformat_message);
+                        break;
+                    case CHANGING_RARITY:
+                        tag.setRarity(deformat_message);
+                        break;
+                    case CHANGING_COST:
+                        tag.getEconomy().setAmount(Double.parseDouble(deformat_message));
+                        break;
+                    case CHANGING_DESCRIPTION:
+                        List<String> desc = tag.getDescription();
+                        desc.add(message);
+                        tag.setDescription(desc);
+                        break;
+                    case CHANGING_ORDER:
+                        tag.setOrder(Integer.parseInt(deformat_message));
+                        break;
+                }
+
+                SupremeTags.getInstance().getTagManager().saveTag(tag);
+                SupremeTags.getInstance().getTagManager().unloadTags();
+                SupremeTags.getInstance().getTagManager().loadTags(true);
+                SupremeTags.getInstance().getCategoryManager().initCategories();
+
+                runTaskLater(() -> new SpecificTagMenu(
+                        SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+
+            } else {
+                Tag tag = SupremeTags.getInstance().getPlayerManager()
+                        .getTag(player.getUniqueId(), editor.getIdentifier());
+                switch (type) {
+                    case CHANGING_TAG:
+                        List<String> tagList = new ArrayList<>();
+                        tagList.add(message);
+                        tag.setTag(tagList);
+                        break;
+                    case CHANGING_DESCRIPTION:
+                        List<String> desc = tag.getDescription();
+                        desc.add(message);
+                        tag.setDescription(desc);
+                        break;
+                }
+
+                SupremeTags.getInstance().getPlayerManager().save(tag, player);
+                runTaskLater(() -> new PersonalTagEditorMenu(
+                        SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
             }
 
-            SupremeTags.getInstance().getPlayerManager().save(tag, player);
+            SupremeTags.getInstance().getEditorList().remove(player);
 
-            runTaskLater(() -> new PersonalTagEditorMenu(SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+            String tag_updated = messages.getString("messages.tag-updated")
+                    .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+            msgPlayer(player, tag_updated);
         }
-
-        SupremeTags.getInstance().getEditorList().remove(player);
-
-        String tag_updated = messages.getString("messages.tag-updated").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-        msgPlayer(player, tag_updated);
     }
 
     /**

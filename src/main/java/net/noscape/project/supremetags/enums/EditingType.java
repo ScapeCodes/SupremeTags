@@ -8,5 +8,6 @@ public enum EditingType {
     CHANGING_DESCRIPTION(),
     CHANGING_COST(),
     CHANGING_DISPLAY_ITEM(),
-    CHANGING_ORDER();
+    CHANGING_ORDER(),
+    CHANGING_RARITY();
 }

@@ -1,7 +1,7 @@
 package net.noscape.project.supremetags.managers;
 
 import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.storage.PlayerConfig;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;

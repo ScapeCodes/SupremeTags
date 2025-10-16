@@ -1,21 +1,22 @@
 package net.noscape.project.supremetags.storage;
 
-import net.noscape.project.supremetags.*;
+import net.noscape.project.supremetags.SupremeTags;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class H2Database {
 
     private final String ConnectionURL;
 
     public H2Database(String connectionURL) {
-        ConnectionURL = connectionURL;
-
+        this.ConnectionURL = connectionURL;
         this.initialiseDatabase();
     }
 
     public Connection getConnection() {
-
         Connection connection = null;
 
         try {
@@ -23,24 +24,56 @@ public class H2Database {
             connection = DriverManager.getConnection(SupremeTags.getConnectionURL());
         } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-            SupremeTags.getInstance().getLogger().info("------------------------------");
-            SupremeTags.getInstance().getLogger().info("H2: Something wrong with connecting to h2-sql for SupremeTags, contact the developer if you see this.");
-            SupremeTags.getInstance().getLogger().info("------------------------------");
+            SupremeTags.getInstance().getLogger().warning("------------------------------");
+            SupremeTags.getInstance().getLogger().warning("H2: Could not connect to database.");
+            SupremeTags.getInstance().getLogger().warning("------------------------------");
         }
 
         return connection;
     }
 
     public void initialiseDatabase() {
-        PreparedStatement preparedStatement;
+        try (Connection connection = getConnection()) {
 
-        String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name VARCHAR(255) NOT NULL, UUID VARCHAR(255) NOT NULL, Active VARCHAR(255) NOT NULL, PRIMARY KEY (UUID))";
+            if (connection == null) {
+                SupremeTags.getInstance().getLogger().warning("Failed to initialize H2: Connection is null");
+                return;
+            }
 
-        try {
-            preparedStatement = getConnection().prepareStatement(userTable);
-            preparedStatement.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            // USERS TABLE (unchanged)
+            String userTable = "CREATE TABLE IF NOT EXISTS users (" +
+                    "Name VARCHAR(255) NOT NULL, " +
+                    "UUID VARCHAR(255) NOT NULL, " +
+                    "Active VARCHAR(255) NOT NULL, " +
+                    "PRIMARY KEY (UUID)" +
+                    ")";
+            connection.prepareStatement(userTable).executeUpdate();
+
+            // SINGLE TAGS TABLE
+            String tagsTable = "CREATE TABLE IF NOT EXISTS tags (" +
+                    "identifier VARCHAR(255) PRIMARY KEY, " +
+                    "tag_text TEXT, " +
+                    "category VARCHAR(255), " +
+                    "permission VARCHAR(255), " +
+                    "description TEXT, " +
+                    "rarity VARCHAR(100), " +
+                    "order_num INT, " +
+                    "is_withdrawable BOOLEAN, " +
+                    "eco_enabled BOOLEAN, " +
+                    "eco_type VARCHAR(100), " +
+                    "eco_amount DOUBLE, " +
+                    "effects TEXT, " +
+                    "variants TEXT, " +
+                    "custom_placeholders TEXT, " +
+                    "economy TEXT" +
+                    ")";
+            connection.prepareStatement(tagsTable).executeUpdate();
+
+            SupremeTags.getInstance().getLogger().info("✅ H2 tables (users, tags) initialized successfully.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            SupremeTags.getInstance().getLogger().warning("⚠️ Error while initializing H2 tables: " + e.getMessage());
         }
     }
 

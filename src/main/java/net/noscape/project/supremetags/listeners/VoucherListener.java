@@ -14,8 +14,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Objects;
 
-import static net.noscape.project.supremetags.utils.Utils.addPerm;
-import static net.noscape.project.supremetags.utils.Utils.msgPlayer;
+import static net.noscape.project.supremetags.utils.Utils.*;
 
 public class VoucherListener implements Listener {
 
@@ -50,21 +49,19 @@ public class VoucherListener implements Listener {
         Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
 
         if (tag == null) {
-            String invalid = messages.getString("messages.invalid-tag");
-            invalid = invalid.replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+            String invalid = configMessage("messages.invalid-tag", messages);
             msgPlayer(player, invalid);
             return;
         }
 
-        String already_have_tag = messages.getString("messages.already-have-tag")
-                .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        String already_have_tag = configMessage("messages.already-have-tag", messages);
 
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.voucher-redeem-permission")) {
             if (!player.hasPermission("supremetags.voucher." + identifier)) {
                 String invalid = messages.getString("messages.no-permission-voucher")
-                        .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")))
-                        .replaceAll("%identifier%", tag.getIdentifier())
-                        .replaceAll("%tag%", tag.getTag().get(0));
+                        .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")))
+                        .replace("%identifier%", tag.getIdentifier())
+                        .replace("%tag%", tag.getTag().getFirst());
                 msgPlayer(player, invalid);
                 return;
             }
@@ -80,9 +77,9 @@ public class VoucherListener implements Listener {
         item.setAmount(item.getAmount() - 1);
 
         String received_voucher = messages.getString("messages.received-voucher")
-                .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")))
-                .replaceAll("%identifier%", tag.getIdentifier())
-                .replaceAll("%tag%", tag.getTag().get(0));
+                .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")))
+                .replace("%identifier%", tag.getIdentifier())
+                .replace("%tag%", tag.getTag().getFirst());
 
         msgPlayer(player, received_voucher);
     }

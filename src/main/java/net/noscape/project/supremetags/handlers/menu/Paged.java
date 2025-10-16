@@ -998,7 +998,7 @@ public abstract class Paged extends Menu {
     protected void sendLockedMessage(Player player) {
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
             String locked = messages.getString("messages.locked-tag")
-                    .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+                    .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
             locked = replacePlaceholders(menuUtil.getOwner(), locked);
             msgPlayer(player, locked);
         }
@@ -1021,12 +1021,22 @@ public abstract class Paged extends Menu {
         t.applyEffects(menuUtil.getOwner());
 
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
-            String select = messages.getString("messages.tag-select-message")
-                    .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+            String prefix = messages.getString("messages.prefix");
+            if (prefix == null) {
+                prefix = "&e[SupremeTags]"; // fallback value
+            }
+
+            String select = messages.getString("messages.tag-select-message");
+            if (select == null) {
+                select = "&aYou have selected the tag %tag%"; // fallback value
+            }
+
+            select = select.replace("%prefix%", prefix);
             select = replacePlaceholders(menuUtil.getOwner(), select);
             msgPlayer(player, select
                     .replace("%identifier%", identifier)
-                    .replaceAll("%tag%", t.getCurrentTag()));
+                    .replace("%tag%", t.getTag().getFirst()));
+            playConfigSound(player, "selected-tag");
         }
     }
 
@@ -1043,8 +1053,10 @@ public abstract class Paged extends Menu {
 
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
             msgPlayer(player, messages.getString("messages.reset-message")
-                    .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
+                    .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
         }
+
+        playConfigSound(player, "reset-tag");
     }
 
     protected List<String> getFormattedLore(Tag t, String permission) {

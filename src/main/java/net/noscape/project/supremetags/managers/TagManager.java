@@ -62,8 +62,12 @@ public class TagManager {
         Tag tag = new Tag(identifier, Collections.singletonList(tagText), defaultCategory, permission, description, orderID, true, "common", new HashMap<>(), economy);
         tags.put(identifier, tag);
 
-        saveTagToConfig(tag, material, modelData, tagText);
-        saveTagConfig();
+        if (!isDBTags()) {
+            saveTagToConfig(tag, material, modelData, tagText);
+            saveTagConfig();
+        } else {
+            //SupremeTags.getInstance().getDatabase().saveTag(tag); // your DB API call
+        }
 
         if (sender != null) {
             msgPlayer(sender, "&8[&6&lTAG&8] &7New tag created &6" + identifier + " &f- " + tagText);
@@ -111,16 +115,28 @@ public class TagManager {
         }
 
         tags.remove(identifier);
-        getTagConfig().set("tags." + identifier, null);
-        saveTagConfig();
-        reloadTagConfig();
 
-        msgPlayer(sender, "&8[&6&lTAG&8] &7Tag &6" + identifier + " &7is now deleted!");
+        if (isDBTags()) {
+            //SupremeTags.getInstance().getDatabase().deleteTag(identifier);
+        } else {
+            getTagConfig().set("tags." + identifier, null);
+            saveTagConfig();
+            reloadTagConfig();
+        }
+        String deleted = messages.getString("messages.editor.deleted").replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+        msgPlayer(sender, deleted);
     }
 
     /* ---------------------- LOAD & VALIDATE ---------------------- */
 
     public void loadTags(boolean silent) {
+        if (isDBTags()) {
+            tags.clear();
+            //tags.putAll(SupremeTags.getInstance().getDatabase().loadTags()); // returns Map<String, Tag>
+            if (!silent) Bukkit.getConsoleSender().sendMessage("[TAGS] Loaded " + tags.size() + " tag(s) from database.");
+            return;
+        }
+
         FileConfiguration tagConfig = getTagConfig();
         ConfigurationSection tagsSection = tagConfig.getConfigurationSection("tags");
 
@@ -167,11 +183,24 @@ public class TagManager {
 
             String ecoType = tagConfig.getString("tags." + identifier + ".economy.type");
             double ecoAmount = tagConfig.getInt("tags." + identifier + ".economy.amount");
-            boolean ecoEnabled = tagConfig.getBoolean("tags." + identifier + ".economy.enabled");
+            boolean ecoEnabled = false;
+            if (tagConfig.isSet("tags." + identifier + ".economy.enable")) {
+                ecoEnabled = tagConfig.getBoolean("tags." + identifier + ".economy.enable");
+            } else if (tagConfig.isSet("tags." + identifier + ".economy.enabled")) {
+                ecoEnabled = tagConfig.getBoolean("tags." + identifier + ".economy.enabled");
+            }
+
+            List<String> abilities = tagConfig.getStringList("tags." + identifier + ".abilities");
 
             TagEconomy economy = new TagEconomy(ecoType, ecoAmount, ecoEnabled);
             Tag t = new Tag(identifier, tag, category, permission, description, orderID, withdrawable, rarity, effects, economy);
+
+            t.setEcoEnabled(ecoEnabled);
+            t.setEcoType(ecoType);
+            t.setEcoAmount(ecoAmount);
+
             t.setVariants(variants);
+            t.setAbilities(abilities);
 
             loadedTags.put(identifier, t);
             count++;
@@ -348,14 +377,18 @@ public class TagManager {
     }
 
     public void saveTag(Tag tag) {
-        String identifier = tag.getIdentifier();
-        getTagConfig().set("tags." + identifier + ".tag", tag.getTag());
-        getTagConfig().set("tags." + identifier + ".permission", tag.getPermission());
-        getTagConfig().set("tags." + identifier + ".description", tag.getDescription());
-        getTagConfig().set("tags." + identifier + ".category", tag.getCategory());
-        getTagConfig().set("tags." + identifier + ".economy.amount", tag.getEconomy().getAmount());
-        getTagConfig().set("tags." + identifier + ".withdrawable", tag.isWithdrawable());
-        saveTagConfig();
+        if (isDBTags()) {
+            //SupremeTags.getInstance().getDatabase().updateTag(tag);
+        } else {
+            String identifier = tag.getIdentifier();
+            getTagConfig().set("tags." + identifier + ".tag", tag.getTag());
+            getTagConfig().set("tags." + identifier + ".permission", tag.getPermission());
+            getTagConfig().set("tags." + identifier + ".description", tag.getDescription());
+            getTagConfig().set("tags." + identifier + ".category", tag.getCategory());
+            getTagConfig().set("tags." + identifier + ".economy.amount", tag.getEconomy().getAmount());
+            getTagConfig().set("tags." + identifier + ".withdrawable", tag.isWithdrawable());
+            saveTagConfig();
+        }
     }
 
     public void setTag(CommandSender sender, String identifier, String tag) {
@@ -454,5 +487,9 @@ public class TagManager {
 
     public FileConfiguration getMessages() {
         return messages;
+    }
+
+    public boolean isDBTags() {
+        return SupremeTags.getInstance().isDBTags();
     }
 }

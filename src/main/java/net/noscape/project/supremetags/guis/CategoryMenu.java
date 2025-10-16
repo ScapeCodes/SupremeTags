@@ -49,7 +49,7 @@ public class CategoryMenu extends Paged {
 
     @Override
     public String getMenuName() {
-        String title = format(Objects.requireNonNull(SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + menuUtil.getCategory() + ".title")).replaceAll("%page%", String.valueOf(this.getPage())));
+        String title = format(Objects.requireNonNull(SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + menuUtil.getCategory() + ".title")).replace("%page%", String.valueOf(this.getPage())));
         title = globalPlaceholders(menuUtil.getOwner(), title);
         return title;
     }
@@ -78,10 +78,10 @@ public class CategoryMenu extends Paged {
         String ptags = guis.getString("gui.items.personal-tags.displayname");
         String search = guis.getString("gui.items.search.displayname");
 
-        String insufficient = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.insufficient-funds").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
-        String unlocked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-unlocked").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+        String insufficient = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.insufficient-funds").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+        String unlocked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-unlocked").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
 
-        String no_tag_selected = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-tag-selected").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));;
+        String no_tag_selected = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-tag-selected").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));;
 
         insufficient = replacePlaceholders(player, insufficient);
 
@@ -101,14 +101,14 @@ public class CategoryMenu extends Paged {
 
                 if (option.startsWith("[player]") || option.startsWith("[PLAYER]")) {
                     String command = option.replace("[player] ", "");
-                    command = command.replaceAll("%player%", menuUtil.getOwner().getName());
+                    command = command.replace("%player%", menuUtil.getOwner().getName());
                     menuUtil.getOwner().performCommand(command);
                 }
 
                 if (option.startsWith("[console]") || option.startsWith("[CONSOLE]")) {
                     String command = option.replace("[console] ", "");
-                    command = command.replaceAll("%player%", menuUtil.getOwner().getName());
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replaceAll("%player%", menuUtil.getOwner().getName()));
+                    command = command.replace("%player%", menuUtil.getOwner().getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", menuUtil.getOwner().getName()));
                 }
 
                 if (option.startsWith("[broadcast]") || option.startsWith("[BROADCAST]")) {
@@ -197,14 +197,14 @@ public class CategoryMenu extends Paged {
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         msgPlayer(player, unlocked
-                                .replaceAll("%identifier%", t.getIdentifier())
-                                .replaceAll("%tag%", t.getCurrentTag()));
+                                .replace("%identifier%", t.getIdentifier())
+                                .replace("%tag%", t.getCurrentTag()));
                     }
                     super.open();
                 } else {
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
-                        msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEcoAmount())));
+                        msgPlayer(player, insufficient.replace("%cost%", String.valueOf(t.getEcoAmount())));
                     }
                 }
             } else {
@@ -291,8 +291,10 @@ public class CategoryMenu extends Paged {
                     menuUtil.setIdentifier("None");
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
-                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
+                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
                     }
+
+                    playConfigSound(player, "reset-tag");
                 } else {
                     TagResetEvent tagEvent = new TagResetEvent(player, false);
                     Bukkit.getPluginManager().callEvent(tagEvent);
@@ -313,8 +315,10 @@ public class CategoryMenu extends Paged {
                     menuUtil.setIdentifier(defaultTag);
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
-                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
+                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
                     }
+
+                    playConfigSound(player, "reset-tag");
                 }
             }
 

@@ -5,7 +5,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.SetupTag;
 import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.storage.PlayerConfig;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
