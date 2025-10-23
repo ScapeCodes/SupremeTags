@@ -1,5 +1,6 @@
 package net.noscape.project.supremetags.listeners;
 
+import com.cryptomorin.xseries.inventory.XInventoryView;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.menu.Menu;
 import org.bukkit.Material;
@@ -20,14 +21,17 @@ import java.lang.reflect.Method;
 public class MenuListener implements Listener {
 
     public static Inventory getTopInventory(InventoryEvent event) {
-        try {
-            Object view = event.getView();
-            Method getTopInventory = view.getClass().getMethod("getTopInventory");
-            getTopInventory.setAccessible(true);
-            return (Inventory) getTopInventory.invoke(view);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        //try {
+        //    Object view = event.getView();
+        //    Method getTopInventory = view.getClass().getMethod("getTopInventory");
+        //    getTopInventory.setAccessible(true);
+        //    return (Inventory) getTopInventory.invoke(view);
+        //} catch (NoSuchMethodException e) {
+        //    throw new RuntimeException(e);
+        //}
+
+        // new Inventory view detection.
+        return XInventoryView.of(event.getView()).getTopInventory();
     }
 
     @EventHandler

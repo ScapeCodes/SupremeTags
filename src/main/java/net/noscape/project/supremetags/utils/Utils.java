@@ -29,6 +29,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.lushplugins.chatcolorhandler.ChatColorHandler;
 import su.nightexpress.coinsengine.api.CoinsEngineAPI;
 
 import java.awt.*;
@@ -95,21 +96,18 @@ public class Utils {
         if (useMiniMessage && adventureSupported) {
             try {
                 Component component = formatComponent(message);
-                // Convert back to legacy string for backward compatibility
                 return LegacyComponentSerializer.legacySection().serialize(component);
             } catch (Exception e) {
                 // Graceful fallback to legacy
                 return ChatColor.translateAlternateColorCodes('&', message);
             }
         }
-
         // Otherwise, fallback to legacy system with hex code replacements
         message = replacePatternWithMinecraftColor(message, p1);
         message = replacePatternWithMinecraftColor(message, p2);
         message = replacePatternWithMinecraftColor(message, p4);
         message = replacePatternWithMinecraftColor(message, p5);
         message = replacePatternWithMinecraftColor(message, p3);
-
         message = message
                 .replace("<black>", "&0")
                 .replace("<dark_blue>", "&1")

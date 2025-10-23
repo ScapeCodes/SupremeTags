@@ -28,6 +28,9 @@ public class FreeSupremeTagsImporter implements TagImporter {
     @Override
     public void importTags(SupremeTags plugin, CommandSender sender, boolean force) {
         File file = getConfigFile();
+
+        if (sender == null) sender = Bukkit.getConsoleSender();
+
         if (!file.exists()) {
             Utils.msgPlayer(sender, "&6Merger: &7Missing 'free-tags.yml' in SupremeTags folder.");
             return;

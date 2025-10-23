@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static net.noscape.project.supremetags.utils.Utils.format;
@@ -20,8 +21,9 @@ public class EssentialsChatListener implements Listener {
 
     @EventHandler
     public void onGlobalChat(GlobalChatEvent event) {
-        String message = event.getFormat(); // Get EssentialsX's already-built chat format
+        String message = event.getFormat();
         message = replaceTagPlaceholders(message, event.getPlayer().getUniqueId());
+        message = sanitizeForEssentials(message);
         event.setFormat(message);
     }
 
@@ -29,25 +31,50 @@ public class EssentialsChatListener implements Listener {
     public void onLocalChat(LocalChatEvent event) {
         String message = event.getFormat();
         message = replaceTagPlaceholders(message, event.getPlayer().getUniqueId());
+        message = sanitizeForEssentials(message);
         event.setFormat(message);
+    }
+
+    /**
+     * Escapes problematic format symbols and ensures UTF-8 safe strings.
+     * EssentialsX internally uses String.format(), so we must escape '%' and
+     * ensure no invalid color encoding breaks it.
+     */
+    private String sanitizeForEssentials(String message) {
+        if (message == null) return "";
+
+        // Escape '%' because Essentials uses String.format()
+        message = message.replace("%", "%%");
+
+        // Detect & fix any broken encoding (e.g. 'ย§' instead of '§')
+        // This happens when files are saved in ANSI or CP1252 encoding.
+        message = message.replace("ย§", "§");
+
+        // Force UTF-8 normalization (remove invalid characters)
+        byte[] utf8Bytes = message.getBytes(StandardCharsets.UTF_8);
+        message = new String(utf8Bytes, StandardCharsets.UTF_8);
+
+        return message;
     }
 
     private String replaceTagPlaceholders(String text, UUID uuid) {
         if (uuid == null) return text;
 
         String activeTag = UserData.getActive(uuid);
-        String displayTag = SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output");
+        String displayTag = SupremeTags.getInstance().getConfig()
+                .getString("placeholders.chat.none-output", "");
 
         Tag tag = SupremeTags.getInstance().getTagManager().getTags().get(activeTag);
         Tag personalTag = SupremeTags.getInstance().getPlayerManager().loadAllPlayerTags(uuid).get(activeTag);
         Variant var = SupremeTags.getInstance().getTagManager().getVariantTag(Bukkit.getPlayer(uuid));
 
+        // Select the right tag to show
         if (tag != null && tag.getTag() != null) {
-            displayTag = tag.getCurrentTag() != null ? tag.getCurrentTag() : tag.getTag().get(0);
+            displayTag = tag.getCurrentTag() != null ? tag.getCurrentTag() : tag.getTag().getFirst();
         } else if (personalTag != null) {
-            displayTag = personalTag.getTag().get(0);
+            displayTag = personalTag.getTag().getFirst();
         } else if (var != null) {
-            displayTag = var.getTag().get(0);
+            displayTag = var.getTag().getFirst();
         }
 
         Player player = Bukkit.getPlayer(uuid);
@@ -57,8 +84,12 @@ public class EssentialsChatListener implements Listener {
 
         displayTag = format(displayTag);
 
-        String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
-        formatted = formatted.replace("%tag%", displayTag);
+        String formatted = SupremeTags.getInstance().getConfig()
+                .getString("placeholders.chat.format", "{tag}");
+        formatted = formatted.replace("%tag%", displayTag)
+                .replace("{tag}", displayTag)
+                .replace("{TAG}", displayTag)
+                .replace("{supremetags_tag}", displayTag);
 
         return text
                 .replace("{tag}", formatted)

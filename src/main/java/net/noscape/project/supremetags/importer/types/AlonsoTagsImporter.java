@@ -30,6 +30,8 @@ public class AlonsoTagsImporter implements TagImporter {
         File file = getConfigFile();
         if (!file.exists()) return;
 
+        if (sender == null) sender = Bukkit.getConsoleSender();
+
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         ConfigurationSection section = config.getConfigurationSection("Tags");
 

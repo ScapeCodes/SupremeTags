@@ -48,7 +48,7 @@ public final class SupremeTags extends JavaPlugin {
     public final int build;
     {
         dev_build = false;
-        build = 12;
+        build = 1;
     }
 
     private static SupremeTags instance;
