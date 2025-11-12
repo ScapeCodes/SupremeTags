@@ -3,6 +3,7 @@ package net.noscape.project.supremetags.guis.tagactions;
 import de.tr7zw.nbtapi.NBTItem;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.api.events.TagAssignEvent;
+import net.noscape.project.supremetags.api.events.TagBuyEvent;
 import net.noscape.project.supremetags.api.events.TagResetEvent;
 import net.noscape.project.supremetags.guis.MainMenu;
 import net.noscape.project.supremetags.guis.TagMenu;
@@ -82,6 +83,55 @@ public class TagActionsMenu extends Menu {
                 new SpecificTagMenu(SupremeTags.getMenuUtilIdentifier(player, id)).open();
             }
 
+            if (name.equalsIgnoreCase("purchase-tag")) {
+                String identifier = menuUtil.getIdentifier();
+                Tag t = SupremeTags.getInstance().getTagManager().getTag(identifier);
+
+                if (t == null) {
+                    msgPlayer(player, "§cInvalid tag identifier!");
+                    return;
+                }
+
+                String insufficient = messages.getString("messages.insufficient-funds")
+                        .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+                String unlocked = messages.getString("messages.tag-unlocked")
+                        .replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
+
+                insufficient = replacePlaceholders(player, insufficient);
+                unlocked = replacePlaceholders(player, unlocked);
+
+                boolean hasPerm = player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none");
+
+                if (hasPerm) {
+                    msgPlayer(player, "§eYou already own this tag!");
+                    return;
+                }
+
+                if (hasAmount(player, t.getEcoType(), t.getEcoAmount(), t.getIdentifier())) {
+                    TagBuyEvent tagEvent = new TagBuyEvent(player, identifier, t.getEcoAmount(), false);
+                    Bukkit.getPluginManager().callEvent(tagEvent);
+
+                    if (tagEvent.isCancelled()) return;
+
+                    take(player, t.getEcoType(), t.getEcoAmount(), t.getIdentifier());
+                    addPerm(player, t.getPermission());
+
+                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                        msgPlayer(player, unlocked
+                                .replace("%identifier%", t.getIdentifier())
+                                .replace("%tag%", t.getCurrentTag()));
+                    }
+
+                    super.refresh();
+                } else {
+                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                        insufficient = replacePlaceholders(player, insufficient);
+                        msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEcoAmount())));
+                    }
+                }
+            }
+
+
             if (name.equalsIgnoreCase("withdraw-tag")) {
                 SupremeTags.getInstance().getVoucherManager().withdrawTag(player, menuUtil.getIdentifier());
                 player.closeInventory();
@@ -115,7 +165,7 @@ public class TagActionsMenu extends Menu {
 
                 UserData.setActive(player, tagevent.getTag());
 
-                super.open();
+                super.refresh();
 
                 SupremeTags.getInstance().getTagManager().getTag(id).applyEffects(menuUtil.getOwner());
 
@@ -146,7 +196,7 @@ public class TagActionsMenu extends Menu {
                     }
 
                     UserData.setActive(player, "None");
-                    super.open();
+                    super.refresh();
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         msgPlayer(player, messages.getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
@@ -167,7 +217,7 @@ public class TagActionsMenu extends Menu {
                     }
 
                     UserData.setActive(player, defaultTag);
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier(defaultTag);
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {

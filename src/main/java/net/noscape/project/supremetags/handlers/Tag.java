@@ -55,6 +55,20 @@ public class Tag {
         this.economy = economy;
     }
 
+    public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy, List<Variant> variants) {
+        this.identifier = identifier;
+        this.tag = tag;
+        this.category = category;
+        this.permission = permission;
+        this.description = description;
+        this.order = order;
+        this.isWithdrawable = isWithdrawable;
+        this.rarity = rarity;
+        this.effects = effects;
+        this.economy = economy;
+        this.variants = variants;
+    }
+
     public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, boolean isWithdrawable, String rarity, TagEconomy economy) {
         this.identifier = identifier;
         this.tag = tag;
@@ -159,7 +173,7 @@ public class Tag {
 
                 runAtFixedRate.invoke(scheduler, plugin, animationTaskRunnable, 0L, animationSpeed);
             } catch (Exception e) {
-                plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
             }
         }
     }
@@ -172,6 +186,7 @@ public class Tag {
     }
 
     public String getCurrentTag() {
+        if (current_tag == null) return current_tag = getTag().getFirst();
         return current_tag;
     }
 
@@ -297,5 +312,9 @@ public class Tag {
 
     public void setAbilities(List<String> abilities) {
         this.abilities = abilities;
+    }
+
+    public boolean isAnimated() {
+        return tag.size() > 1;
     }
 }

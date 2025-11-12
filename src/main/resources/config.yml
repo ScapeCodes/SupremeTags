@@ -11,9 +11,7 @@ settings:
     main-command: 'tags'
     aliases:
       - tag
-      - stags
-      - supremetags
-  no-permission-menu-action: false # set true, if the player doesn't have permission to the argument like "/tags reload" it will just open the tags' menu.
+  no-permission-menu-action: true # set true, if the player doesn't have permission to the argument like "/tags reload" it will just open the tags' menu.
   messaging-platform: 'bungeecord' # 'bungeecord' or 'velocity'
   bungee-messaging: false # when set to true, this will sync all tags across all servers, without having to manually do this.
   default-tag: 'none' # set 'none' players start with no tag.
@@ -28,7 +26,7 @@ settings:
     - 'example'
     - 'world2'
   gui-messages: true # setting this to true, will enable 'tag-select-message' & 'reset-message'
-  locked-view: false # this setting allows players to view locked/unlocked tags.
+  locked-view: true # this setting allows players to view locked/unlocked tags.
   personal-tags:
     enable: true # this setting allows players to make and access their own tags.
     limits:
@@ -49,9 +47,7 @@ settings:
   deactivate-click: true # set false if you don't want function where if you click the active tag item in gui, it will deactivate.
   only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
   search-type: 'SIGN' # either 'SIGN' or 'ANVIL'
-  use-minimessage: false # If true the plugin will use MiniMessage exclusively, you will have to remove all legacy hex codes.
   update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
-  auto-tag-rarity: false # set true, if you want the plugin to auto update tag rarity depending on rarities.yml ranges.
 
 ############################################################
 # +------------------------------------------------------+ #

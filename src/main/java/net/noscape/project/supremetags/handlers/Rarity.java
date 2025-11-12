@@ -1,5 +1,7 @@
 package net.noscape.project.supremetags.handlers;
 
+import net.noscape.project.supremetags.utils.Utils;
+
 public class Rarity {
 
     private boolean enable;
@@ -62,5 +64,11 @@ public class Rarity {
 
     public void setDisplayname(String displayname) {
         this.displayname = displayname;
+    }
+
+    public void checkRank() {
+        Utils.runAsync(() -> ((Runnable) () -> {
+            // implement auto rankup for rarities.
+        }).run());
     }
 }

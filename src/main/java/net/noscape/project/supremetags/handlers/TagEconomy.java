@@ -6,6 +6,10 @@ public class TagEconomy {
     private double amount;
     private boolean enabled;
 
+    // custom economy
+    private String take_cmd;
+    private String condition;
+
     public TagEconomy(String type, double amount, boolean enabled) {
         this.type = type;
         this.amount = amount;
@@ -34,5 +38,21 @@ public class TagEconomy {
 
     public void setAmount(double cost) {
         this.amount = cost;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public String getTake_cmd() {
+        return take_cmd;
+    }
+
+    public void setTake_cmd(String take_cmd) {
+        this.take_cmd = take_cmd;
     }
 }

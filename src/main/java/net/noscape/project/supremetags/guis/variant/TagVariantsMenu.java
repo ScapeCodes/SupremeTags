@@ -42,6 +42,8 @@ public class TagVariantsMenu extends Paged {
         super(menuUtil);
         this.tag = tag;
         this.variants = tag.getVariants();
+
+        enableAutoUpdate(true);
     }
 
     @Override
@@ -109,7 +111,7 @@ public class TagVariantsMenu extends Paged {
                     String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag");
 
                     UserData.setActive(player, defaultTag);
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier(defaultTag);
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -155,7 +157,7 @@ public class TagVariantsMenu extends Paged {
                     }
 
                     UserData.setActive(player, "None");
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier("None");
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -177,7 +179,7 @@ public class TagVariantsMenu extends Paged {
                     }
 
                     UserData.setActive(player, defaultTag);
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier(defaultTag);
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -203,7 +205,7 @@ public class TagVariantsMenu extends Paged {
                 String nextSort = sortOptions.get(nextIndex);
 
                 menuUtil.setSort(nextSort);
-                super.open();
+                super.refresh();
             }
 
             if (name.equalsIgnoreCase("back")) {
@@ -220,7 +222,7 @@ public class TagVariantsMenu extends Paged {
                 if (variants.size() > maxItems & currentItemsOnPage >= maxItems) {
                     if (!((index + 1) >= variants.size())) {
                         page = page + 1;
-                        super.open();
+                        super.refresh();
                     } else {
                         e.setCancelled(true);
                     }
@@ -247,9 +249,9 @@ public class TagVariantsMenu extends Paged {
                     if (!var.getRarity().equalsIgnoreCase(rarity)) continue;
                 }
 
-                String material = this.guis.getString("gui.tag-variants-menu.item.display-item");
+                String material = var.getMaterial();
                 String item_displayname;
-                int item_custom_model_data = this.guis.getInt("gui.tag-variants-menu.item.custom-model-data");
+                int item_custom_model_data = var.getCustom_model_data();
 
                 if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
                     item_displayname = this.guis.getString("gui.tag-variants-menu.item.displayname");
@@ -330,7 +332,11 @@ public class TagVariantsMenu extends Paged {
                     }
 
                     line = line.replace(identifierPlaceholder, var.getIdentifier());
-                    line = line.replace(tagPlaceholder, var.getTag().get(0));
+                    if (var.getCurrentTag() != null) {
+                        line = line.replace(tagPlaceholder, var.getCurrentTag());
+                    } else {
+                        line = line.replace(tagPlaceholder, var.getTag().getFirst());
+                    }
                     line = line.replace(costFormattedPlaceholder, "$" + formatNumber(tag.getEconomy().getAmount()));
                     line = line.replace(costFormattedPlaceholderRaw, formatNumber(tag.getEconomy().getAmount()));
                     line = line.replace(costPlaceholder, String.valueOf(tag.getEconomy().getAmount()));

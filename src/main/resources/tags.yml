@@ -62,7 +62,9 @@ tags:
     rarity: common
     economy:
       enabled: false
-      type: VAULT # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere]
+      type: CUSTOM # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere, CUSTOM]
+      take-cmd: 'eco take %player% %amount%'
+      condition: '%vault_eco_balance% >= %amount%' # requires placeholderapi
       amount: 200
   santa: # Christmas themed tag, shows in the Xmas category.
     tag:
@@ -160,6 +162,13 @@ tags:
           - '&a[VIP&b+&a]'
         description:
           - '&aAqua VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.blue
         rarity: common
       vipplus_red:
@@ -168,6 +177,13 @@ tags:
           - '&a[VIP&c+&a]'
         description:
           - '&aRed VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.red
         rarity: rare
       vipplus_gold:
@@ -176,6 +192,13 @@ tags:
           - '&a[VIP&6+&a]'
         description:
           - '&aGold VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.gol
         rarity: uncommon
       vipplus_pink:
@@ -184,6 +207,13 @@ tags:
           - '&a[VIP&d+&a]'
         description:
           - '&aPink VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.pin
         rarity: common
       vipplus_black:
@@ -192,6 +222,13 @@ tags:
           - '&a[VIP&0+&a]'
         description:
           - '&aBlack VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.bla
         rarity: common
       vipplus_yellow:
@@ -200,6 +237,13 @@ tags:
           - '&a[VIP&e+&a]'
         description:
           - '&aYellow VIP for VIP+'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
         permission: supremetags.tag.vip.yel
         rarity: common
     effects: []

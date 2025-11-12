@@ -27,7 +27,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,6 +42,7 @@ public class TagMenu extends Paged {
     public TagMenu(MenuUtil menuUtil) {
         super(menuUtil);
         tags = SupremeTags.getInstance().getTagManager().getTags();
+        enableAutoUpdate(true);
     }
 
     @Override
@@ -126,12 +126,12 @@ public class TagMenu extends Paged {
                     handleTagReset(player, t);
                 }
             } else if (isCostTag) { // Only check cost if it's actually a cost tag
-                if (hasAmount(player, t.getEcoType(), t.getEcoAmount())) {
+                if (hasAmount(player, t.getEcoType(), t.getEcoAmount(), t.getIdentifier())) {
                     TagBuyEvent tagevent = new TagBuyEvent(player, identifier, t.getEcoAmount(), false);
                     Bukkit.getPluginManager().callEvent(tagevent);
                     if (tagevent.isCancelled()) return;
 
-                    take(player, t.getEcoType(), t.getEcoAmount());
+                    take(player, t.getEcoType(), t.getEcoAmount(), t.getIdentifier());
                     addPerm(player, t.getPermission());
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -139,7 +139,7 @@ public class TagMenu extends Paged {
                                 .replace("%identifier%", t.getIdentifier())
                                 .replace("%tag%", t.getCurrentTag()));
                     }
-                    super.open();
+                    super.refresh();
                 } else {
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
@@ -186,7 +186,7 @@ public class TagMenu extends Paged {
                         if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
                             if (!((index + 1) >= tag.size())) {
                                 page = page + 1;
-                                super.open();
+                                super.refresh();
                             } else {
                                 e.setCancelled(true);
                             }
@@ -198,7 +198,7 @@ public class TagMenu extends Paged {
                     if (option.startsWith("[previous-page]") || option.startsWith("[PREVIOUS-PAGE]")) {
                         if (page != 0) {
                             page = page - 1;
-                            super.open();
+                            super.refresh();
                         }
                     }
 
@@ -244,7 +244,7 @@ public class TagMenu extends Paged {
                     String nextFilter = filterOptions.get(nextIndex);
 
                     menuUtil.setFilter(nextFilter);
-                    super.open();
+                    super.refresh();
                 }
 
                 if (name.equalsIgnoreCase("sort")) {
@@ -264,7 +264,7 @@ public class TagMenu extends Paged {
                     String nextSort = sortOptions.get(nextIndex);
 
                     menuUtil.setSort(nextSort);
-                    super.open();
+                    super.refresh();
                 }
 
                 if (name.equalsIgnoreCase("reset")) {
@@ -287,7 +287,7 @@ public class TagMenu extends Paged {
                         }
 
                         UserData.setActive(player, "None");
-                        super.open();
+                        super.refresh();
                         menuUtil.setIdentifier("None");
 
                         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -311,7 +311,7 @@ public class TagMenu extends Paged {
                         }
 
                         UserData.setActive(player, defaultTag);
-                        super.open();
+                        super.refresh();
                         menuUtil.setIdentifier(defaultTag);
 
                         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -324,7 +324,7 @@ public class TagMenu extends Paged {
                 if (name.equalsIgnoreCase("back")) {
                     if (page != 0) {
                         page = page - 1;
-                        super.open();
+                        super.refresh();
                     }
                 }
 
@@ -332,7 +332,7 @@ public class TagMenu extends Paged {
                     if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
                         if (!((index + 1) >= tag.size())) {
                             page = page + 1;
-                            super.open();
+                            super.refresh();
                         } else {
                             e.setCancelled(true);
                         }
@@ -581,7 +581,11 @@ public class TagMenu extends Paged {
                     }
 
                     line = line.replace(identifierPlaceholder, t.getIdentifier());
-                    line = line.replace(tagPlaceholder, t.getTag().get(0));
+                    if (t.getCurrentTag() != null) {
+                        line = line.replace(tagPlaceholder, t.getCurrentTag());
+                    } else {
+                        line = line.replace(tagPlaceholder, t.getTag().getFirst());
+                    }
                     line = line.replace(costFormattedPlaceholder, "$" + formatNumber(t.getEconomy().getAmount()));
                     line = line.replace(costFormattedPlaceholderRaw, formatNumber(t.getEconomy().getAmount()));
                     line = line.replace(costPlaceholder, String.valueOf(t.getEconomy().getAmount()));
@@ -600,19 +604,28 @@ public class TagMenu extends Paged {
                 nbt.getItem().setItemMeta(tagMeta);
                 nbt.setString("identifier", t.getIdentifier());
 
-                if (guis.getBoolean("gui.tag-menu.slots-tag.enable")) {
-                    if (currentItemsOnPage < slots.size()) {
-                        try {
-                            int slot = Integer.parseInt(slots.get(currentItemsOnPage));
-                            inventory.setItem(slot, nbt.getItem());
-                        } catch (NumberFormatException e) {
-                            inventory.addItem(nbt.getItem());
-                        }
-                    } else {
-                        inventory.addItem(nbt.getItem());
+                int placementSlot;
+
+                boolean useDefinedSlots = guis.getBoolean("gui.tag-menu.slots-tag.enable");
+
+                if (useDefinedSlots && currentItemsOnPage < slots.size()) {
+                    String rawSlot = slots.get(currentItemsOnPage);
+                    try {
+                        placementSlot = Integer.parseInt(rawSlot);
+                    } catch (NumberFormatException e) {
+                        placementSlot = inventory.firstEmpty();
                     }
+                } else if (useDefinedSlots) {
+                    placementSlot = inventory.firstEmpty();
                 } else {
-                    inventory.addItem(nbt.getItem());
+                    placementSlot = inventory.firstEmpty();
+                }
+
+                if (placementSlot != -1) {
+                    inventory.setItem(placementSlot, nbt.getItem());
+                    if (t.isAnimated()) {
+                        animatedSlots.add(placementSlot);
+                    }
                 }
 
                 currentItemsOnPage++;

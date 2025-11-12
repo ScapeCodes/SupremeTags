@@ -93,6 +93,7 @@ messages:
   no-effects: '&7No Effects Found!'
   effects-replace-style: '&8&l> &f%effect%'
   placeholder-error: '%prefix% &cYou cannot use placeholders in the your tags.'
+  similar-error: '%prefix% &cTag too similar to an existing one. Try again.'
   dev-build-alert:
     - '&r'
     - '&c&l⚠ DEV BUILD ACTIVE ⚠'
@@ -102,3 +103,34 @@ messages:
     - '&7Version: &f%version%'
     - '&7Link: &f%link%'
     - '&r'
+  debug:
+    - "&f&lSupremeTags2 Debug Report &8➜"
+    - ""
+    - "&7Version:&f %version%"
+    - "&7Author:&f %author%"
+    - "&7Discord:&f %discord%"
+    - ""
+    - "&e&lBasic Information:"
+    - " &8● &7Tags Loaded: &f%tags_loaded%"
+    - " &8● &7Categories Loaded: &f%categories_loaded%"
+    - " &8● &7Database Type: &f%db_type%"
+    - " &8● &7Database Connected: &f%db_connected%"
+    - ""
+    - "&e&lPlugin Hooks:"
+    - " &8● &7Vault: %hook_vault%"
+    - " &8● &7PlayerPoints: %hook_playerpoints%"
+    - " &8● &7CoinsEngine: %hook_coinsengine%"
+    - " &8● &7NBT API: %hook_nbtapi%"
+    - " &8● &7PlaceholderAPI: %hook_papi%"
+    - ""
+    - "&e&lConfiguration Check:"
+    - "%config_errors%"
+    - ""
+    - "&e&lPlaceholderAPI Test:"
+    - "%papi_test_tag%"
+    - "%papi_test_chat%"
+    - ""
+    - "&e&lTag Sanity Check:"
+    - "%tag_errors%"
+    - ""
+    - "&7Debug complete."

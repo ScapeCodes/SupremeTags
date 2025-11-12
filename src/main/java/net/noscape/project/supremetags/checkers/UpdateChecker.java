@@ -47,7 +47,7 @@ public class UpdateChecker {
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Runnable.class);
                 runMethod.invoke(scheduler, this.plugin, task);
             } catch (Exception e) {
-                plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
             }
         }
     }

@@ -1,11 +1,14 @@
 package net.noscape.project.supremetags;
 
+import com.artillexstudios.axapi.AxPlugin;
+import com.artillexstudios.axapi.utils.featureflags.FeatureFlags;
 import com.nexomc.nexo.api.NexoItems;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import net.noscape.project.supremetags.api.SupremeTagsAPI;
 import net.noscape.project.supremetags.checkers.Metrics;
 import net.noscape.project.supremetags.checkers.UpdateChecker;
+import net.noscape.project.supremetags.commands.MyTags;
 import net.noscape.project.supremetags.commands.tags.TagsCommand;
 import net.noscape.project.supremetags.handlers.Editor;
 import net.noscape.project.supremetags.handlers.SetupTag;
@@ -32,14 +35,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.logging.Logger;
 
 import static net.noscape.project.supremetags.utils.Utils.*;
 
-public final class SupremeTags extends JavaPlugin {
+public final class SupremeTags extends AxPlugin {
 
     /*
      * Specified by Scape if the plugin is in development build or is a release.
@@ -101,6 +103,9 @@ public final class SupremeTags extends JavaPlugin {
     private DataCache dataCache;
 
     private ItemStack head;
+
+    private static boolean foliaDetected = false;
+    private static boolean foliaChecked = false;
 
     @Override
     public void onEnable() {
@@ -194,7 +199,8 @@ public final class SupremeTags extends JavaPlugin {
         List<String> aliases = getConfig().getStringList("settings.commands.aliases");
         registerCommand(mainCommand, aliases);
 
-        ClassRegistrationUtils.loadCommands("net.noscape.project.supremetags.commands", this);
+        getCommand("mytags").setExecutor(new MyTags());
+
         ClassRegistrationUtils.loadListeners("net.noscape.project.supremetags.listeners", this);
 
         if (isEssentials()) {
@@ -212,7 +218,7 @@ public final class SupremeTags extends JavaPlugin {
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
         //isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
-        merge(logger);
+        merge();
 
         if (isPlaceholderAPI()) {
             logger.info("> PlaceholderAPI: Found");
@@ -252,6 +258,8 @@ public final class SupremeTags extends JavaPlugin {
         }
 
         validateDefaultSounds();
+
+        updateFlags();
     }
 
     public static SupremeTags getInstance() { return instance; }
@@ -386,7 +394,11 @@ public final class SupremeTags extends JavaPlugin {
         return legacy_format;
     }
 
-    public void merge(Logger log) {
+    public void merge() {
+        if (!getConfig().getBoolean("settings.auto-merge")) {
+            return;
+        }
+
         mergeManager.merge(null, true);
     }
 
@@ -471,13 +483,17 @@ public final class SupremeTags extends JavaPlugin {
         return getConfig().getBoolean("settings.no-permission-menu-action");
     }
 
-    public boolean isFoliaFound() {
-        try {
-            Class.forName("io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+    public static boolean isFoliaFound() {
+        if (!foliaChecked) {
+            try {
+                Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+                foliaDetected = true;
+            } catch (ClassNotFoundException ignored) {
+                foliaDetected = false;
+            }
+            foliaChecked = true; // Cache result forever
         }
+        return foliaDetected;
     }
 
     public Boolean isH2() {
@@ -693,5 +709,9 @@ public final class SupremeTags extends JavaPlugin {
         }
 
         SupremeTags.getInstance().saveConfig();
+    }
+
+    public void updateFlags() {
+        FeatureFlags.USE_LEGACY_HEX_FORMATTER.set(true);
     }
 }

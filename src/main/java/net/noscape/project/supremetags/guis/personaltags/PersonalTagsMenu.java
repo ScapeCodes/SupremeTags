@@ -129,7 +129,7 @@ public class PersonalTagsMenu extends Paged {
                     }
 
                     UserData.setActive(player, "None");
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier("None");
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
@@ -151,7 +151,7 @@ public class PersonalTagsMenu extends Paged {
                     }
 
                     UserData.setActive(player, defaultTag);
-                    super.open();
+                    super.refresh();
                     menuUtil.setIdentifier(defaultTag);
 
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {

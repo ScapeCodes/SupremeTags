@@ -1,5 +1,6 @@
 package net.noscape.project.supremetags.utils;
 
+import com.artillexstudios.axapi.utils.StringUtils;
 import com.cryptomorin.xseries.XSound;
 import dev.lone.itemsadder.api.CustomStack;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
@@ -16,24 +17,22 @@ import net.luckperms.api.util.Tristate;
 import net.md_5.bungee.api.ChatColor;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
+import net.noscape.project.supremetags.handlers.TagEconomy;
 import net.noscape.project.supremetags.handlers.Variant;
 import net.noscape.project.supremetags.managers.TagManager;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.lushplugins.chatcolorhandler.ChatColorHandler;
 import su.nightexpress.coinsengine.api.CoinsEngineAPI;
 
 import java.awt.*;
-import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
@@ -42,8 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static com.ssomar.score.utils.backward_compatibility.SoundUtils.getSound;
 
 public class Utils {
 
@@ -61,53 +58,77 @@ public class Utils {
     private static final Pattern p4 = Pattern.compile("<#([A-Fa-f0-9]{6})>");
     private static final Pattern p5 = Pattern.compile("<#&([A-Fa-f0-9]{6})>");
 
-    private static final Pattern g1 = Pattern.compile("<gradient:([0-9A-Fa-f]{6})>(.*?)</gradient:([0-9A-Fa-f]{6})>");
-    private static final Pattern g2 = Pattern.compile("<gradient:#([A-Fa-f0-9]{6})>(.*?)</gradient:#([A-Fa-f0-9]{6})>");
-    private static final Pattern g3 = Pattern.compile("<gradient:&#([A-Fa-f0-9]{6})>(.*?)</gradient:&#([A-Fa-f0-9]{6})>");
-
-    private static final Pattern g4 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-    private static final Pattern g5 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-    private static final Pattern g6 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-
-    private static final Pattern rainbow1 = Pattern.compile("<rainbow>(.*?)</rainbow>");
-    private static final Pattern rainbow2 = Pattern.compile("<r>(.*?)</r>");
+//    private static final Pattern g1 = Pattern.compile("<gradient:([0-9A-Fa-f]{6})>(.*?)</gradient:([0-9A-Fa-f]{6})>");
+//    private static final Pattern g2 = Pattern.compile("<gradient:#([A-Fa-f0-9]{6})>(.*?)</gradient:#([A-Fa-f0-9]{6})>");
+//    private static final Pattern g3 = Pattern.compile("<gradient:&#([A-Fa-f0-9]{6})>(.*?)</gradient:&#([A-Fa-f0-9]{6})>");
+//
+//    private static final Pattern g4 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
+//    private static final Pattern g5 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
+//    private static final Pattern g6 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
+//
+//    private static final Pattern rainbow1 = Pattern.compile("<rainbow>(.*?)</rainbow>");
+//    private static final Pattern rainbow2 = Pattern.compile("<r>(.*?)</r>");
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.#");
 
-    /**
-     * Automatically formats a string depending on server version and configuration.
-     * Supports both MiniMessage (modern) and legacy (&) color formats.
-     *
-     * @param message Raw input string (may contain MiniMessage or & codes)
-     * @return Formatted string (legacy-compatible)
-     */
+
     public static String format(String message) {
         if (message == null || message.isEmpty()) return "";
 
-        // Always handle legacy for older servers
-        if (isVersionLessThan("1.16")) {
+        return StringUtils.formatToString(message, Collections.emptyMap());
+    }
+
+    public static String formatOLD(String message) {
+        if (message == null || message.isEmpty()) return "";
+
+        try {
+            // --- If legacy detected, convert it first ---
+            if (containsLegacyFormatting(message)) {
+
+                message = formatLegacy(message);
+
+                Component legacyComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(message);
+
+                // Optional: upgrade to MiniMessage string if you ever want to re-save
+                String upgradedMini = MiniMessage.miniMessage().serialize(legacyComponent);
+
+                // Return a version safe for GUI or chat
+                return LegacyComponentSerializer.legacySection().serialize(
+                        MiniMessage.miniMessage().deserialize(upgradedMini)
+                );
+            }
+
+            // --- Otherwise, assume it's MiniMessage and parse directly ---
+            Component component = MiniMessage.miniMessage().deserialize(message);
+            return LegacyComponentSerializer.legacySection().serialize(component);
+
+        } catch (Exception e) {
+            // Last resort fallback — never crash on color parsing
+            message = formatLegacy(message);
             return ChatColor.translateAlternateColorCodes('&', message);
         }
+    }
 
-        // Detect user preference and Adventure support
-        boolean useMiniMessage = SupremeTags.getInstance().isMiniMessage();
-        boolean adventureSupported = isAdventureAvailable();
+    /**
+     * Detects legacy color codes (& or §)
+     */
+    private static boolean containsLegacyFormatting(String message) {
+        // § or & followed by a valid color/formatting char
+        return message.contains("§") || message.matches(".*&[0-9a-frklmnor].*");
+    }
 
-        if (useMiniMessage && adventureSupported) {
-            try {
-                Component component = formatComponent(message);
-                return LegacyComponentSerializer.legacySection().serialize(component);
-            } catch (Exception e) {
-                // Graceful fallback to legacy
-                return ChatColor.translateAlternateColorCodes('&', message);
-            }
-        }
-        // Otherwise, fallback to legacy system with hex code replacements
+    /**
+     * Formats a string with & and hex color support (fallback mode).
+     */
+    private static String formatLegacy(String message) {
+        // Replace known hex formats (#RRGGBB, &#RRGGBB, etc.)
         message = replacePatternWithMinecraftColor(message, p1);
         message = replacePatternWithMinecraftColor(message, p2);
         message = replacePatternWithMinecraftColor(message, p4);
         message = replacePatternWithMinecraftColor(message, p5);
         message = replacePatternWithMinecraftColor(message, p3);
+
+        // Translate MiniMessage-like color tags into legacy
         message = message
                 .replace("<black>", "&0")
                 .replace("<dark_blue>", "&1")
@@ -132,11 +153,12 @@ public class Utils {
                 .replace("<italic>", "&o")
                 .replace("<reset>", "&r");
 
+        // Apply final color codes
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
     /**
-     * Returns a formatted Adventure Component, automatically choosing MiniMessage or legacy.
+     * Handles both MiniMessage + legacy when using Adventure Components.
      */
     public static Component formatComponent(String message) {
         if (message == null || message.isEmpty()) return Component.empty();
@@ -145,14 +167,15 @@ public class Utils {
 
         try {
             if (useMiniMessage) {
-                // Convert legacy codes into MiniMessage-compatible input
-                message = legacyToMiniMessage(message);
+                // Let MiniMessage handle the rich formatting
                 return MiniMessage.miniMessage().deserialize(message);
             } else {
-                return LegacyComponentSerializer.legacyAmpersand().deserialize(message);
+                // Fallback: handle legacy codes and return a component
+                String formatted = formatLegacy(message);
+                return LegacyComponentSerializer.legacySection().deserialize(formatted);
             }
         } catch (Exception e) {
-            // Fallback to plain text if MiniMessage parsing fails
+            e.printStackTrace();
             return Component.text(ChatColor.stripColor(message));
         }
     }
@@ -208,25 +231,39 @@ public class Utils {
         msgPlayer((CommandSender) player, messages);
     }
 
+    public static List<String> color(List<String> lore) {
+        if (lore == null) return Collections.emptyList();
+        return lore.stream()
+                .map(line -> format(line))
+                .collect(Collectors.toList());
+    }
 
-    private static String replacePatternWithMinecraftColor(String message, Pattern pattern) {
-        Matcher matcher = pattern.matcher(message);
-        StringBuffer sb = new StringBuffer();
+    private static String replacePatternWithMinecraftColor(String input, Pattern pattern) {
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer buffer = new StringBuffer();
+
         while (matcher.find()) {
-            String hex;
-            if (matcher.groupCount() == 1) {
-                hex = "#" + matcher.group(1);
-            } else if (matcher.groupCount() >= 2) {
-                // For p3 pattern, group(2) is hex without '#'
-                hex = "#" + matcher.group(matcher.groupCount());
+            String colorCode = matcher.group(1);
+            String replacement;
+
+            if (SUPPORTS_RGB) {
+                // Convert to §x§R§R§G§G§B§B
+                StringBuilder hex = new StringBuilder("§x");
+                for (char c : colorCode.toCharArray()) {
+                    hex.append('§').append(c);
+                }
+                replacement = hex.toString();
             } else {
-                hex = "#000000"; // Fallback (should never happen)
+                // Approximate to nearest ChatColor
+                ChatColor closest = ChatColor.of("#" + colorCode);
+                replacement = closest.toString();
             }
-            String replacement = hexToMinecraftColorCode(hex);
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+
+            matcher.appendReplacement(buffer, replacement);
         }
-        matcher.appendTail(sb);
-        return sb.toString();
+
+        matcher.appendTail(buffer);
+        return buffer.toString();
     }
 
     private static String hexToMinecraftColorCode(String hex) {
@@ -390,7 +427,7 @@ public class Utils {
         SupremeTags.getPermissions().playerRemove(null, player, permission);
     }
 
-    public static boolean hasAmount(Player player, String economyType, double cost) {
+    public static boolean hasAmount(Player player, String economyType, double cost, String tag) {
         if (economyType.equalsIgnoreCase("VAULT")) {
             return SupremeTags.getEconomy().has(player, cost);
         } else if (economyType.equalsIgnoreCase("PLAYERPOINTS")) {
@@ -400,12 +437,23 @@ public class Utils {
         } else if (economyType.startsWith("COINSENGINE-")) {
             String eco_name = economyType.replace("COINSENGINE-", "");
             return CoinsEngineAPI.getBalance(player.getUniqueId(), eco_name) >= cost;
+        } else if (economyType.equalsIgnoreCase("CUSTOM")) {
+            TagEconomy eco = SupremeTags.getInstance().getTagManager().getTag(tag).getEconomy();
+            String condition = eco.getCondition();
+
+            if (condition == null || condition.trim().isEmpty()) return false;
+
+            condition = condition.replace("%amount%", String.valueOf(cost));
+            condition = PlaceholderAPI.setPlaceholders(player, condition);
+
+            return evaluateCondition(condition);
         }
+
 
         return false;
     }
 
-    public static void take(Player player, String economyType, double cost) {
+    public static void take(Player player, String economyType, double cost, String tag) {
         if (economyType.equalsIgnoreCase("VAULT")) {
             SupremeTags.getEconomy().withdrawPlayer(player, cost);
         } else if (economyType.equalsIgnoreCase("PLAYERPOINTS")) {
@@ -415,8 +463,49 @@ public class Utils {
         } else if (economyType.startsWith("COINSENGINE-")) {
             String eco_name = economyType.replace("COINSENGINE-", "");
             CoinsEngineAPI.removeBalance(player.getUniqueId(), eco_name, cost);
+        } else if (economyType.equalsIgnoreCase("CUSTOM")) {
+            TagEconomy eco = SupremeTags.getInstance().getTagManager().getTag(tag).getEconomy();
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), eco.getTake_cmd().replace("%player%", player.getName()).replace("%amount%", String.valueOf(cost)));
         }
     }
+
+    /**
+     * Supports comparisons like:
+     *  - >=, <=, >, <, ==, !=
+     */
+    private static boolean evaluateCondition(String condition) {
+        condition = condition.replace(" ", "");
+
+        String[] operators = {">=", "<=", "==", "!=", ">", "<"};
+
+        for (String op : operators) {
+            if (condition.contains(op)) {
+                String[] parts = condition.split(java.util.regex.Pattern.quote(op));
+                if (parts.length != 2) return false;
+
+                double left, right;
+                try {
+                    left = Double.parseDouble(parts[0]);
+                    right = Double.parseDouble(parts[1]);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+
+                return switch (op) {
+                    case ">=" -> left >= right;
+                    case "<=" -> left <= right;
+                    case ">"  -> left > right;
+                    case "<"  -> left < right;
+                    case "==" -> left == right;
+                    case "!=" -> left != right;
+                    default -> false;
+                };
+            }
+        }
+
+        return false;
+    }
+
 
     public static String deformat(String str) {
         return ChatColor.stripColor(format(str));
@@ -428,10 +517,6 @@ public class Utils {
 
     public static void soundPlayer(Player player, Sound sound, float volume, float pitch) {
         player.playSound(player.getLocation(), sound, volume, pitch);
-    }
-
-    public static List<String> color(List<String> lore) {
-        return lore.stream().map(Utils::format).collect(Collectors.toList());
     }
 
     private static final Pattern rgbPat = Pattern.compile("(?:#|0x)(?:[a-f0-9]{3}|[a-f0-9]{6})\\b|(?:rgb|hsl)a?\\([^\\)]*\\)");
@@ -900,10 +985,19 @@ public class Utils {
     }
 
     public static void runMain(Runnable task) {
-        if (SupremeTags.getInstance().isFoliaFound()) {
+        if (SupremeTags.isFoliaFound()) {
             Bukkit.getServer().getGlobalRegionScheduler().execute(SupremeTags.getInstance(), task); // global sync task
         } else {
             Bukkit.getScheduler().runTask(SupremeTags.getInstance(), task);
+        }
+    }
+
+    public static void runMainLater(Runnable task, long ticks) {
+        if (SupremeTags.isFoliaFound()) {
+            Bukkit.getServer().getGlobalRegionScheduler()
+                    .runDelayed(SupremeTags.getInstance(), s -> task.run(), ticks);
+        } else {
+            Bukkit.getScheduler().runTaskLater(SupremeTags.getInstance(), task, ticks);
         }
     }
 

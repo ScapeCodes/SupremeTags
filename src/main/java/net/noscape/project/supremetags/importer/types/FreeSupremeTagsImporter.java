@@ -32,7 +32,7 @@ public class FreeSupremeTagsImporter implements TagImporter {
         if (sender == null) sender = Bukkit.getConsoleSender();
 
         if (!file.exists()) {
-            Utils.msgPlayer(sender, "&6Merger: &7Missing 'free-tags.yml' in SupremeTags folder.");
+            //Utils.msgPlayer(sender, "&6Merger: &7Missing 'free-tags.yml' in SupremeTags folder.");
             return;
         }
 

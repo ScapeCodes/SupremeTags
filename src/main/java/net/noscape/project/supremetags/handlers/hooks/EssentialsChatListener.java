@@ -23,7 +23,7 @@ public class EssentialsChatListener implements Listener {
     public void onGlobalChat(GlobalChatEvent event) {
         String message = event.getFormat();
         message = replaceTagPlaceholders(message, event.getPlayer().getUniqueId());
-        message = sanitizeForEssentials(message);
+        //message = sanitizeForEssentials(message);
         event.setFormat(message);
     }
 
@@ -31,7 +31,7 @@ public class EssentialsChatListener implements Listener {
     public void onLocalChat(LocalChatEvent event) {
         String message = event.getFormat();
         message = replaceTagPlaceholders(message, event.getPlayer().getUniqueId());
-        message = sanitizeForEssentials(message);
+        //message = sanitizeForEssentials(message);
         event.setFormat(message);
     }
 
@@ -45,10 +45,6 @@ public class EssentialsChatListener implements Listener {
 
         // Escape '%' because Essentials uses String.format()
         message = message.replace("%", "%%");
-
-        // Detect & fix any broken encoding (e.g. 'ย§' instead of '§')
-        // This happens when files are saved in ANSI or CP1252 encoding.
-        message = message.replace("ย§", "§");
 
         // Force UTF-8 normalization (remove invalid characters)
         byte[] utf8Bytes = message.getBytes(StandardCharsets.UTF_8);

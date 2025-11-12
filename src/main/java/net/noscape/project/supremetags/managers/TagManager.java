@@ -163,7 +163,7 @@ public class TagManager {
             ConfigurationSection variantSection = section.getConfigurationSection("variants");
             if (variantSection != null) {
                 for (String var : variantSection.getKeys(false)) {
-                    if (variantSection.getBoolean(var + ".enable")) {
+                    if (variantSection.getBoolean(var + ".enable") || variantSection.getBoolean(var + ".enabled")) {
                         String permission = variantSection.getString(var + ".permission");
                         List<String> variantTag = tagConfig.getStringList("tags." + identifier + ".variants." + var + ".tag");
                         List<String> variantDescription = tagConfig.getStringList("tags." + identifier + ".variants." + var + ".description");
@@ -171,8 +171,15 @@ public class TagManager {
                             variantDescription = description;
                         }
 
+                        String material = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.material", "NAME_TAG");
+                        int custom_model_data = tagConfig.getInt("tags." + identifier + ".variants." + var + ".item.custom-model-data", 0);
+
                         String rarityVariant = tagConfig.getString("tags." + identifier + ".variants." + var + ".rarity", rarity);
-                        variants.add(new Variant(var, identifier, variantTag, permission, variantDescription, rarityVariant));
+
+                        Variant v = new Variant(var, identifier, variantTag, permission, variantDescription, rarityVariant);
+                        v.setMaterial(material);
+                        v.setCustom_model_data(custom_model_data);
+                        variants.add(v);
                     }
                 }
             }
@@ -190,10 +197,18 @@ public class TagManager {
                 ecoEnabled = tagConfig.getBoolean("tags." + identifier + ".economy.enabled");
             }
 
+            String take_cmd = tagConfig.getString("tags." + identifier + ".economy.take-cmd");
+            String condition = tagConfig.getString("tags." + identifier + ".economy.condition");
+
             List<String> abilities = tagConfig.getStringList("tags." + identifier + ".abilities");
 
             TagEconomy economy = new TagEconomy(ecoType, ecoAmount, ecoEnabled);
-            Tag t = new Tag(identifier, tag, category, permission, description, orderID, withdrawable, rarity, effects, economy);
+            if (ecoType != null && ecoType.equalsIgnoreCase("CUSTOM")) {
+                economy.setTake_cmd(take_cmd);
+                economy.setCondition(condition);
+            }
+
+            Tag t = new Tag(identifier, tag, category, permission, description, orderID, withdrawable, rarity, effects, economy, variants);
 
             t.setEcoEnabled(ecoEnabled);
             t.setEcoType(ecoType);
@@ -211,6 +226,10 @@ public class TagManager {
 
         for (Tag tag : tags.values()) {
             if (tag.getTag().size() > 1) tag.startAnimation();
+        }
+
+        for (Variant v : getVariants()) {
+            if (v.getTag().size() > 1) v.startAnimation();
         }
 
         if (!silent) Bukkit.getConsoleSender().sendMessage("[TAGS] Loaded " + count + " tag(s) successfully.");

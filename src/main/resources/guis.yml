@@ -427,7 +427,7 @@ gui:
     sort:
       enable: true
       slot: 5
-      displayname: '&e&lSorting by: %sort%'
+      displayname: '&e&lSorting by: &7%sort%'
       material: 'ENDER_EYE'
       custom-model-data: 0
       lore:
@@ -444,10 +444,12 @@ gui:
         unselected:
           no-filter: '&8&l> &8No Filter!'
           rarity: '&8&l> &7%rarity%'
+        replacements: # for %sort%
+          no-filter: '&7No Filter'
     filter:
       enable: true
       slot: 3
-      displayname: '&e&lFiltering by: %filter%'
+      displayname: '&e&lFiltering by: &7%filter%'
       material: 'HOPPER'
       custom-model-data: 0
       lore:
@@ -466,3 +468,6 @@ gui:
           your-tags: '&8&l> &7Your Tags'
           all-tags: '&8&l> &7All Tags'
           category: '&8&l> %category%'
+        replacements: # for %filter%
+          all-tags: 'All Tags'
+          your-tags: 'Your Tags'

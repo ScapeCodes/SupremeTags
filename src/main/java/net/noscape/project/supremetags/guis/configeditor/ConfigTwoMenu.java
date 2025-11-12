@@ -78,7 +78,7 @@ public class ConfigTwoMenu extends Menu {
         plugin.getConfig().set(path, enable);
         plugin.saveConfig();
         plugin.reload();
-        super.open();
+        super.refresh();
     }
 
     private void toggleConfigFile(String file, String path, ItemStack clickedItem) {
@@ -87,7 +87,7 @@ public class ConfigTwoMenu extends Menu {
         manager.getConfig(file).get().set(path, enable);
         manager.saveConfig(file);
         manager.reloadConfig(file);
-        super.open();
+        super.refresh();
     }
 
     @Override

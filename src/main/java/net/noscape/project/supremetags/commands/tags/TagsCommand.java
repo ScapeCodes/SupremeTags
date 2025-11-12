@@ -2,13 +2,16 @@ package net.noscape.project.supremetags.commands.tags;
 
 import de.rapha149.signgui.SignGUI;
 import de.rapha149.signgui.exception.SignGUIVersionException;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.enums.TPermissions;
 import net.noscape.project.supremetags.guis.MainMenu;
 import net.noscape.project.supremetags.guis.TagMenu;
 import net.noscape.project.supremetags.guis.configeditor.ConfigOneMenu;
 import net.noscape.project.supremetags.guis.search.SearchResultMenu;
 import net.noscape.project.supremetags.guis.tageditor.EditorSelectorMenu;
 import net.noscape.project.supremetags.handlers.Tag;
+import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.BungeeMessaging;
 import org.bukkit.*;
@@ -16,6 +19,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -106,7 +111,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleEdit(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             msgPlayer(sender, noperm);
             return;
         }
@@ -161,10 +166,12 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        if (!player.hasPermission("supremetags.player")) {
-            msgPlayer(player, noperm);
-            playConfigSound(player, "error-message");
-            return;
+        if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
+            if (!player.hasPermission(TPermissions.PLAYER)) {
+                msgPlayer(player, noperm);
+                playConfigSound(player, "error-message");
+                return;
+            }
         }
 
         if (!SupremeTags.getInstance().isDisabledWorldsTag()) {
@@ -232,7 +239,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleReload(CommandSender sender) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -252,7 +259,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleDebug(CommandSender sender) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -265,7 +272,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleConfig(CommandSender sender, Player player) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -283,7 +290,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleList(CommandSender sender) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -299,7 +306,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSearch(CommandSender sender, Player player) {
-        if (!sender.hasPermission("supremetags.search")) {
+        if (!sender.hasPermission(TPermissions.SEARCH)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -316,7 +323,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleEditor(CommandSender sender, Player player) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
                 playConfigSound((Player) sender, "error-message");
@@ -336,7 +343,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
     private void handleMerge(CommandSender sender, boolean isFree) {
         if (sender != null) {
-            if (!sender.hasPermission("supremetags.admin")) {
+            if (!sender.hasPermission(TPermissions.ADMIN)) {
                 if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                     msgPlayer(sender, noperm);
                     playConfigSound((Player) sender, "error-message");
@@ -356,7 +363,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
                 playConfigSound((Player) sender, "error-message");
@@ -385,58 +392,82 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         SupremeTags.getInstance().getVoucherManager().withdrawTag(player, tagName);
     }
 
-    // Reset Command - Reset a player's tag to the default or "None"
     private void handleReset(CommandSender sender, Player player, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
-            if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ /tags reset                     → reset your own tag
+        // ✅ /tags reset <player>            → reset another player (needs supremetags.reset.other)
+        // ───────────────────────────────────────────────────────────────
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ Case 1: /tags reset (self reset)
+        // ───────────────────────────────────────────────────────────────
+        if (args.length == 1) {
+
+            if (!(sender instanceof Player p)) {
+                msgPlayer(sender, "&cConsole must use: /tags reset <player>");
+                return;
+            }
+
+            if (!p.hasPermission("supremetags.reset")) {
+                msgPlayer(p, noperm);
+                playConfigSound(p, "error-message");
+                return;
+            }
+
+            resetPlayerTag(p, p); // reset SELF
+            return;
+        }
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ Case 2: /tags reset <player> (other player reset)
+        // ───────────────────────────────────────────────────────────────
+        if (args.length >= 2) {
+
+            if (!sender.hasPermission("supremetags.reset.other")) {
                 msgPlayer(sender, noperm);
-                playConfigSound((Player) sender, "error-message");
-            } else {
-                handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
+                if (sender instanceof Player pl) playConfigSound(pl, "error-message");
+                return;
             }
+
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+
+            if (target == null || target.getName() == null) {
+                msgPlayer(sender, player_not_online);
+                return;
+            }
+
+            resetPlayerTag(sender, target);
+        }
+    }
+
+    private void resetPlayerTag(CommandSender sender, OfflinePlayer target) {
+        boolean forced = SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag");
+        String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag", "None");
+
+        String no_tag_selected = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-tag-selected").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+
+        if (UserData.getActive(target.getUniqueId()).equalsIgnoreCase("None")) {
+            msgPlayer(sender, no_tag_selected);
             return;
         }
-        if (args.length < 2) {
-            msgPlayer(sender, "&cUsage: /tags reset <player>");
-            playConfigSound((Player) sender, "error-message");
-            return;
+
+        // Remove tag effects if online
+        if (target.isOnline()) {
+            Tag t = SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(target.getUniqueId()));
+            if (t != null) {
+                t.removeEffects(target.getPlayer());
+            }
         }
 
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-
-        if (SupremeTags.getInstance().getConfig().isBoolean("settings.forced-tag")) {
-            String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag");
-
-            if (target.isOnline()) {
-                Tag t = SupremeTags.getInstance().getTagManager().getTag(UserData.getActive(target.getUniqueId()));
-                if (t != null) {
-                    t.removeEffects(Objects.requireNonNull(target.getPlayer()));
-                }
-            }
-
-            UserData.setActive(target, defaultTag);
-
-            if (Bukkit.getServer().getPluginManager().getPlugin("Vault") != null) {
-                for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values()) {
-                    String permission = tag.getPermission();
-                    if (player.hasPermission(permission)) {
-                        removePerm(target.getPlayer(), permission);
-                    }
-                }
-            } else {
-                Bukkit.getLogger().warning("Vault not found!");
-            }
-
-            msgPlayer(player, reset.replaceAll("%player%", target.getName()));
-        } else {
-            UserData.setActive(target, "None");
-            msgPlayer(player, reset.replaceAll("%player%", target.getName()));
-        }
+        // Set active value
+        UserData.setActive(target, forced ? defaultTag : "None");
+        msgPlayer(sender, reset.replace("%player%", target.getName()));
     }
 
     // Create Command - Create a new tag
     private void handleCreate(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -474,7 +505,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
     // RemoveTagP Command - Remove a tag from a player
     private void handleRemoveTagP(CommandSender sender, Player player, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
                 playConfigSound((Player) sender, "error-message");
@@ -525,7 +556,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
     // GiveVoucher Command - Give a tag voucher to a player
     private void handleGiveVoucher(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -563,7 +594,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSetCategory(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
+        if (!sender.hasPermission(TPermissions.ADMIN)) {
             if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
                 msgPlayer(sender, noperm);
             } else {
@@ -587,30 +618,91 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         SupremeTags.getInstance().getTagManager().setCategory(sender, name, category);
     }
+
     private void handleSet(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("supremetags.admin")) {
-            if (!SupremeTags.getInstance().isNoPermissionMenuAction()) {
-                msgPlayer(sender, noperm);
-            } else {
-                handleMainCommand(sender, Bukkit.getPlayer(sender.getName()));
-            }
-            return;
-        }
-        if (args.length < 3) {
-            msgPlayer(sender, "&cUsage: /tags set <player> <tag>");
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ /tags set <identifier>
+        // ✅ /tags set <identifier> <player>
+        // ───────────────────────────────────────────────────────────────
+
+        if (args.length < 2) {
+            msgPlayer(sender, "&cUsage: /tags set <identifier> [player]");
             return;
         }
 
-        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-        String identifier = args[2];
+        String identifier = args[1];
+        boolean tagExists = SupremeTags.getInstance().getTagManager().getTags().containsKey(identifier);
 
-        if (SupremeTags.getInstance().getTagManager().getTags().containsKey(identifier)) {
-            UserData.setActive(target, identifier);
-            msgPlayer(sender, "&8[&6&lTag&8] &7Set &b" + target.getName() + "'s &7tag to &b" + identifier);
-        } else {
+        if (!tagExists) {
             msgPlayer(sender, invalidtag);
+            return;
+        }
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ Case 1: Player setting THEIR OWN tag → /tags set <identifier>
+        // ───────────────────────────────────────────────────────────────
+        if (args.length == 2) {
+            if (!(sender instanceof Player player)) {
+                msgPlayer(sender, "&cOnly players can set their own tags. Use /tags set <identifier> <player>");
+                return;
+            }
+
+            if (!player.hasPermission("supremetags.set")) {
+                msgPlayer(player, noperm);
+                return;
+            }
+
+            if (!player.hasPermission(SupremeTags.getInstance().getTagManager().getTag(identifier).getPermission())) {
+                sendLockedMessage(player);
+                return;
+            }
+
+            UserData.setActive(player, identifier);
+            String select = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-select-message");
+            if (select == null) {
+                select = "&aYou have selected the tag %tag%"; // fallback value
+            }
+
+            select = select.replace("%prefix%", SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"));
+            select = replacePlaceholders(player, select);
+            msgPlayer(player, select
+                    .replace("%identifier%", identifier)
+                    .replace("%tag%", SupremeTags.getInstance().getTagManager().getTag(identifier).getTag().getFirst()));
+            playConfigSound(player, "selected-tag");
+            return;
+        }
+
+        // ───────────────────────────────────────────────────────────────
+        // ✅ Case 2: Admin setting ANOTHER PLAYER’S TAG
+        //     /tags set <identifier> <player>
+        // ───────────────────────────────────────────────────────────────
+        if (args.length >= 3) {
+
+            if (!sender.hasPermission("supremetags.set.other")) {
+                msgPlayer(sender, noperm);
+                return;
+            }
+
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+
+            if (target == null || target.getName() == null) {
+                msgPlayer(sender, player_not_online);
+                return;
+            }
+
+            // Set tag for target
+            UserData.setActive(target, identifier);
+
+            msgPlayer(sender, "&eSet &b" + target.getName() + "'s &etag to &b" + identifier);
+
+            Player onlineTarget = target.getPlayer();
+            if (onlineTarget != null) {
+                msgPlayer(onlineTarget, "&aYour active tag was set to &b" + identifier + " &aby an administrator.");
+            }
         }
     }
+
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -633,13 +725,13 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         String[] edits;
 
-        if (sender.hasPermission("supremetags.admin")) {
+        if (sender.hasPermission(TPermissions.ADMIN)) {
             subCommands = new String[]{
                     "create", "delete", "set", "givevoucher", "reset",
                     "removetagp", "merge", "reload", "help", "config", "editor",
                     "list", "withdraw", "debug", "search", "edit"
             };
-        } else if (!sender.hasPermission("supremetags.admin") && sender.hasPermission("supremetags.withdraw") && sender.hasPermission("supremetags.search")) {
+        } else if (!sender.hasPermission(TPermissions.ADMIN) && sender.hasPermission(TPermissions.WITHDRAW) && sender.hasPermission(TPermissions.SEARCH)) {
             subCommands = new String[]{
                     "withdraw", "search"
             };
@@ -670,13 +762,17 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                     case "edit":
                         completions.addAll(SupremeTags.getInstance().getTagManager().getTags().keySet());
                         break;
-                    case "removetagp":
                     case "set":
+                        SupremeTags.getInstance().getTagManager().getTags().values().stream()
+                                .filter(tag -> sender.hasPermission(tag.getPermission()))
+                                .forEach(tag -> completions.add(tag.getIdentifier()));
+                        break;
+                    case "removetagp":
                     case "givevoucher":
                     case "reset":
                         completions.addAll(Bukkit.getOnlinePlayers().stream()
                                 .map(Player::getName)
-                                .collect(Collectors.toList()));
+                                .toList());
                         break;
                     default:
                         break;
@@ -693,6 +789,12 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                         break;
                     case "givevoucher":
                     case "set":
+                        if (sender.hasPermission("supremetags.set.other")) {
+                            completions.addAll(Bukkit.getOnlinePlayers().stream()
+                                    .map(Player::getName)
+                                    .toList());
+                        }
+                        break;
                     case "removetagp":
                         // Suggest <tag> for these commands
                         completions.addAll(SupremeTags.getInstance().getTagManager().getTags().keySet());
@@ -759,7 +861,290 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    public void sendDebug(CommandSender player) {
+    public void sendDebug(CommandSender sender) {
+
+        FileConfiguration msg = SupremeTags.getInstance()
+                .getConfigManager().getConfig("messages.yml").get();
+
+        List<String> lines = msg.getStringList("messages.debug");
+        if (lines.isEmpty()) {
+            msgPlayer(sender, "&cDebug section missing in messages.yml");
+            return;
+        }
+
+        Map<String, String> values = collectDebugValues(sender);
+
+        for (String line : lines) {
+            msgPlayer(sender, replace(line, values));
+        }
+    }
+
+    private Map<String, String> collectDebugValues(CommandSender sender) {
+
+        Map<String, String> map = new HashMap<>();
+
+        String version = SupremeTags.getInstance().getDescription().getVersion();
+        if (SupremeTags.getInstance().dev_build) {
+            version += "-DEV#" + SupremeTags.getInstance().build;
+        }
+
+        map.put("%version%", version);
+        map.put("%author%", "DevScape");
+        map.put("%discord%", "https://discord.gg/AnPwty8asP");
+
+        map.put("%tags_loaded%", String.valueOf(SupremeTags.getInstance().getTagManager().getTags().size()));
+        map.put("%categories_loaded%", String.valueOf(SupremeTags.getInstance().getCategoryManager().getCatorgies().size()));
+
+        String dbType = SupremeTags.getInstance()
+                .getConfigManager().getConfig("data.yml").get().getString("data.type", "UNKNOWN");
+
+        map.put("%db_type%", dbType);
+        map.put("%db_connected%", UserData.isConnected() ? "&aYES" : "&cNO");
+
+        map.put("%hook_vault%", hookString(SupremeTags.getInstance().isVaultAPI()));
+        map.put("%hook_playerpoints%", hookString(isPlugin("PlayerPoints")));
+        map.put("%hook_coinsengine%", hookString(SupremeTags.getInstance().isCoinsEngine()));
+        map.put("%hook_nbtapi%", hookString(isPlugin("NBTAPI")));
+        map.put("%hook_papi%", hookString(SupremeTags.getInstance().isPlaceholderAPI()));
+
+        map.put("%config_errors%", formatMultiline(validateMainConfigCollect()));
+        map.put("%papi_test_tag%", formatMultiline(debugPlaceholderTag(sender)));
+        map.put("%papi_test_chat%", formatMultiline(debugPlaceholderChat(sender)));
+        map.put("%tag_errors%", formatMultiline(debugTagErrorsCollect()));
+
+        return map;
+    }
+
+    private List<String> debugPlaceholderChat(CommandSender sender) {
+
+        List<String> out = new ArrayList<>();
+
+        if (!SupremeTags.getInstance().isPlaceholderAPI()) {
+            out.add("PlaceholderAPI not installed.");
+            return out;
+        }
+
+        String val = PlaceholderAPI.setPlaceholders(
+                sender instanceof Player ? (Player) sender : null,
+                "%supremetags_chattag%"
+        );
+
+        if (val == null || val.isEmpty() || val.equalsIgnoreCase("null")) {
+            out.add("Chat placeholder returned null/empty.");
+        } else {
+            out.add("Output: " + val);
+        }
+
+        return out;
+    }
+
+    private String replace(String line, Map<String, String> map) {
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            line = line.replace(e.getKey(), e.getValue());
+        }
+        return line;
+    }
+
+    private String hookString(boolean found) {
+        return found ? "&aFound" : "&cNot Found";
+    }
+
+
+    private String formatMultiline(List<String> list) {
+        if (list.isEmpty()) return "&aNo issues found.";
+
+        StringBuilder b = new StringBuilder();
+        for (String s : list) {
+            b.append("\n").append(" &c- ").append(s);
+        }
+        return b.toString().trim();
+    }
+
+
+    private List<String> debugPlaceholderTag(CommandSender sender) {
+
+        List<String> out = new ArrayList<>();
+
+        if (!SupremeTags.getInstance().isPlaceholderAPI()) {
+            out.add("PlaceholderAPI not installed.");
+            return out;
+        }
+
+        String val = PlaceholderAPI.setPlaceholders(
+                sender instanceof Player ? (Player) sender : null,
+                "%supremetags_tag%"
+        );
+
+        if (val == null || val.isEmpty() || val.equalsIgnoreCase("null")) {
+            out.add("Tag placeholder returned null/empty.");
+        } else {
+            out.add("Output: " + val);
+        }
+
+        return out;
+    }
+
+
+    private List<String> debugTagErrorsCollect() {
+
+        List<String> errors = new ArrayList<>();
+
+        Collection<Tag> tags = SupremeTags.getInstance().getTagManager().getTags().values();
+
+        if (tags.isEmpty()) {
+            errors.add("No tags loaded.");
+            return errors;
+        }
+
+        for (Tag tag : tags) {
+
+            if (tag.getIdentifier() == null || tag.getIdentifier().trim().isEmpty()) {
+                errors.add("Tag missing identifier.");
+            }
+            if (tag.getDescription() == null || tag.getDescription().isEmpty()) {
+                errors.add("Tag '" + tag.getIdentifier() + "' missing description.");
+            }
+            if (tag.getPermission() == null || tag.getPermission().trim().isEmpty()) {
+                errors.add("Tag '" + tag.getIdentifier() + "' missing permission.");
+            }
+            if (SupremeTags.getInstance().getConfig().getBoolean("settings.categories")) {
+                if (tag.getCategory() == null || tag.getCategory().trim().isEmpty()) {
+                    errors.add("Tag '" + tag.getIdentifier() + "' missing category.");
+                }
+            }
+        }
+
+        return errors;
+    }
+
+
+
+    private void hook(CommandSender sender, String name, boolean found) {
+        msgPlayer(sender, " &8● &7" + name + ": " + (found ? "&aFound" : "&cNot found"));
+    }
+
+    private boolean isPlugin(String name) {
+        return Bukkit.getPluginManager().getPlugin(name) != null;
+    }
+
+    private List<String> validateMainConfigCollect() {
+
+        FileConfiguration config = SupremeTags.getInstance().getConfig();
+        List<String> errors = new ArrayList<>();
+
+        if (!config.isConfigurationSection("settings")) {
+            errors.add("Missing section: settings");
+            return errors;
+        }
+
+        ConfigurationSection settings = config.getConfigurationSection("settings");
+
+        // Required keys inside "settings"
+        checkKey(settings, "commands.main-command", errors, String.class);
+        checkKey(settings, "commands.aliases", errors, List.class);
+        checkKey(settings, "no-permission-menu-action", errors, Boolean.class);
+        checkKey(settings, "messaging-platform", errors, String.class);
+        checkKey(settings, "bungee-messaging", errors, Boolean.class);
+        checkKey(settings, "default-tag", errors, String.class);
+        checkKey(settings, "forced-tag", errors, Boolean.class);
+        checkKey(settings, "categories", errors, Boolean.class);
+        checkKey(settings, "default-category", errors, String.class);
+        checkKey(settings, "update-check", errors, Boolean.class);
+        checkKey(settings, "auto-merge", errors, Boolean.class);
+        checkKey(settings, "active-tag-glow", errors, Boolean.class);
+        checkKey(settings, "tag-command-in-disabled-worlds", errors, Boolean.class);
+        checkKey(settings, "disabled-worlds", errors, List.class);
+        checkKey(settings, "gui-messages", errors, Boolean.class);
+        checkKey(settings, "locked-view", errors, Boolean.class);
+
+        // personal-tags
+        checkKey(settings, "personal-tags.enable", errors, Boolean.class);
+        checkKey(settings, "personal-tags.limits", errors, ConfigurationSection.class);
+        checkKey(settings, "personal-tags.format-replace", errors, String.class);
+
+        // layout + tag behavior
+        checkKey(settings, "layout-type", errors, String.class);
+        checkKey(settings, "animated-tag-speed", errors, Integer.class);
+        checkKey(settings, "tag-vouchers", errors, Boolean.class);
+        checkKey(settings, "prioritise-selected-tag", errors, Boolean.class);
+        checkKey(settings, "voucher-redeem-permission", errors, Boolean.class);
+        checkKey(settings, "deactivate-click", errors, Boolean.class);
+        checkKey(settings, "only-show-player-access-tags", errors, Boolean.class);
+        checkKey(settings, "search-type", errors, String.class);
+        checkKey(settings, "update-unlocked-cache", errors, Integer.class);
+
+        // ---------------------------
+        // ✅ Validate specific values
+        // ---------------------------
+
+        String messaging = settings.getString("messaging-platform", "").toLowerCase();
+        if (!messaging.equals("bungeecord") && !messaging.equals("velocity")) {
+            errors.add("Invalid messaging-platform: " + messaging + " (must be bungeecord or velocity)");
+        }
+
+        String layout = settings.getString("layout-type", "").toUpperCase();
+        if (!layout.equals("FULL") && !layout.equals("BORDER")) {
+            errors.add("Invalid layout-type: " + layout + " (must be FULL or BORDER)");
+        }
+
+        String searchType = settings.getString("search-type", "").toUpperCase();
+        if (!searchType.equals("SIGN") && !searchType.equals("ANVIL")) {
+            errors.add("Invalid search-type: " + searchType + " (must be SIGN or ANVIL)");
+        }
+
+        // ---------------------------
+        // ✅ placeholders section
+        // ---------------------------
+
+        List<String> phKeys = Arrays.asList("tag", "chat", "scoreboard", "tab");
+
+        for (String key : phKeys) {
+            checkKey(config, "placeholders." + key + ".none-output", errors, String.class);
+            checkKey(config, "placeholders." + key + ".format", errors, String.class);
+        }
+
+        // ---------------------------
+        // ✅ sounds section
+        // ---------------------------
+
+        List<String> soundKeys = Arrays.asList("open-menus", "selected-tag", "reset-tag", "error-message");
+
+        for (String key : soundKeys) {
+            checkKey(config, "sounds." + key + ".enable", errors, Boolean.class);
+            checkKey(config, "sounds." + key + ".sound", errors, String.class);
+            checkKey(config, "sounds." + key + ".volume", errors, Double.class);
+            checkKey(config, "sounds." + key + ".pitch", errors, Double.class);
+        }
+
+        return errors;
+    }
+
+    private void sendConfigResult(CommandSender sender, List<String> errors) {
+        if (errors.isEmpty()) {
+            msgPlayer(sender, " &8● &aConfig.yml validated successfully. No issues found.");
+        } else {
+            msgPlayer(sender, " &8● &cConfig.yml Errors Found:");
+            for (String err : errors) {
+                msgPlayer(sender, "   &c- " + err);
+            }
+        }
+    }
+
+    private void checkKey(ConfigurationSection sec, String path, List<String> errors, Class<?> type) {
+        if (!sec.contains(path)) {
+            errors.add("Missing key: " + path);
+            return;
+        }
+
+        Object val = sec.get(path);
+        if (!type.isInstance(val)) {
+            errors.add("Invalid type for '" + path + "' (expected " + type.getSimpleName() + ")");
+        }
+    }
+
+
+
+    public void sendDebugOLD(CommandSender player) {
         msgPlayer(player, "");
         msgPlayer(player, "&fDebugging SupremeTags2 &8➜");
         msgPlayer(player, "");
@@ -839,5 +1224,12 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         }
 
         gui.open(player);
+    }
+
+    protected void sendLockedMessage(Player player) {
+            String locked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.locked-tag")
+                    .replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+            locked = replacePlaceholders(player, locked);
+            msgPlayer(player, locked);
     }
 }

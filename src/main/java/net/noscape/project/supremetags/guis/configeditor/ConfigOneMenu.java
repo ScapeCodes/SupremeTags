@@ -89,7 +89,7 @@ public class ConfigOneMenu extends Menu {
         plugin.getConfig().set(path, enable);
         plugin.saveConfig();
         plugin.reload();
-        super.open();
+        super.refresh();
     }
 
     private void handleLayoutToggle(InventoryClickEvent e) {
@@ -102,7 +102,7 @@ public class ConfigOneMenu extends Menu {
         }
         plugin.saveConfig();
         plugin.reload();
-        super.open();
+        super.refresh();
     }
 
     @Override

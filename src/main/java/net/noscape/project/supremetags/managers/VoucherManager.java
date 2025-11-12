@@ -2,6 +2,7 @@ package net.noscape.project.supremetags.managers;
 
 import de.tr7zw.nbtapi.NBTItem;
 import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.enums.TPermissions;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.storage.UserData;
 import org.bukkit.Bukkit;
@@ -74,7 +75,7 @@ public class VoucherManager {
         String noperm = configMessage("messages.no-permission", messages);
         String voucher_spam = configMessage("messages.voucher-spam-warning", messages);
 
-        if (!player.hasPermission("supremetags.withdraw")) {
+        if (!player.hasPermission(TPermissions.SEARCH)) {
             msgPlayer(player, noperm);
             return;
         }

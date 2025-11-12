@@ -24,5 +24,7 @@ commands:
     usage: /<command>
     aliases:
       - tag
-      - stags
-      - supremetags
+  mytags:
+    description: Opens the personal tags menu.
+    usage: /mytags
+    permission: supremetags.mytags

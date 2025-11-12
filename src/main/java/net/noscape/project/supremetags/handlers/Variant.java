@@ -1,7 +1,13 @@
 package net.noscape.project.supremetags.handlers;
 
 import net.noscape.project.supremetags.SupremeTags;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class Variant {
@@ -9,9 +15,15 @@ public class Variant {
     private String identifier;
     private String parent_tag_identifier;
     private List<String> tag;
+    private String current_tag;
     private String permission;
     private List<String> description;
     private String rarity;
+    private BukkitTask animationTask;
+
+    // item
+    private String material;
+    private int custom_model_data;
 
     public Variant(String identifier, String parentTagIdentifier, List<String> tag, String permission, List<String> description, String rarity) {
         this.identifier = identifier;
@@ -68,5 +80,84 @@ public class Variant {
 
     public String getRarity() {
         return rarity;
+    }
+
+    public String getMaterial() {
+        return material;
+    }
+
+    public void setMaterial(String material) {
+        this.material = material;
+    }
+
+    public int getCustom_model_data() {
+        return custom_model_data;
+    }
+
+    public void setCustom_model_data(int custom_model_data) {
+        this.custom_model_data = custom_model_data;
+    }
+
+    public void startAnimation() {
+        SupremeTags plugin = SupremeTags.getInstance();
+        int defaultSpeed = plugin.getConfig().getInt("settings.animated-tag-speed");
+
+        // Get the tag-specific speed, if present
+        ConfigurationSection tagConfig = plugin.getTagManager().getTagConfig().getConfigurationSection("tags." + identifier);
+        int animationSpeed = (tagConfig != null) ? tagConfig.getInt("animated-tag-speed", defaultSpeed) : defaultSpeed;
+
+        // Validate speed
+        if (animationSpeed <= 0 || animationSpeed > 9999) {
+            return;
+        }
+
+        // Stop previous animation
+        stopAnimation();
+
+        Runnable animationTaskRunnable = new Runnable() {
+            int currentIndex = 0;
+
+            @Override
+            public void run() {
+                currentIndex = (currentIndex + 1) % tag.size();
+                current_tag = tag.get(currentIndex);
+            }
+        };
+
+        if (!plugin.isFoliaFound()) {
+            // Use BukkitRunnable for non-Folia environments
+            animationTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    animationTaskRunnable.run();
+                }
+            }.runTaskTimerAsynchronously(plugin, 0L, animationSpeed);
+        } else {
+            // Folia scheduler via reflection
+            try {
+                Object server = Bukkit.getServer();
+                Method getScheduler = server.getClass().getMethod("getGlobalRegionScheduler");
+                Object scheduler = getScheduler.invoke(server);
+
+                Method runAtFixedRate = scheduler.getClass().getMethod(
+                        "runAtFixedRate", Plugin.class, Runnable.class, long.class, long.class
+                );
+
+                runAtFixedRate.invoke(scheduler, plugin, animationTaskRunnable, 0L, animationSpeed);
+            } catch (Exception e) {
+                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+            }
+        }
+    }
+
+    public void stopAnimation() {
+        if (animationTask != null) {
+            animationTask.cancel();
+            animationTask = null;
+        }
+    }
+
+    public String getCurrentTag() {
+        return current_tag;
     }
 }

@@ -1,13 +1,14 @@
 package net.noscape.project.supremetags.utils.commands;
 
 import net.noscape.project.supremetags.SupremeTags;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.SimplePluginManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -19,23 +20,13 @@ import static net.noscape.project.supremetags.utils.Utils.msgPlayer;
 
 public class CommandFramework implements CommandExecutor {
 
-    private SupremeTags plugin;
-    private Map<String, Entry<Method, Object>> commandMap = new HashMap<>();
-    private CommandMap map;
+    private final SupremeTags plugin;
+    private final Map<String, Entry<Method, Object>> commandMap = new HashMap<>();
+    private final CommandMap map;
 
     public CommandFramework(SupremeTags plugin) {
         this.plugin = plugin;
-
-        if (plugin.getServer().getPluginManager() instanceof SimplePluginManager) {
-            SimplePluginManager manager = (SimplePluginManager) plugin.getServer().getPluginManager();
-            try {
-                Field field = SimplePluginManager.class.getDeclaredField("commandMap");
-                field.setAccessible(true);
-                map = (CommandMap) field.get(manager);
-            } catch (IllegalArgumentException | SecurityException | NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
+        this.map = Bukkit.getCommandMap();
     }
 
     @Override
@@ -132,13 +123,15 @@ public class CommandFramework implements CommandExecutor {
         }
     }
 
-    public void registerCommand(Command command, String label, Method m, Object obj) {
+    public void registerCommand(Command command, @NotNull  String label, @NotNull Method m, @NotNull Object obj) {
         if (label.equalsIgnoreCase("tags")) {
             label = SupremeTags.getInstance().getConfig().getString("settings.commands.main-command");
         }
 
         // Map the main command and its aliases
-        commandMap.put(label.toLowerCase(), new AbstractMap.SimpleEntry<>(m, obj));
+        if (label != null) {
+            commandMap.put(label.toLowerCase(), new AbstractMap.SimpleEntry<>(m, obj));
+        }
         commandMap.put(this.plugin.getName() + ':' + label.toLowerCase(), new AbstractMap.SimpleEntry<>(m, obj));
 
         String cmdLabel = label.replace(".", ",").split(",")[0].toLowerCase();

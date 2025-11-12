@@ -1,5 +1,7 @@
 package net.noscape.project.supremetags.handlers.menu;
 
+import com.cryptomorin.xseries.XEnchantment;
+import com.cryptomorin.xseries.XMaterial;
 import de.rapha149.signgui.SignGUI;
 import de.rapha149.signgui.exception.SignGUIVersionException;
 import de.tr7zw.nbtapi.NBTItem;
@@ -15,11 +17,11 @@ import net.noscape.project.supremetags.utils.SkullUtil;
 import net.noscape.project.supremetags.utils.Utils;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -90,7 +92,7 @@ public abstract class Paged extends Menu {
         }
 
         for (int i = 36; i <= 44; i++) {
-            inventory.setItem(i, makeItem(Material.GRAY_STAINED_GLASS_PANE, "&6", 0, true));
+            inventory.setItem(i, makeItem(XMaterial.matchXMaterial("GRAY_STAINED_GLASS_PANE").get().get(), "&6", 0, true));
         }
     }
 
@@ -105,7 +107,7 @@ public abstract class Paged extends Menu {
                     boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
 
                     assert item_material != null;
-                    inventory.setItem(i, makeItem(Material.valueOf(item_material.toUpperCase()), item_displayname, item_custom_model_data, hideToolTip));
+                    inventory.setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
                 }
             }
         } else if (SupremeTags.getInstance().getLayout().equalsIgnoreCase("BORDER")) {
@@ -119,7 +121,7 @@ public abstract class Paged extends Menu {
                         boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
 
                         assert item_material != null;
-                        inventory.setItem(i, makeItem(Material.valueOf(item_material.toUpperCase()), item_displayname, item_custom_model_data, hideToolTip));
+                        inventory.setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
                     }
                 }
             }
@@ -200,24 +202,24 @@ public abstract class Paged extends Menu {
                 item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
 
                 if (menuUtil.getFilter() == null) {
-                    item_displayname = item_displayname.replace("%filter%", "All Tags");
+                    item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.all-tags"));
                 } else {
                     if (menuUtil.getFilter().startsWith("category:")) {
                         item_displayname = item_displayname.replace("%filter%", menuUtil.getFilter().replace("category:", ""));
                     } else if (menuUtil.getFilter().equalsIgnoreCase("players")) {
-                        item_displayname = item_displayname.replace("%filter%", "Your Tags");
+                        item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.your-tags"));
                     } else {
-                        item_displayname = item_displayname.replace("%filter%", "All Tags");
+                        item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.all-tags"));
                     }
                 }
 
                 if (menuUtil.getSort() == null) {
-                    item_displayname = item_displayname.replace("%sort%", "&8No Filter!");
+                    item_displayname = item_displayname.replace("%sort%", guis.getString("gui.items.sort.sorts.replacements.no-filter"));
                 } else {
                     if (menuUtil.getSort().startsWith("rarity:")) {
                         item_displayname = item_displayname.replace("%sort%", menuUtil.getSort().replace("rarity:", "").toUpperCase());
                     } else {
-                        item_displayname = item_displayname.replace("%sort%", "&8No Filter!");
+                        item_displayname = item_displayname.replace("%sort%", guis.getString("gui.items.sort.sorts.replacements.no-filter"));
                     }
                 }
 
@@ -276,20 +278,14 @@ public abstract class Paged extends Menu {
                     int amountYourTags = getTypeAmount(player, "yourtags");
 
                     if (filter.equalsIgnoreCase("players")) {
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(unselectedKey + "all-tags") + " &7(" + amountAll + ")"));
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(selectedKey + "your-tags") + " &7(" + amountYourTags + ")"));
+                        newLore.add(format(guis.getString(unselectedKey + "all-tags") + " (" + amountAll + ")"));
+                        newLore.add(format(guis.getString(selectedKey + "your-tags") + " (" + amountYourTags + ")"));
                     } else if (filter.equalsIgnoreCase("all")) {
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(selectedKey + "all-tags") + " &7(" + amountAll + ")"));
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(unselectedKey + "your-tags") + " &7(" + amountYourTags + ")"));
+                        newLore.add(format(guis.getString(selectedKey + "all-tags") + " (" + amountAll + ")"));
+                        newLore.add(format(guis.getString(unselectedKey + "your-tags") + " (" + amountYourTags + ")"));
                     } else {
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(unselectedKey + "all-tags") + " &7(" + amountAll + ")"));
-                        newLore.add(ChatColor.translateAlternateColorCodes('&',
-                                guis.getString(unselectedKey + "your-tags") + " &7(" + amountYourTags + ")"));
+                        newLore.add(format(guis.getString(unselectedKey + "all-tags") + " (" + amountAll + ")"));
+                        newLore.add(format(guis.getString(unselectedKey + "your-tags") + " (" + amountYourTags + ")"));
                     }
 
                     ConfigurationSection cat_sec = this.Cat_Config.getConfigurationSection("categories");
@@ -314,18 +310,18 @@ public abstract class Paged extends Menu {
                             }
 
                             String formatKey = isSelected ? selectedKey + "category" : unselectedKey + "category";
-                            String formatTemplate = guis.getString(formatKey, "&7> %category%");
-                            String formatted = formatTemplate.replace("%category%", label) + " &7(" + amountCategory + ")";
-                            newLore.add(ChatColor.translateAlternateColorCodes('&', formatted));
+                            String formatTemplate = guis.getString(formatKey);
+                            String formatted = formatTemplate.replace("%category%", label) + " (" + amountCategory + ")";
+                            newLore.add(format(formatted));
                         }
                     }
 
                     List<String> finalLore = new ArrayList<>();
                     for (String line : item_lore) {
                         if (line.contains("%filter_lore%")) {
-                            finalLore.addAll(newLore);
+                            finalLore.addAll(color(newLore));
                         } else {
-                            finalLore.add(line);
+                            finalLore.add(format(line));
                         }
                     }
                     item_lore = finalLore;
@@ -355,7 +351,7 @@ public abstract class Paged extends Menu {
                         amountAll = getVariantTypeAmount(player, "all");
                     }
 
-                    newLore.add(ChatColor.translateAlternateColorCodes('&', noneLabel + " &7(" + amountAll + ")"));
+                    newLore.add(format(noneLabel + " (" + amountAll + ")"));
 
                     for (String rarity : rarities) {
                         boolean isSelected = sort.equalsIgnoreCase("rarity:" + rarity);
@@ -380,19 +376,19 @@ public abstract class Paged extends Menu {
                         }
 
                         // Get format template from GUI config
-                        String template = guis.getString(isSelected ? selectedKey : unselectedKey, "&8&l> %rarity%");
-                        String formatted = template.replace("%rarity%", label) + " &7(" + amountByRarity + ")";
+                        String template = guis.getString(isSelected ? selectedKey : unselectedKey);
+                        String formatted = template.replace("%rarity%", label) + " (" + amountByRarity + ")";
 
-                        newLore.add(ChatColor.translateAlternateColorCodes('&', formatted));
+                        newLore.add(format(formatted));
                     }
 
                     // Replace %sort_lore% in lore with newLore
                     List<String> finalLore = new ArrayList<>();
                     for (String line : item_lore) {
                         if (line.contains("%sort_lore%")) {
-                            finalLore.addAll(newLore);
+                            finalLore.addAll(color(newLore));
                         } else {
-                            finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+                            finalLore.add(format(line));
                         }
                     }
                     item_lore = finalLore;
@@ -758,7 +754,7 @@ public abstract class Paged extends Menu {
                             nbt.setString("identifier", t.getIdentifier());
                             this.inventory.addItem(nbt.getItem());
                         } else {
-                            ItemStack tagItem = new ItemStack(Material.valueOf(material.toUpperCase()), 1);
+                            ItemStack tagItem = new ItemStack(XMaterial.matchXMaterial(material.toUpperCase()).get().get(), 1);
                             ItemMeta tagMeta = tagItem.getItemMeta();
                             assert tagMeta != null;
                             NBTItem nbt = new NBTItem(tagItem);
@@ -905,14 +901,38 @@ public abstract class Paged extends Menu {
 
                         return List.of(AnvilGUI.ResponseAction.close());
                     })
-                    .itemLeft(new ItemStack(Material.PAPER))
+                    .itemLeft(createSearchItem())
                     .text("") // Optional: Initial text
-                    .title(format(messages.getString("messages.anvil-title"))) // Optional: Title
+                    .title(format(messages.getString("messages.sign-line-top"))) // Optional: Title
                     .plugin(SupremeTags.getInstance())
                     .open(player);
         } else {
             msgPlayer(player, "&cInvalid Search type, use SIGN or ANVIL.");
         }
+    }
+
+    private ItemStack createSearchItem() {
+        ItemStack item = XMaterial.NAME_TAG.parseItem();
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(format("&eSearch Tags"));
+
+            meta.setLore(Arrays.asList(
+                    format("&7Type the tag name"),
+                    format("&7into the anvil text box."),
+                    "",
+                    format("&aClick the output to search!")
+            ));
+
+            // Optional examples
+            meta.addEnchant(XEnchantment.MENDING.get(), 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+            item.setItemMeta(meta);
+        }
+
+        return item;
     }
 
     protected Comparator<Tag> getTagComparator(boolean prioritiseSelectedTag, MenuUtil menuUtil) {
@@ -970,7 +990,7 @@ public abstract class Paged extends Menu {
             String id = materialKey.replace("nexo-", "");
             item = SupremeTags.getInstance().getItemWithNexo(id);
         } else {
-            item = new ItemStack(Material.valueOf(materialKey.toUpperCase()), 1);
+            item = new ItemStack(XMaterial.matchXMaterial(materialKey.toUpperCase()).get().get(), 1);
         }
 
         itemMeta = item.getItemMeta();
@@ -1075,7 +1095,6 @@ public abstract class Paged extends Menu {
 
         lore = guis.getStringList("gui.tag-menu.global-tag-lores." + lorePath);
 
-        return lore;
+        return color(lore);
     }
-
 }

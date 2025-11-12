@@ -21,17 +21,17 @@ import java.lang.reflect.Method;
 public class MenuListener implements Listener {
 
     public static Inventory getTopInventory(InventoryEvent event) {
-        //try {
-        //    Object view = event.getView();
-        //    Method getTopInventory = view.getClass().getMethod("getTopInventory");
-        //    getTopInventory.setAccessible(true);
-        //    return (Inventory) getTopInventory.invoke(view);
-        //} catch (NoSuchMethodException e) {
-        //    throw new RuntimeException(e);
-        //}
+        try {
+            Object view = event.getView();
+            Method getTopInventory = view.getClass().getMethod("getTopInventory");
+            getTopInventory.setAccessible(true);
+            return (Inventory) getTopInventory.invoke(view);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            return XInventoryView.of(event.getView()).getTopInventory();
+        }
 
         // new Inventory view detection.
-        return XInventoryView.of(event.getView()).getTopInventory();
+        //return XInventoryView.of(event.getView()).getTopInventory();
     }
 
     @EventHandler
