@@ -171,14 +171,25 @@ public class TagManager {
                             variantDescription = description;
                         }
 
-                        String material = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.material", "NAME_TAG");
-                        int custom_model_data = tagConfig.getInt("tags." + identifier + ".variants." + var + ".item.custom-model-data", 0);
+                        String unlocked_material = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.unlocked.material", "NAME_TAG");
+                        int unlocked_custom_model_data = tagConfig.getInt("tags." + identifier + ".variants." + var + ".item.unlocked.custom-model-data", 0);
+                        String unlocked_displayname = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.unlocked.displayname", "&7Variant: %tag%");
+
+                        String locked_material = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.locked.material", "NAME_TAG");
+                        int locked_custom_model_data = tagConfig.getInt("tags." + identifier + ".variants." + var + ".item.locked.custom-model-data", 0);
+                        String locked_displayname = tagConfig.getString("tags." + identifier + ".variants." + var + ".item.locked.displayname", "&7Variant: %tag%");
 
                         String rarityVariant = tagConfig.getString("tags." + identifier + ".variants." + var + ".rarity", rarity);
 
                         Variant v = new Variant(var, identifier, variantTag, permission, variantDescription, rarityVariant);
-                        v.setMaterial(material);
-                        v.setCustom_model_data(custom_model_data);
+                        v.setUnlocked_material(unlocked_material);
+                        v.setUnlocked_custom_model_data(unlocked_custom_model_data);
+                        v.setUnlocked_displayname(unlocked_displayname);
+
+                        v.setLocked_material(locked_material);
+                        v.setLocked_custom_model_data(locked_custom_model_data);
+                        v.setLocked_displayname(locked_displayname);
+
                         variants.add(v);
                     }
                 }

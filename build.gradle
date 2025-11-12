@@ -6,7 +6,7 @@ plugins {
 sourceCompatibility = 21
 targetCompatibility = 21
 group = 'net.noscape.project.supremetags'
-version = '2.1.14'
+version = '2.1.15'
 
 java {
     disableAutoTargetJvm()

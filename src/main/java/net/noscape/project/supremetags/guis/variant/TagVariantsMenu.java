@@ -249,17 +249,33 @@ public class TagVariantsMenu extends Paged {
                     if (!var.getRarity().equalsIgnoreCase(rarity)) continue;
                 }
 
-                String material = var.getMaterial();
+                String material;
                 String item_displayname;
-                int item_custom_model_data = var.getCustom_model_data();
+                int item_custom_model_data;
 
                 if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    item_displayname = this.guis.getString("gui.tag-variants-menu.item.displayname");
+                    item_custom_model_data = var.getUnlocked_custom_model_data();
                 } else {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".locked-tag.displayname") == null) {
-                        item_displayname = this.guis.getString("gui.tag-variants-menu.item.displayname").replace("%tag%", var.getTag().get(0));
+                    item_custom_model_data = var.getLocked_custom_model_data();
+                }
+
+                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
+                    item_displayname = var.getUnlocked_displayname().replace("%tag%", var.getTag().get(0));
+                } else {
+                    item_displayname = var.getLocked_displayname().replace("%tag%", var.getTag().get(0));
+                }
+
+                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
+                    if (var.getUnlocked_material() != null) {
+                        material = var.getUnlocked_material();
                     } else {
-                        item_displayname = Objects.requireNonNull(guis.getString("gui.tag-menu.global-locked-tag.displayname")).replace("%tag%", var.getTag().get(0));
+                        material = "NAME_TAG";
+                    }
+                } else {
+                    if (var.getLocked_material() != null) {
+                        material = var.getLocked_material();
+                    } else {
+                        material = "BARRIER";
                     }
                 }
 
@@ -267,20 +283,6 @@ public class TagVariantsMenu extends Paged {
                 ItemStack variantItem = resolved.item();
                 ItemMeta variantMeta = resolved.meta();
                 NBTItem nbt = new NBTItem(variantItem);
-
-                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + var.getSisterTag().getIdentifier() + ".display-item") != null) {
-                        material = guis.getString("gui.tag-variants-menu.item.display-item");
-                    } else {
-                        material = "NAME_TAG";
-                    }
-                } else {
-                    if (guis.getString("gui.tag-menu.global-locked-tag.display-item") != null) {
-                        material = guis.getString("gui.tag-menu.global-locked-tag.display-item");
-                    } else {
-                        material = "NAME_TAG";
-                    }
-                }
 
                 if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
                     if (variantMeta != null) {

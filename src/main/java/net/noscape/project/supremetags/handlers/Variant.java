@@ -22,8 +22,13 @@ public class Variant {
     private BukkitTask animationTask;
 
     // item
-    private String material;
-    private int custom_model_data;
+    private String unlocked_material;
+    private String unlocked_displayname;
+    private int unlocked_custom_model_data;
+
+    private String locked_material;
+    private String locked_displayname;
+    private int locked_custom_model_data;
 
     public Variant(String identifier, String parentTagIdentifier, List<String> tag, String permission, List<String> description, String rarity) {
         this.identifier = identifier;
@@ -80,22 +85,6 @@ public class Variant {
 
     public String getRarity() {
         return rarity;
-    }
-
-    public String getMaterial() {
-        return material;
-    }
-
-    public void setMaterial(String material) {
-        this.material = material;
-    }
-
-    public int getCustom_model_data() {
-        return custom_model_data;
-    }
-
-    public void setCustom_model_data(int custom_model_data) {
-        this.custom_model_data = custom_model_data;
     }
 
     public void startAnimation() {
@@ -159,5 +148,53 @@ public class Variant {
 
     public String getCurrentTag() {
         return current_tag;
+    }
+
+    public String getUnlocked_material() {
+        return unlocked_material;
+    }
+
+    public void setUnlocked_material(String unlocked_material) {
+        this.unlocked_material = unlocked_material;
+    }
+
+    public String getUnlocked_displayname() {
+        return unlocked_displayname;
+    }
+
+    public void setUnlocked_displayname(String unlocked_displayname) {
+        this.unlocked_displayname = unlocked_displayname;
+    }
+
+    public int getUnlocked_custom_model_data() {
+        return unlocked_custom_model_data;
+    }
+
+    public void setUnlocked_custom_model_data(int unlocked_custom_model_data) {
+        this.unlocked_custom_model_data = unlocked_custom_model_data;
+    }
+
+    public String getLocked_material() {
+        return locked_material;
+    }
+
+    public void setLocked_material(String locked_material) {
+        this.locked_material = locked_material;
+    }
+
+    public String getLocked_displayname() {
+        return locked_displayname;
+    }
+
+    public void setLocked_displayname(String locked_displayname) {
+        this.locked_displayname = locked_displayname;
+    }
+
+    public int getLocked_custom_model_data() {
+        return locked_custom_model_data;
+    }
+
+    public void setLocked_custom_model_data(int locked_custom_model_data) {
+        this.locked_custom_model_data = locked_custom_model_data;
     }
 }

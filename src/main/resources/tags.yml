@@ -88,6 +88,15 @@ tags:
         enabled: true
         tag:
           - '&f[&cSanta&f]'
+        item:
+          locked:
+            material: 'BARRIER'
+            displayname: '&7Variant: %tag%'
+            custom-model-data: 0
+          unlocked:
+            material: 'NAME_TAG'
+            displayname: '&7Variant: %tag%'
+            custom-model-data: 0
         permission: supremetags.tag.santa.white
     effects: []
     voucher-item:
