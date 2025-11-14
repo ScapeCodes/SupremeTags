@@ -75,6 +75,11 @@ public class Utils {
     public static String format(String message) {
         if (message == null || message.isEmpty()) return "";
 
+        if (isVersionLessThan("1.16")) {
+            message = ChatColor.translateAlternateColorCodes('&', message);
+            return message;
+        }
+
         return StringUtils.formatToString(message, Collections.emptyMap());
     }
 

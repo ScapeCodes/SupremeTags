@@ -4,6 +4,7 @@ import net.noscape.project.supremetags.*;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.TagEconomy;
 import net.noscape.project.supremetags.handlers.Variant;
+import net.noscape.project.supremetags.storage.TagData;
 import net.noscape.project.supremetags.storage.UserData;
 import org.bukkit.*;
 import org.bukkit.command.*;
@@ -20,7 +21,7 @@ import static net.noscape.project.supremetags.utils.Utils.*;
 
 public class TagManager {
 
-    private final Map<String, Tag> tags = new HashMap<>();
+    private Map<String, Tag> tags = new HashMap<>();
     private final Map<Integer, String> dataItem = new HashMap<>();
     public static final Map<String, Integer> tagUnlockCounts = new ConcurrentHashMap<>();
 
@@ -66,7 +67,7 @@ public class TagManager {
             saveTagToConfig(tag, material, modelData, tagText);
             saveTagConfig();
         } else {
-            //SupremeTags.getInstance().getDatabase().saveTag(tag); // your DB API call
+            TagData.createTag(tag);
         }
 
         if (sender != null) {
@@ -117,7 +118,7 @@ public class TagManager {
         tags.remove(identifier);
 
         if (isDBTags()) {
-            //SupremeTags.getInstance().getDatabase().deleteTag(identifier);
+            TagData.deleteTag(identifier);
         } else {
             getTagConfig().set("tags." + identifier, null);
             saveTagConfig();
@@ -132,7 +133,7 @@ public class TagManager {
     public void loadTags(boolean silent) {
         if (isDBTags()) {
             tags.clear();
-            //tags.putAll(SupremeTags.getInstance().getDatabase().loadTags()); // returns Map<String, Tag>
+            TagData.getAllTags();
             if (!silent) Bukkit.getConsoleSender().sendMessage("[TAGS] Loaded " + tags.size() + " tag(s) from database.");
             return;
         }
@@ -408,7 +409,7 @@ public class TagManager {
 
     public void saveTag(Tag tag) {
         if (isDBTags()) {
-            //SupremeTags.getInstance().getDatabase().updateTag(tag);
+            TagData.updateTag(tag);
         } else {
             String identifier = tag.getIdentifier();
             getTagConfig().set("tags." + identifier + ".tag", tag.getTag());
@@ -521,5 +522,9 @@ public class TagManager {
 
     public boolean isDBTags() {
         return SupremeTags.getInstance().isDBTags();
+    }
+
+    public void setTagsMap(Map<String, Tag> tags) {
+        this.tags = tags;
     }
 }

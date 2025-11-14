@@ -17,6 +17,8 @@ import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.managers.*;
 import net.noscape.project.supremetags.storage.*;
+import net.noscape.project.supremetags.storage.tags.MySQLTags;
+import net.noscape.project.supremetags.storage.tags.SQLiteTags;
 import net.noscape.project.supremetags.storage.user.H2UserData;
 import net.noscape.project.supremetags.storage.user.MySQLUserData;
 import net.noscape.project.supremetags.storage.user.PlayerConfig;
@@ -74,6 +76,9 @@ public final class SupremeTags extends AxPlugin {
     private final H2UserData h2user = new H2UserData();
     private static String connectionURL;
     private final MySQLUserData user = new MySQLUserData();
+
+    private MySQLTags mySQLTags;
+    private SQLiteTags sqLiteTags;
 
     private static final HashMap<Player, MenuUtil> menuUtilMap = new HashMap<>();
     private final HashMap<Player, Editor> editorList = new HashMap<>();
@@ -216,7 +221,7 @@ public final class SupremeTags extends AxPlugin {
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
-        //isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
+        isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         merge();
 
@@ -359,7 +364,7 @@ public final class SupremeTags extends AxPlugin {
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
-        //isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
+        isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         rarityManager.unloadRarities();
         rarityManager.loadRarities();
@@ -387,6 +392,16 @@ public final class SupremeTags extends AxPlugin {
 
         if (isMySQL() || isMaria()) {
             mysql = new MySQLDatabase(host, port, database, username, password, useSSL);
+        }
+
+        if (isDBTags) {
+            if (isH2() || isSQLite()) {
+                sqLiteTags = new SQLiteTags(sqlite);
+            }
+
+            if (isMySQL() || isMaria()) {
+                mySQLTags = new MySQLTags(mysql);
+            }
         }
     }
 
@@ -713,5 +728,13 @@ public final class SupremeTags extends AxPlugin {
 
     public void updateFlags() {
         FeatureFlags.USE_LEGACY_HEX_FORMATTER.set(true);
+    }
+
+    public MySQLTags getMySQLTags() {
+        return mySQLTags;
+    }
+
+    public SQLiteTags getSqLiteTags() {
+        return sqLiteTags;
     }
 }

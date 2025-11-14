@@ -632,5 +632,4 @@ public class TagMenu extends Paged {
             }
         }
     }
-
 }

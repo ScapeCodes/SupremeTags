@@ -11,6 +11,7 @@ import net.noscape.project.supremetags.api.events.TagAssignEvent;
 import net.noscape.project.supremetags.api.events.TagResetEvent;
 import net.noscape.project.supremetags.guis.search.SearchResultMenu;
 import net.noscape.project.supremetags.handlers.Tag;
+import net.noscape.project.supremetags.handlers.Variant;
 import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.SkullUtil;
@@ -550,6 +551,22 @@ public abstract class Paged extends Menu {
 
     public int getMaxItems() {
         return maxItems;
+    }
+
+    public void getVariantsCountOnPage(String identifier) {
+        ArrayList<Variant> tag = new ArrayList<>(SupremeTags.getInstance().getTagManager().getTag(identifier).getVariants());
+
+        if (!tag.isEmpty()) {
+
+            int startIndex = page * maxItems;
+            int endIndex = Math.min(startIndex + maxItems, tag.size());
+
+            currentItemsOnPage = 0;
+
+            for (int i = startIndex; i < endIndex; i++) {
+                currentItemsOnPage++;
+            }
+        }
     }
 
     public void getTagsCountOnPage() {

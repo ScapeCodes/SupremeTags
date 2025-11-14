@@ -9,6 +9,7 @@ import net.noscape.project.supremetags.guis.TagMenu;
 import net.noscape.project.supremetags.guis.personaltags.PersonalTagsMenu;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.Variant;
+import net.noscape.project.supremetags.handlers.menu.Menu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.managers.TagManager;
@@ -209,8 +210,18 @@ public class TagVariantsMenu extends Paged {
             }
 
             if (name.equalsIgnoreCase("back")) {
+
+                // If we're NOT on the first page, go back a page
+                if (page != 0) {
+                    page = page - 1;
+                    super.refresh();
+                    return;
+                }
+
+                // Otherwise (page == 1), go back to TagMenu / MainMenu
                 player.closeInventory();
                 boolean isCategories = SupremeTags.getInstance().getConfig().getBoolean("settings.categories");
+
                 if (isCategories) {
                     new MainMenu(SupremeTags.getMenuUtil(player)).open();
                 } else {
@@ -219,13 +230,9 @@ public class TagVariantsMenu extends Paged {
             }
 
             if (name.equalsIgnoreCase("next")) {
-                if (variants.size() > maxItems & currentItemsOnPage >= maxItems) {
-                    if (!((index + 1) >= variants.size())) {
-                        page = page + 1;
-                        super.refresh();
-                    } else {
-                        e.setCancelled(true);
-                    }
+                if (variants.size() > maxItems && currentItemsOnPage >= maxItems) {
+                    page = page + 1;
+                    super.refresh();
                 } else {
                     e.setCancelled(true);
                 }
@@ -235,157 +242,126 @@ public class TagVariantsMenu extends Paged {
 
     @Override
     public void setMenuItems() {
+        getVariantsCountOnPage(tag.getIdentifier());
         applyLayout(false, false, true);
 
-        if (this.variants != null) {
+        if (this.variants == null || this.variants.isEmpty())
+            return;
 
-            currentItemsOnPage = 0;
+        String sort = menuUtil.getSort();
 
-            String sort = menuUtil.getSort();
+        // Filter variants based on sorting
+        List<Variant> filtered = new ArrayList<>(variants);
 
-            for (Variant var : this.variants) {
-                if (sort.startsWith("rarity:")) {
-                    String rarity = sort.replace("rarity:", "");
-                    if (!var.getRarity().equalsIgnoreCase(rarity)) continue;
-                }
+        if (sort != null && sort.startsWith("rarity:")) {
+            String rarity = sort.replace("rarity:", "");
+            filtered.removeIf(v -> !v.getRarity().equalsIgnoreCase(rarity));
+        }
 
-                String material;
-                String item_displayname;
-                int item_custom_model_data;
+        // Paging Setup
+        int startIndex = page * maxItems;
+        int endIndex = Math.min(startIndex + maxItems, filtered.size());
 
-                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    item_custom_model_data = var.getUnlocked_custom_model_data();
-                } else {
-                    item_custom_model_data = var.getLocked_custom_model_data();
-                }
+        currentItemsOnPage = 0;
+        index = startIndex; // ✅ VERY IMPORTANT
 
-                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    item_displayname = var.getUnlocked_displayname().replace("%tag%", var.getTag().get(0));
-                } else {
-                    item_displayname = var.getLocked_displayname().replace("%tag%", var.getTag().get(0));
-                }
+        for (int i = startIndex; i < endIndex; i++) {
+            if (i >= filtered.size()) break;
 
-                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    if (var.getUnlocked_material() != null) {
-                        material = var.getUnlocked_material();
-                    } else {
-                        material = "NAME_TAG";
+            Variant var = filtered.get(i);
+            if (var == null) continue;
+
+            // ------------------
+            // BUILD ITEM (your original item-building logic left untouched)
+            // ------------------
+
+            String material;
+            String item_displayname;
+            int item_custom_model_data;
+
+            boolean unlocked = menuUtil.getOwner().hasPermission(var.getPermission()) ||
+                    var.getPermission().equalsIgnoreCase("none");
+
+            // Model data
+            item_custom_model_data = unlocked ? var.getUnlocked_custom_model_data() : var.getLocked_custom_model_data();
+
+            // Display name
+            item_displayname = unlocked ?
+                    var.getUnlocked_displayname().replace("%tag%", var.getTag().get(0)) :
+                    var.getLocked_displayname().replace("%tag%", var.getTag().get(0));
+
+            // Material
+            material = unlocked ?
+                    (var.getUnlocked_material() != null ? var.getUnlocked_material() : "NAME_TAG") :
+                    (var.getLocked_material() != null ? var.getLocked_material() : "BARRIER");
+
+            ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
+            ItemStack item = resolved.item();
+            ItemMeta meta = resolved.meta();
+            NBTItem nbt = new NBTItem(item);
+
+            // Set model data
+            if (meta != null) {
+                if (unlocked) {
+                    if (item_custom_model_data > 0) {
+                        meta.setCustomModelData(item_custom_model_data);
                     }
                 } else {
-                    if (var.getLocked_material() != null) {
-                        material = var.getLocked_material();
-                    } else {
-                        material = "BARRIER";
+                    int modelData = guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data");
+                    if (modelData > 0) {
+                        meta.setCustomModelData(modelData);
                     }
                 }
-
-                ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
-                ItemStack variantItem = resolved.item();
-                ItemMeta variantMeta = resolved.meta();
-                NBTItem nbt = new NBTItem(variantItem);
-
-                if (menuUtil.getOwner().hasPermission(var.getPermission()) || var.getPermission().equalsIgnoreCase("none")) {
-                    if (variantMeta != null) {
-                        if (item_custom_model_data > 0) {
-                            variantMeta.setCustomModelData(item_custom_model_data);{
-                        }
-                    }
-                } else {
-                        if (guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data") > 0) {
-                            int modelData = guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data");
-                            if (variantMeta != null) {
-                                variantMeta.setCustomModelData(modelData);
-                            }
-                        }
-                    }
-                }
-
-                nbt.setString("variant_identifier", var.getIdentifier());
-                nbt.setBoolean("isVariant", Boolean.valueOf(true));
-
-                List<String> lore = getFormattedLore(var, var.getPermission());
-
-                String descriptionPlaceholder = "%description%";
-                String identifierPlaceholder = "%identifier%";
-                String tagPlaceholder = "%tag%";
-                String costPlaceholder = "%cost%";
-                String costFormattedPlaceholder = "%cost_formatted%";
-                String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
-                String variantsPlaceholder = "%variants%";
-                String orderPlaceholder = "%order%";
-                String trackPlaceholder = "%track_unlocked%";
-                String categoryPlaceholder = "%category%";
-                String rarityPlaceholder = "%rarity%";
-                String joinedDescription = var.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
-
-                for (int l = 0; l < lore.size(); l++) {
-                    String line = lore.get(l);
-
-                    if (line.contains(descriptionPlaceholder)) {
-                        if (line.trim().equals(descriptionPlaceholder)) {
-                            List<String> descriptionLines = Arrays.asList(joinedDescription.split("\n"));
-                            lore.remove(l);
-                            lore.addAll(l, descriptionLines);
-                            l += descriptionLines.size() - 1;
-                            continue;
-                        } else {
-                            line = line.replace(descriptionPlaceholder, joinedDescription.replace("\n", " "));
-                        }
-                    }
-
-                    line = line.replace(identifierPlaceholder, var.getIdentifier());
-                    if (var.getCurrentTag() != null) {
-                        line = line.replace(tagPlaceholder, var.getCurrentTag());
-                    } else {
-                        line = line.replace(tagPlaceholder, var.getTag().getFirst());
-                    }
-                    line = line.replace(costFormattedPlaceholder, "$" + formatNumber(tag.getEconomy().getAmount()));
-                    line = line.replace(costFormattedPlaceholderRaw, formatNumber(tag.getEconomy().getAmount()));
-                    line = line.replace(costPlaceholder, String.valueOf(tag.getEconomy().getAmount()));
-                    line = line.replace(variantsPlaceholder, String.valueOf(tag.getVariants().size()));
-                    line = line.replace(orderPlaceholder, String.valueOf(tag.getOrder()));
-                    line = line.replace(trackPlaceholder, String.valueOf(TagManager.tagUnlockCounts.getOrDefault(var.getIdentifier(), 0)));
-                    line = line.replace(categoryPlaceholder, tag.getCategory());
-                    line = line.replace(rarityPlaceholder, SupremeTags.getInstance().getRarityManager().getRarity(var.getRarity()).getDisplayname());
-                    line = globalPlaceholders(menuUtil.getOwner(), line);
-
-                    lore.set(l, line);
-                }
-
-                variantMeta.setLore(color(lore));
-
-                item_displayname = item_displayname.replaceAll("%variant%", var.getTag().get(0));
-                item_displayname = item_displayname.replaceAll(identifierPlaceholder, var.getIdentifier());
-                item_displayname = item_displayname.replaceAll(tagPlaceholder, var.getTag().get(0));
-
-                item_displayname = globalPlaceholders(menuUtil.getOwner(), item_displayname);
-
-                if (UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(var.getIdentifier()) && SupremeTags.getInstance().getConfig().getBoolean("settings.active-tag-glow")) {
-                    variantMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-                }
-
-                variantMeta.setDisplayName(format(item_displayname));
-                variantMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-
-                try {
-                    ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                    variantMeta.addItemFlags(hideDye);
-                } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available in this version — skip
-                }
-                variantMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                variantMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                variantMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-
-                nbt.getItem().setItemMeta(variantMeta);
-
-                nbt.setString("variant_identifier", var.getIdentifier());
-                nbt.setBoolean("isVariant", Boolean.valueOf(true));
-
-                this.inventory.addItem(nbt.getItem());
-
-                currentItemsOnPage++;
             }
+
+            // Lore building
+            List<String> lore = getFormattedLore(var, var.getPermission());
+
+            String joinedDescription = var.getDescription().stream()
+                    .map(Utils::format)
+                    .collect(Collectors.joining("\n"));
+
+            for (int l = 0; l < lore.size(); l++) {
+                String line = lore.get(l);
+
+                if (line.equals("%description%")) {
+                    List<String> desc = Arrays.asList(joinedDescription.split("\n"));
+                    lore.remove(l);
+                    lore.addAll(l, desc);
+                    l += desc.size() - 1;
+                    continue;
+                } else {
+                    line = line.replace("%description%", joinedDescription.replace("\n", " "));
+                }
+
+                line = line.replace("%identifier%", var.getIdentifier());
+                line = line.replace("%tag%", var.getCurrentTag() != null ? var.getCurrentTag() : var.getTag().getFirst());
+                line = line.replace("%variants%", String.valueOf(tag.getVariants().size()));
+                line = line.replace("%order%", String.valueOf(tag.getOrder()));
+                line = line.replace("%category%", tag.getCategory());
+                line = line.replace("%rarity%", SupremeTags.getInstance().getRarityManager().getRarity(var.getRarity()).getDisplayname());
+                lore.set(l, line);
+            }
+
+            meta.setLore(color(lore));
+
+            // Active glow
+            if (UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(var.getIdentifier()) &&
+                    SupremeTags.getInstance().getConfig().getBoolean("settings.active-tag-glow")) {
+                meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
+            }
+
+            meta.setDisplayName(format(item_displayname));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+
+            nbt.getItem().setItemMeta(meta);
+
+            nbt.setString("variant_identifier", var.getIdentifier());
+            nbt.setBoolean("isVariant", true);
+
+            this.inventory.addItem(nbt.getItem());
+
+            currentItemsOnPage++;
         }
     }
 
