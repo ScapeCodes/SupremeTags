@@ -863,6 +863,7 @@ public abstract class Paged extends Menu {
             try {
                 gui = SignGUI.builder()
                         .setLines(format(messages.getString("messages.sign-line-top")), null, null)
+                        .callHandlerSynchronously(SupremeTags.getInstance())
                         .setColor(DyeColor.YELLOW)
 
                         .setHandler((p, result) -> {
@@ -1114,4 +1115,5 @@ public abstract class Paged extends Menu {
 
         return color(lore);
     }
+
 }
