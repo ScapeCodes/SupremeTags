@@ -868,13 +868,13 @@ public abstract class Paged extends Menu {
                         .setHandler((p, result) -> {
                             String line1 = result.getLineWithoutColor(1);
 
-                            if (!line1.isEmpty()) {
-                                if (SupremeTags.getInstance().getCategoryManager().isCategoryNearName(line1) || SupremeTags.getInstance().getTagManager().tagExistsNearName(line1)) {
-                                    Bukkit.getScheduler().runTask(SupremeTags.getInstance(), () -> new SearchResultMenu(SupremeTags.getMenuUtil(player), line1).open());
-                                } else {
-                                    String search_invalid = messages.getString("messages.search-invalid-1").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
-                                    msgPlayer(player, search_invalid);
-                                }
+                            if (line1 != null && !line1.isEmpty()
+                                    && (SupremeTags.getInstance().getCategoryManager().isCategoryNearName(line1)
+                                    || SupremeTags.getInstance().getTagManager().tagExistsNearName(line1))) {
+
+                                return List.of(SignGUIAction.run(() ->
+                                        new SearchResultMenu(SupremeTags.getMenuUtil(p), line1).open()
+                                ));
                             } else {
                                 String search_invalid = messages.getString("messages.search-invalid-2").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
                                 msgPlayer(player, search_invalid);
