@@ -343,56 +343,54 @@ public class Utils {
     }
 
     public static boolean isVersionLessThan(String version) {
-        String serverVersion = Bukkit.getVersion();
-        String[] serverParts = serverVersion.split(" ")[2].split("\\.");
-        String[] targetParts = version.split("\\.");
+        try {
+            String current = Bukkit.getBukkitVersion().split("-")[0];
 
-        for (int i = 0; i < Math.min(serverParts.length, targetParts.length); i++) {
-            if (!isValidVersion(serverParts[i]) || !isValidVersion(targetParts[i])) {
-                return false;
+            String[] currentParts = current.split("\\.");
+            String[] targetParts = version.split("\\.");
+
+            int length = Math.max(currentParts.length, targetParts.length);
+
+            for (int i = 0; i < length; i++) {
+                int currentNum = i < currentParts.length
+                        ? Integer.parseInt(currentParts[i])
+                        : 0;
+
+                int targetNum = i < targetParts.length
+                        ? Integer.parseInt(targetParts[i])
+                        : 0;
+
+                if (currentNum < targetNum) return true;
+                if (currentNum > targetNum) return false;
             }
 
-            int serverPart = Integer.parseInt(serverParts[i]);
-            int targetPart = Integer.parseInt(targetParts[i]);
+            return false;
 
-            if (serverPart < targetPart) {
-                return true;
-            } else if (serverPart > targetPart) {
-                return false;
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-        return serverParts.length < targetParts.length;
     }
 
-    /**
-     * Gets a simplified major version (..., 9, 10, ..., 14).
-     * In most cases, you shouldn't be using this method.
-     *
-     * @return the simplified major version, or -1 for bungeecord
-     * @since 1.0.0
-     */
     private static int getVersion() {
-        if (!classExists("org.bukkit.Bukkit") && classExists("net.md_5.bungee.api.ChatColor")) {
+        if (!classExists("org.bukkit.Bukkit") &&
+                classExists("net.md_5.bungee.api.ChatColor")) {
             return -1;
         }
 
-        String version = Bukkit.getVersion();
-        Validate.notEmpty(version, "Cannot get major Minecraft version from null or empty string");
+        try {
+            String bukkitVersion = Bukkit.getBukkitVersion();
 
-        // getVersion()
-        int index = version.lastIndexOf("MC:");
-        if (index != -1) {
-            version = version.substring(index + 4, version.length() - 1);
-        } else if (version.endsWith("SNAPSHOT")) {
-            // getBukkitVersion()
-            index = version.indexOf('-');
-            version = version.substring(0, index);
+            String mcVersion = bukkitVersion.split("-")[0];
+
+            String[] parts = mcVersion.split("\\.");
+
+            return Integer.parseInt(parts[1]);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 21; // safe fallback
         }
-        // 1.13.2, 1.14.4, etc...
-        int lastDot = version.lastIndexOf('.');
-        if (version.indexOf('.') != lastDot) version = version.substring(0, lastDot);
-
-        return Integer.parseInt(version.substring(2));
     }
 
     /**
@@ -476,7 +474,7 @@ public class Utils {
 
     /**
      * Supports comparisons like:
-     *  - >=, <=, >, <, ==, !=
+     * - >=, <=, >, <, ==, !=
      */
     private static boolean evaluateCondition(String condition) {
         condition = condition.replace(" ", "");
@@ -499,8 +497,8 @@ public class Utils {
                 return switch (op) {
                     case ">=" -> left >= right;
                     case "<=" -> left <= right;
-                    case ">"  -> left > right;
-                    case "<"  -> left < right;
+                    case ">" -> left > right;
+                    case "<" -> left < right;
                     case "==" -> left == right;
                     case "!=" -> left != right;
                     default -> false;

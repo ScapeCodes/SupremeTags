@@ -1,0 +1,35 @@
+############################################################
+# +------------------------------------------------------+ #
+# |                     Rarities                         | #
+# +------------------------------------------------------+ #
+############################################################
+
+rarities:
+  common:
+    enable: true
+    order: 1
+    displayname: '&7Common'
+    filter-labels:
+      selected: '&7&lCOMMON'
+      unselected: '&7Common'
+  uncommon:
+    enable: true
+    order: 2
+    displayname: '&7UnCommon'
+    filter-labels:
+      selected: '&f&lUNCOMMON'
+      unselected: '&7UnCommon'
+  rare:
+    enable: true
+    order: 3
+    displayname: '&7Rare'
+    filter-labels:
+      selected: '&9&lRARE'
+      unselected: '&7Rare'
+  legendary:
+    enable: true
+    order: 4
+    displayname: '&7Legendary'
+    filter-labels:
+      selected: '&6&lLEGENDARY'
+      unselected: '&7Legendary'
