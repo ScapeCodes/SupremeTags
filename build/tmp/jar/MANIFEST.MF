@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: net.noscape.project.supremetags.SupremeTags
-Implementation-Title: SupremeTags
-Implementation-Version: 2.1.17
-
