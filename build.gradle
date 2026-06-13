@@ -3,13 +3,12 @@ plugins {
     id 'maven-publish'
 }
 
-sourceCompatibility = 21
-targetCompatibility = 21
 group = 'net.noscape.project.supremetags'
-version = '2.1.16'
+version = '2.1.17'
 
 java {
-    disableAutoTargetJvm()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -60,7 +59,7 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:26.1.2.build.+'
 
     compileOnly 'me.clip:placeholderapi:2.11.7'
     compileOnly 'net.milkbowl.vault:VaultUnlockedAPI:2.16'
@@ -82,7 +81,7 @@ dependencies {
     compileOnly files('libs/Score.jar')
     compileOnly files('libs/ExecutableBlocks.jar')
 
-    shade 'com.github.cryptomorin:XSeries:13.5.1'
+    shade 'com.github.CryptoMorin:XSeries:13.8.0'
 
     compileOnly 'mysql:mysql-connector-java:8.0.33'
     compileOnly 'redis.clients:jedis:5.1.0'

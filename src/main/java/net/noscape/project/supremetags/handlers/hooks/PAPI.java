@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static net.noscape.project.supremetags.utils.Utils.format;
 import static net.noscape.project.supremetags.utils.Utils.formatNumber;
 
 public class PAPI extends PlaceholderExpansion {
@@ -163,7 +164,7 @@ public class PAPI extends PlaceholderExpansion {
                 String tagStr1 = (t.getCurrentTag() != null) ? t.getCurrentTag() : t.getTag().get(0);
 
                 String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.tag.format");
-                formatted = formatted.replace("%tag%", tagStr1);
+                formatted = format(formatted.replace("%tag%", tagStr1));
 
                 return PlaceholderAPI.setPlaceholders(player, formatted);
             case "chattag":
@@ -173,7 +174,7 @@ public class PAPI extends PlaceholderExpansion {
 
                 String tagStr2 = (t.getCurrentTag() != null) ? t.getCurrentTag() : t.getTag().get(0);
                 String formatted2 = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
-                formatted2 = formatted2.replace("%tag%", tagStr2);
+                formatted2 = format(formatted2.replace("%tag%", tagStr2));
 
                 return PlaceholderAPI.setPlaceholders(player, formatted2);
             case "scoreboardtag":
@@ -183,7 +184,7 @@ public class PAPI extends PlaceholderExpansion {
 
                 String sbStr = (t.getCurrentTag() != null) ? t.getCurrentTag() : t.getTag().get(0);
                 String sbformatted = SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.format");
-                sbformatted = sbformatted.replace("%tag%", sbStr);
+                sbformatted = format(sbformatted.replace("%tag%", sbStr));
 
                 return PlaceholderAPI.setPlaceholders(player, sbformatted);
             case "tabtag":
@@ -193,13 +194,13 @@ public class PAPI extends PlaceholderExpansion {
 
                 String tabStr = (t.getCurrentTag() != null) ? t.getCurrentTag() : t.getTag().get(0);
                 String tabformatted = SupremeTags.getInstance().getConfig().getString("placeholders.tab.format");
-                tabformatted = tabformatted.replace("%tag%", tabStr);
+                tabformatted = format(tabformatted.replace("%tag%", tabStr));
 
                 return PlaceholderAPI.setPlaceholders(player, tabformatted);
             case "identifier":
                 return t.getIdentifier();
             case "description":
-                return t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
+                return format(t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n")));
             case "permission":
                 return t.getPermission();
             case "rarity":
@@ -231,7 +232,7 @@ public class PAPI extends PlaceholderExpansion {
 
             String tag = v.getTag().get(0);
             String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.tag.format");
-            formatted = formatted.replace("%tag%", tag);
+            formatted = format(formatted.replace("%tag%", tag));
 
             text = PlaceholderAPI.setPlaceholders(player, formatted);
         }
@@ -244,7 +245,7 @@ public class PAPI extends PlaceholderExpansion {
 
             String tag = v.getTag().get(0);
             String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
-            formatted = formatted.replace("%tag%", tag);
+            formatted = format(formatted.replace("%tag%", tag));
 
             text = PlaceholderAPI.setPlaceholders(player, formatted);
         }
@@ -257,7 +258,7 @@ public class PAPI extends PlaceholderExpansion {
 
             String tag = v.getTag().get(0);
             String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.tab.format");
-            formatted = formatted.replace("%tag%", tag);
+            formatted = format(formatted.replace("%tag%", tag));
 
             text = PlaceholderAPI.setPlaceholders(player, formatted);
         }
@@ -270,13 +271,13 @@ public class PAPI extends PlaceholderExpansion {
 
             String tag = v.getTag().get(0);
             String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.format");
-            formatted = formatted.replace("%tag%", tag);
+            formatted = format(formatted.replace("%tag%", tag));
 
             text = PlaceholderAPI.setPlaceholders(player, formatted);
         }
 
         if (params.equalsIgnoreCase("description")) {
-            text = v.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
+            text = format(v.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n")));
             return text;
         }
 
