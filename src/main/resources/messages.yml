@@ -54,6 +54,13 @@ messages:
     withdrawable: '%prefix% &7Withdrawable setting updated.'
     cost: '%prefix% &7You are setting a new cost value. &6Type it in chat.'
     rarity: '%prefix% &7You are setting a new rarity. &6Type it in chat.'
+    displayname: '%prefix% &7You are setting a new display name. &6Type it in chat.'
+    material: '%prefix% &7You are setting a new material. &6Type it in chat.'
+    slot: '%prefix% &7You are setting a new slot. &6Type it in chat.'
+    permission-see-category: '%prefix% &7You are setting a new permission-see-category value. &6Type it in chat.'
+    cost-category: '%prefix% &7You are setting a new cost-category value. &6Type it in chat.'
+    glow: '%prefix% &7You are setting a new glow value. &6Type it in chat.'
+    invalid-number: '%prefix% &cInvalid number, please enter a valid number.'
     cancelled: '%prefix% &7edit cancelled, no changes have taken place.'
   stages:
     stage-1: '&6&lStage 1: &7Enter a name for the tag. &6&o(type in normal chat)'

@@ -10,6 +10,7 @@ softdepend:
   - HeadDatabase
   - VaultAPI
   - Nexo
+  - ExcellentEconomy
   - ItemsAdder
   - PlayerPoints
   - SimpleItemGenerator

@@ -22,7 +22,7 @@
 # Economy Option Feature (PER TAG)
 # economy:
 #   enabled: true/false
-#   type: 'VAULT' # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere]
+#   type: 'VAULT' # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, EXCELLENTECONOMY-currencyhere]
 #   amount: 200
 
 tags:
@@ -59,7 +59,7 @@ tags:
     rarity: common
     economy:
       enabled: false
-      type: CUSTOM # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, COINSENGINE-currencyhere, CUSTOM]
+      type: CUSTOM # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, EXCELLENTECONOMY-currencyhere, CUSTOM]
       take-cmd: 'eco take %player% %amount%'
       condition: '%vault_eco_balance% >= %amount%' # requires placeholderapi
       amount: 200

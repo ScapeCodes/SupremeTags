@@ -19,12 +19,24 @@ settings:
   categories: false # should supremetags use the category system?
   default-category: 'default' # used to set the tags category value when creating a new tag with the '/tag create' command
   update-check: true # the plugin will check if there is an update available.
+  use-minimessage: false # set true to send messages as Adventure MiniMessage where supported.
+  color-formatting:
+    legacy-hex-format: true # allow legacy hex color formatting.
+    cmi-color-support: true # allow CMI color format support.
   auto-merge: false # auto merges all tags from deluxetags into supremetags (DeluxeTags is required on the server)
   active-tag-glow: true # adds a hidden enchantment to the tag item that is active for the player.
   tag-command-in-disabled-worlds: true # should /tags command be disabled in 'disabled-worlds'.
   disabled-worlds: # what worlds should tags be allowed in, tags in this world will not be shown.
     - 'example'
     - 'world2'
+  cost-system: false # set true if tags should require an economy cost to unlock.
+  use-global-lore: false # set true if tags should use global tag lore settings.
+  db-only-tags: false # set true if tags should be loaded only from the database.
+  auto-apply:
+    displayname: false # automatically apply the selected tag to the player's display name.
+    tab: false # automatically apply the selected tag to the player's tab list name.
+    displayname-format: '%displayname% %tag%'
+    tab-format: '%playerlistname% %tag%'
   gui-messages: true # setting this to true, will enable 'tag-select-message' & 'reset-message'
   locked-view: true # this setting allows players to view locked/unlocked tags.
   personal-tags:
@@ -48,6 +60,31 @@ settings:
   only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
   search-type: 'SIGN' # either 'SIGN' or 'ANVIL'
   update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
+
+############################################################
+# +------------------------------------------------------+ #
+# |                       GUI                            | #
+# +------------------------------------------------------+ #
+############################################################
+
+gui:
+  items:
+    glass:
+      enable: true
+      material: 'GRAY_STAINED_GLASS_PANE'
+      displayname: ''
+      custom-model-data: 0
+      hide-tooltip: false
+  tag-editor-menu:
+    tag-item:
+      lore:
+        - '&7Description: %description%'
+        - '&7Identifier: %identifier%'
+        - '&7Tag: %tag%'
+        - '&7Cost: %cost%'
+        - '&7Cost Formatted: %cost_formatted%'
+        - '&7Variants: %variants%'
+    editor-items: {}
 
 ############################################################
 # +------------------------------------------------------+ #
@@ -109,3 +146,13 @@ sounds:
     sound: 'entity.villager.no'
     volume: 1.0
     pitch: 0.9
+  favourite-added:
+    enable: true
+    sound: 'entity.player.levelup'
+    volume: 0.6
+    pitch: 1.2
+  favourite-removed:
+    enable: true
+    sound: 'block.composter.fill_success'
+    volume: 0.9
+    pitch: 1.0

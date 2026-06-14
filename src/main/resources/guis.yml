@@ -340,6 +340,38 @@ gui:
       change-permission: '&e&lChange Permission'
       change-category: '&e&lChange Category'
       delete-tag: '&c&lDelete Tag'
+  category-editor-menu:
+    title: '&8Menu > &lCategory Editor'
+    specific-category-editor-title: '&7Category ➟ [%identifier%]'
+    categories-per-page: 28
+    slots-category:
+      enable: false
+      slots:
+        - 19
+        - 20
+        - 21
+        - 22
+        - 23
+        - 24
+        - 25
+        - 28
+        - 29
+        - 30
+        - 31
+        - 32
+        - 33
+        - 34
+    editor-items:
+      change-displayname: '&e&lChange Display Name'
+      change-identifier: '&e&lChange Identifier'
+      change-description: '&e&lChange Description'
+      change-material: '&e&lChange Material'
+      change-slot: '&e&lChange Slot'
+      change-permission: '&e&lChange Permission'
+      change-permission-see-category: '&e&lChange Permission See Category'
+      change-cost-category: '&e&lChange Cost Category'
+      change-glow: '&e&lChange Glow'
+      delete-category: '&c&lDelete Category'
   # disable items in the gui.
   # setting these values to false will not display the item in tag gui.
   items:
@@ -389,14 +421,23 @@ gui:
         - '&7Create a new tag!'
       hide-tooltip: false # 1.21.5+ only
     active:
-      enable: true
-      slot: 52
-      displayname: '&6&l%player%'
-      material: 'NAME_TAG'
-      custom-model-data: 0
-      lore:
-        - '&7Your Active Tag: &6%identifier%'
-      hide-tooltip: false # 1.21.5+ only
+       enable: true
+       slot: 52
+       displayname: '&6&l%player%'
+       material: 'NAME_TAG'
+       custom-model-data: 0
+       lore:
+         - '&7Your Active Tag: &6%identifier%'
+       hide-tooltip: false # 1.21.5+ only
+    favourites:
+       enable: true
+       slot: 4
+       displayname: '&6&lFavourites'
+       material: 'YELLOW_DYE'
+       custom-model-data: 0
+       lore:
+         - '&7View your favourite tags!'
+       hide-tooltip: false # 1.21.5+ only
     next:
       enable: true
       slot: 50
@@ -469,5 +510,127 @@ gui:
           all-tags: '&8&l> &7All Tags'
           category: '&8&l> %category%'
         replacements: # for %filter%
-          all-tags: 'All Tags'
-          your-tags: 'Your Tags'
+           all-tags: 'All Tags'
+           your-tags: 'Your Tags'
+  favourites-menu:
+     title: '&8Menu > &lFavourites'
+     size: 54
+     tags-per-page: 28
+     slots-tag:
+       enable: false
+       slots:
+         - 19
+         - 20
+         - 21
+         - 22
+         - 23
+         - 24
+         - 25
+         - 28
+         - 29
+         - 30
+         - 31
+         - 32
+         - 33
+         - 34
+     global-locked-tag:
+       displayname: '&7Tag: %tag%'
+       display-item: BARRIER
+       custom-model-data: 0
+     global-tag-lores:
+       unlocked-lore:
+         - '%description%'
+         - ''
+         - '&7Tag &8➜ %tag%'
+         - '&7Variants &8➜ &e%variants%'
+         - '&7Preview &8➜ &f%player_name% %tag%&8: &fHi'
+         - '&7Unlocked &8➜ &f%track_unlocked%'
+         - '&7Rarity: &8➜ %rarity%'
+         - '&7Effects &8➜'
+         - '&7%effects%'
+         - ''
+         - '&e&nClick to Assign'
+         - '&c&nShift+Click to Remove from Favourites'
+       selected-lore:
+         - '%description%'
+         - ''
+         - '&7Tag &8➜ %tag%'
+         - '&7Variants &8➜ &e%variants%'
+         - '&7Preview &8➜ &f%player_name% %tag%&8: &fHi'
+         - '&7Unlocked &8➜ &f%track_unlocked%'
+         - '&7Rarity: &8➜ %rarity%'
+         - '&7Effects &8➜'
+         - '&7%effects%'
+         - ''
+         - '&a&nThis tag is selected!'
+       locked-lore:
+         - '%description%'
+         - ''
+         - '&7Tag &8➜ %tag%'
+         - '&7Variants &8➜ &e%variants%'
+         - '&7Preview &8➜ &f%player_name% %tag%&8: &fHi'
+         - '&7Rarity: &8➜ %rarity%'
+         - '&7Effects &8➜'
+         - '&7%effects%'
+         - ''
+         - '&7Buy &8&l> &fRight-Click'
+         - '&7Cost &8&l> &f$%cost%'
+         - ''
+         - '&c&nThis tag is locked'
+       locked-permission:
+         - '%description%'
+         - ''
+         - '&7Tag &8➜ %tag%'
+         - '&7Variants &8➜ &e%variants%'
+         - '&7Preview &8➜ &f%player_name% %tag%&8: &fHi'
+         - '&7Unlocked &8➜ &f%track_unlocked%'
+         - '&7Rarity: &8➜ %rarity%'
+         - '&7Effects &8➜'
+         - '&7%effects%'
+         - ''
+         - '&7&oNo permission to select this tag!'
+         - ''
+         - '&c&nThis tag is locked'
+     # disable items in the gui.
+     items:
+       close:
+         enable: true
+         slot: 49
+         displayname: '&c&lClose'
+         material: 'BARRIER'
+         custom-model-data: 0
+         lore:
+           - '&7Close the Menu!'
+         hide-tooltip: false
+       reset:
+         enable: true
+         slot: 46
+         displayname: '&c&lReset Tag'
+         material: 'RED_DYE'
+         custom-model-data: 0
+         lore: []
+         hide-tooltip: false
+       glass:
+         enable: true
+         displayname: '&c'
+         material: 'GRAY_STAINED_GLASS_PANE'
+         custom-model-data: 0
+         hide-tooltip: true
+       back:
+         enable: true
+         slot: 48
+         displayname: '&f&lBack'
+         material: 'ARROW'
+         custom-model-data: 0
+         lore:
+           - '&7Go to the previous page!'
+         hide-tooltip: false
+       next:
+         enable: true
+         slot: 50
+         displayname: '&f&lNext'
+         material: 'ARROW'
+         custom-model-data: 0
+         lore:
+           - '&7Go to the next page!'
+         hide-tooltip: false
