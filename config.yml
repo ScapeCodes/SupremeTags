@@ -1,0 +1,158 @@
+############################################################
+# +------------------------------------------------------+ #
+# |                     Settings                         | #
+# +------------------------------------------------------+ #
+############################################################
+
+settings:
+  commands:
+    # set custom aliases for /tags
+    # ** adding/removing these aliases require a restart to take effect! **
+    main-command: 'tags'
+    aliases:
+      - tag
+  no-permission-menu-action: true # set true, if the player doesn't have permission to the argument like "/tags reload" it will just open the tags' menu.
+  messaging-platform: 'bungeecord' # 'bungeecord' or 'velocity'
+  bungee-messaging: false # when set to true, this will sync all tags across all servers, without having to manually do this.
+  default-tag: 'none' # set 'none' players start with no tag.
+  forced-tag: false # this will make it force players to have a tag, they won't beable to take the tag off.
+  categories: false # should supremetags use the category system?
+  default-category: 'default' # used to set the tags category value when creating a new tag with the '/tag create' command
+  update-check: true # the plugin will check if there is an update available.
+  use-minimessage: false # set true to send messages as Adventure MiniMessage where supported.
+  color-formatting:
+    legacy-hex-format: true # allow legacy hex color formatting.
+    cmi-color-support: true # allow CMI color format support.
+  auto-merge: false # auto merges all tags from deluxetags into supremetags (DeluxeTags is required on the server)
+  active-tag-glow: true # adds a hidden enchantment to the tag item that is active for the player.
+  tag-command-in-disabled-worlds: true # should /tags command be disabled in 'disabled-worlds'.
+  disabled-worlds: # what worlds should tags be allowed in, tags in this world will not be shown.
+    - 'example'
+    - 'world2'
+  cost-system: false # set true if tags should require an economy cost to unlock.
+  use-global-lore: false # set true if tags should use global tag lore settings.
+  db-only-tags: false # set true if tags should be loaded only from the database.
+  auto-apply:
+    displayname: false # automatically apply the selected tag to the player's display name.
+    tab: false # automatically apply the selected tag to the player's tab list name.
+    displayname-format: '%displayname% %tag%'
+    tab-format: '%playerlistname% %tag%'
+  gui-messages: true # setting this to true, will enable 'tag-select-message' & 'reset-message'
+  locked-view: true # this setting allows players to view locked/unlocked tags.
+  personal-tags:
+    enable: true # this setting allows players to make and access their own tags.
+    limits:
+      # permission limits: supremetags.mytags.limit.<group>
+      ## example: supremetags.mytags.limit.default
+      default: 10
+      ## example: supremetags.mytags.limit.vip
+      vip: 20
+    format-replace: '%tag%' # strict format replacer.
+  # layout types: [FULL, BORDER]
+  # FULL - 36 tags
+  # BORDER - 28 tags
+  layout-type: 'BORDER'
+  animated-tag-speed: 10 # in ticks
+  tag-vouchers: true # should tag vouchers withdraw be enabled?
+  prioritise-selected-tag: true # set false if you don't want selected tag to force at first slot.
+  voucher-redeem-permission: true # set false if you don't want permission 'supremetags.voucher.[identifier]' applying to tag vouchers.
+  deactivate-click: true # set false if you don't want function where if you click the active tag item in gui, it will deactivate.
+  only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
+  search-type: 'SIGN' # either 'SIGN' or 'ANVIL'
+  update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
+
+############################################################
+# +------------------------------------------------------+ #
+# |                       GUI                            | #
+# +------------------------------------------------------+ #
+############################################################
+
+gui:
+  items:
+    glass:
+      enable: true
+      material: 'GRAY_STAINED_GLASS_PANE'
+      displayname: ''
+      custom-model-data: 0
+      hide-tooltip: false
+  tag-editor-menu:
+    tag-item:
+      lore:
+        - '&7Description: %description%'
+        - '&7Identifier: %identifier%'
+        - '&7Tag: %tag%'
+        - '&7Cost: %cost%'
+        - '&7Cost Formatted: %cost_formatted%'
+        - '&7Variants: %variants%'
+    editor-items: {}
+
+############################################################
+# +------------------------------------------------------+ #
+# |                   Placeholders                       | #
+# +------------------------------------------------------+ #
+############################################################
+
+placeholders:
+  # %supremetags_tag%
+  # & {tag} / {TAG} / {supremetags_tag}
+  tag:
+    none-output: ''
+    format: '%tag%'
+  # %supremetags_chattag%
+  # is used for other built in placeholders as well.
+  chat:
+    none-output: ''
+    format: '%tag%'
+  # %supremetags_scorebardtag%
+  scoreboard:
+    none-output: ''
+    format: '%tag%'
+  # %supremetags_tabtag%
+  tab:
+    none-output: ''
+    format: '%tag%'
+
+############################################################
+# +------------------------------------------------------+ #
+# |                       Sounds                         | #
+# +------------------------------------------------------+ #
+############################################################
+# These default generated sounds are for 1.19+, make sure to look up your versions sounds:
+# latest: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+# 1.19: https://helpch.at/docs/1.19/org/bukkit/Sound.html
+# 1.12: https://helpch.at/docs/1.12.2/org/bukkit/Sound.html
+# 1.8: https://helpch.at/docs/1.8.8/org/bukkit/Sound.html
+#
+# Google search: "spigot sounds <version>".
+
+sounds:
+  open-menus:
+    enable: true
+    sound: 'item.book.page_turn'
+    volume: 1.0
+    pitch: 1.0
+  selected-tag:
+    enable: true
+    sound: 'entity.player.levelup'
+    volume: 0.6
+    pitch: 1.2
+  reset-tag:
+    enable: true
+    sound: 'block.composter.fill_success'
+    volume: 0.9
+    pitch: 1.0
+  error-message:
+    enable: true
+    sound: 'entity.villager.no'
+    volume: 1.0
+    pitch: 0.9
+  favourite-added:
+    enable: true
+    sound: 'entity.player.levelup'
+    volume: 0.6
+    pitch: 1.2
+  favourite-removed:
+    enable: true
+    sound: 'block.composter.fill_success'
+    volume: 0.9
+    pitch: 1.0
