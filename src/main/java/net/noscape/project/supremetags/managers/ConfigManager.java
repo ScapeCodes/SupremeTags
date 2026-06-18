@@ -1,28 +1,199 @@
 package net.noscape.project.supremetags.managers;
 
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class ConfigManager {
 
     private final JavaPlugin plugin;
     private HashMap<String, Config> configs = new HashMap<>();
 
+    // --- Multi-file tag support ---
+    private final List<YamlConfiguration> tagConfigs = new ArrayList<>();
+    private final List<File> tagFiles = new ArrayList<>();
+    private File tagsFolder;
+    private File customTagsFile;
+    private YamlConfiguration customTagsConfig;
+
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
 
         // Load each config, ensuring defaults are only copied if the file does not exist
         loadConfig("rarities.yml");
-        loadConfig("tags.yml");
         loadConfig("messages.yml");
         loadConfig("banned-words.yml");
         loadConfig("categories.yml");
         loadConfig("data.yml");
         loadConfig("guis.yml");
+
+        // Load the tags/ folder (replaces the old single tags.yml)
+        loadTagsFolder();
     }
+
+    // -----------------------------------------------------------------------
+    // Tags folder management
+    // -----------------------------------------------------------------------
+
+    /**
+     * Initialises the tags/ folder, migrates any legacy tags.yml, and loads
+     * all .yml files found inside the folder.
+     */
+    public void loadTagsFolder() {
+        tagsFolder = new File(plugin.getDataFolder(), "tags");
+        if (!tagsFolder.exists()) {
+            tagsFolder.mkdirs();
+        }
+
+        // --- Migration: move old tags.yml into tags/default.yml ---
+        File legacyTagsFile = new File(plugin.getDataFolder(), "tags.yml");
+        File defaultTagsFile = new File(tagsFolder, "default.yml");
+
+        if (legacyTagsFile.exists() && !defaultTagsFile.exists()) {
+            boolean moved = legacyTagsFile.renameTo(defaultTagsFile);
+            if (moved) {
+                plugin.getLogger().info("[SupremeTags] Migrated tags.yml -> tags/default.yml");
+            } else {
+                plugin.getLogger().warning("[SupremeTags] Could not migrate tags.yml to tags/default.yml. Please move it manually.");
+            }
+        }
+
+        // --- If the folder is still empty, copy the bundled default ---
+        File[] existingFiles = tagsFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (existingFiles == null || existingFiles.length == 0) {
+            // Save the default resource (tags/default.yml inside the JAR)
+            try {
+                plugin.saveResource("tags/default.yml", false);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("[SupremeTags] Could not save default tags/default.yml: " + e.getMessage());
+            }
+        }
+
+        // --- Prepare the custom-tags.yml file used for runtime-created tags ---
+        customTagsFile = new File(tagsFolder, "custom-tags.yml");
+        if (!customTagsFile.exists()) {
+            try {
+                customTagsFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().severe("[SupremeTags] Could not create tags/custom-tags.yml: " + e.getMessage());
+            }
+        }
+
+        // Load all yml files in the folder
+        reloadTagConfigs();
+    }
+
+    /**
+     * Rescans the tags/ folder and reloads every .yml file in it,
+     * including subdirectories.
+     */
+    public void reloadTagConfigs() {
+        tagConfigs.clear();
+        tagFiles.clear();
+
+        List<File> ymlFiles = getAllYamlFiles(tagsFolder);
+
+        for (File file : ymlFiles) {
+            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+            tagConfigs.add(cfg);
+            tagFiles.add(file);
+        }
+
+        // Refresh the custom-tags reference
+        customTagsConfig = getOrCreateCustomTagsConfig();
+    }
+
+    /**
+     * Recursively finds all .yml files in a directory and its subdirectories.
+     */
+    private List<File> getAllYamlFiles(File folder) {
+        List<File> ymlFiles = new ArrayList<>();
+        if (folder == null || !folder.exists()) return ymlFiles;
+
+        File[] files = folder.listFiles();
+        if (files == null) return ymlFiles;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                // Recursively search subdirectories
+                ymlFiles.addAll(getAllYamlFiles(file));
+            } else if (file.getName().endsWith(".yml")) {
+                ymlFiles.add(file);
+            }
+        }
+
+        return ymlFiles;
+    }
+
+    /**
+     * Returns all FileConfiguration objects loaded from the tags/ folder.
+     */
+    public List<FileConfiguration> getTagConfigs() {
+        return new ArrayList<>(tagConfigs);
+    }
+
+    /**
+     * Returns the matching File for a given YamlConfiguration loaded from the
+     * tags/ folder, or null if not found.
+     */
+    public File getFileForTagConfig(YamlConfiguration cfg) {
+        int idx = tagConfigs.indexOf(cfg);
+        return (idx >= 0 && idx < tagFiles.size()) ? tagFiles.get(idx) : null;
+    }
+
+    /**
+     * Saves a specific tag config file to its original location.
+     */
+    public void saveTagConfig(FileConfiguration cfg) {
+        YamlConfiguration yamlCfg = (YamlConfiguration) cfg;
+        File file = getFileForTagConfig(yamlCfg);
+        if (file == null) {
+            // Fallback to custom-tags.yml if not found
+            file = customTagsFile;
+        }
+        try {
+            yamlCfg.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("[SupremeTags] Could not save tag config: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Gets or creates the custom-tags.yml configuration.
+     */
+    private YamlConfiguration getOrCreateCustomTagsConfig() {
+        if (customTagsConfig == null) {
+            customTagsConfig = YamlConfiguration.loadConfiguration(customTagsFile);
+        }
+        return customTagsConfig;
+    }
+
+    /**
+     * Returns the config for writing new tags (custom-tags.yml).
+     */
+    public YamlConfiguration getTagConfigForWrite() {
+        return getOrCreateCustomTagsConfig();
+    }
+
+    /**
+     * Saves the custom-tags.yml file.
+     */
+    public void saveCustomTagsConfig() {
+        try {
+            customTagsConfig.save(customTagsFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("[SupremeTags] Could not save custom-tags.yml: " + e.getMessage());
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Standard config management
+    // -----------------------------------------------------------------------
 
     /**
      * Get the config by the name (Don't forget the .yml)
