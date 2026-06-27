@@ -94,13 +94,39 @@ public class MySQLDatabase {
     }
 
     public void createTable() {
-        String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name VARCHAR(255) NOT NULL, UUID VARCHAR(255) NOT NULL, Active VARCHAR(255) NOT NULL, PRIMARY KEY (UUID))";
+        String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name VARCHAR(255) NOT NULL, UUID VARCHAR(255) NOT NULL, Active VARCHAR(255) NOT NULL, Favourites TEXT, CustomTag TEXT DEFAULT '', PRIMARY KEY (UUID))";
 
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement()) {
             stmt.execute(userTable);
+            ensureActiveColumn(connection);
+            ensureCTColumn(connection);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void ensureActiveColumn(Connection connection) throws SQLException {
+        try (ResultSet columns = connection.getMetaData().getColumns(null, connection.getCatalog(), "users", "Active")) {
+            if (columns.next()) {
+                return;
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE `users` ADD COLUMN Active VARCHAR(255) NOT NULL DEFAULT ''")) {
+            statement.executeUpdate();
+        }
+    }
+
+    private void ensureCTColumn(Connection connection) throws SQLException {
+        try (ResultSet columns = connection.getMetaData().getColumns(null, connection.getCatalog(), "users", "CustomTag")) {
+            if (columns.next()) {
+                return;
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE `users` ADD COLUMN CustomTag TEXT DEFAULT ''")) {
+            statement.executeUpdate();
         }
     }
 

@@ -68,6 +68,29 @@ public class UserData {
         return false;
     }
 
+    public static void setCustomTag(OfflinePlayer player, String tag) {
+        if (SupremeTags.getInstance().isH2()) {
+            H2UserData.setCustomTag(player, tag);
+        } else if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
+            MySQLUserData.setCustomTag(player, tag);
+        } else if (SupremeTags.getInstance().isSQLite()) {
+            SQLiteUserData.setCustomTag(player, tag);
+        }
+    }
+
+    public static String getCustomTag(UUID uuid) {
+
+        if (SupremeTags.getInstance().isH2()) {
+            return H2UserData.getCustomTag(uuid);
+        } else if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
+            return MySQLUserData.getCustomTag(uuid);
+        } else if (SupremeTags.getInstance().isSQLite()) {
+            return SQLiteUserData.getCustomTag(uuid);
+        }
+
+        return "";
+    }
+
     public static String getActive(UUID uuid) {
 
         if (SupremeTags.getInstance().isH2()) {
@@ -79,5 +102,27 @@ public class UserData {
         }
 
         return "";
+    }
+
+    public static List<String> getFavourites(UUID uuid) {
+        if (SupremeTags.getInstance().isH2()) {
+            return H2UserData.getFavourites(uuid);
+        } else if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
+            return MySQLUserData.getFavourites(uuid);
+        } else if (SupremeTags.getInstance().isSQLite()) {
+            return SQLiteUserData.getFavourites(uuid);
+        }
+
+        return new ArrayList<>();
+    }
+
+    public static void setFavourites(OfflinePlayer player, List<String> favourites) {
+        if (SupremeTags.getInstance().isH2()) {
+            H2UserData.setFavourites(player, favourites);
+        } else if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
+            MySQLUserData.setFavourites(player, favourites);
+        } else if (SupremeTags.getInstance().isSQLite()) {
+            SQLiteUserData.setFavourites(player, favourites);
+        }
     }
 }

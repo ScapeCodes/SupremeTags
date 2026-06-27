@@ -1,9 +1,20 @@
 package net.noscape.project.supremetags.guis.personaltags;
 
 import de.tr7zw.nbtapi.NBTItem;
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.api.events.TagAssignEvent;
 import net.noscape.project.supremetags.api.events.TagResetEvent;
+import net.noscape.project.supremetags.guis.FavouritesMenu;
 import net.noscape.project.supremetags.guis.MainMenu;
 import net.noscape.project.supremetags.guis.TagMenu;
 import net.noscape.project.supremetags.handlers.SetupTag;
@@ -11,6 +22,7 @@ import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -102,6 +114,10 @@ public class PersonalTagsMenu extends Paged {
 
             if (name.equalsIgnoreCase("personal-tags")) {
                 new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
+            }
+
+            if (name.equalsIgnoreCase("favourites")) {
+                new FavouritesMenu(SupremeTags.getMenuUtil(player)).open();
             }
 
             if (name.equalsIgnoreCase("search")) {
@@ -217,9 +233,48 @@ public class PersonalTagsMenu extends Paged {
                 if (!reachedLimit) {
                     if (!SupremeTags.getInstance().getSetupList().containsKey(player)) {
                         player.closeInventory();
-                        SetupTag setup = new SetupTag(1);
-                        SupremeTags.getInstance().getSetupList().put(player, setup);
-                        msgPlayer(player, stage_one);
+
+
+                        if (!Utils.isVersionLessThan("1.21.8") && SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.use-creation-dialogs")) {
+                            Dialog dialog = Dialog.create(builder -> builder.empty()
+                                    .base(DialogBase.builder(Component.text(format(messages.getString("messages.stages.dialog.title"))))
+                                            .inputs(List.of(
+                                                    DialogInput.text(
+                                                            "identifier",
+                                                            Component.text(format(messages.getString("messages.stages.dialog.q1")))
+                                                    ).width(300).build(),
+
+                                                    DialogInput.text(
+                                                            "tag",
+                                                            Component.text(format(messages.getString("messages.stages.dialog.q2")))
+                                                    ).width(300).build()
+                                            ))
+                                            .build())
+                                    .type(DialogType.confirmation(
+                                            ActionButton.create(
+                                                    Component.text(format(messages.getString("messages.stages.dialog.button-create"))),
+                                                    Component.text(format(messages.getString("messages.stages.dialog.button-create-hover"))),
+                                                    100,
+                                                    DialogAction.customClick(
+                                                            Key.key("supremetags:create_tag"),
+                                                            null
+                                                    )
+                                            ),
+                                            ActionButton.create(
+                                                    Component.text(format(messages.getString("messages.stages.dialog.button-cancel"))),
+                                                    Component.text(format(messages.getString("messages.stages.dialog.button-cancel-hover"))),
+                                                    100,
+                                                    null
+                                            )
+                                    ))
+                            );
+
+                            player.showDialog(dialog);
+                        } else {
+                            SetupTag setup = new SetupTag(1);
+                            SupremeTags.getInstance().getSetupList().put(player, setup);
+                            msgPlayer(player, stage_one);
+                        }
                     }
                 } else {
                     String limit_reached = messages.getString("messages.ptags-limit-reached")

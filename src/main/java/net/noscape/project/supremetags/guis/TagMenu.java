@@ -106,7 +106,7 @@ public class TagMenu extends Paged {
             }
 
             boolean isRightClick = e.getClick().isRightClick();
-            boolean hasVariants = !t.getVariants().isEmpty();
+             boolean hasVariants = !t.getVariants().isEmpty();
 
             if (isRightClick && hasVariants) {
                 player.closeInventory();
@@ -118,6 +118,21 @@ public class TagMenu extends Paged {
             boolean hasPerm = player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none");
             boolean isActive = UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier);
             boolean canDeactivate = SupremeTags.getInstance().isDeactivateClick();
+
+            boolean isFavourites = guis.getBoolean("gui.items.favourites.enable");
+
+            // Add to favourites on left click (if not already in favourites)
+            if (isFavourites) {
+                if (e.getClick().isShiftClick() && e.getClick().isLeftClick() && hasPerm) {
+                    List<String> favourites = UserData.getFavourites(player.getUniqueId());
+                    if (!favourites.contains(identifier)) {
+                        favourites.add(identifier);
+                        UserData.setFavourites(player, favourites);
+                        msgPlayer(player, "&aAdded &e" + identifier + " &ato your favourites!");
+                        playConfigSound(player, "favourite-added");
+                    }
+                }
+            }
 
             if (hasPerm) {
                 if (!isActive && identifier != null) {
@@ -217,10 +232,14 @@ public class TagMenu extends Paged {
                 }
 
                 if (name.equalsIgnoreCase("personal-tags")) {
-                    new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
-                }
+                     new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
+                 }
 
-                if (name.equalsIgnoreCase("search")) {
+                 if (name.equalsIgnoreCase("favourites")) {
+                     new FavouritesMenu(SupremeTags.getMenuUtil(player)).open();
+                 }
+
+                 if (name.equalsIgnoreCase("search")) {
                     player.closeInventory();
                     openSearchContainer(player);
                 }

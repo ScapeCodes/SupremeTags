@@ -1,5 +1,6 @@
 package net.noscape.project.supremetags.guis.tageditor;
 
+import com.cryptomorin.xseries.XMaterial;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.enums.EditingType;
 import net.noscape.project.supremetags.guis.confirm.ConfirmationMenu;
@@ -233,6 +234,42 @@ public class SpecificTagMenu extends Menu {
                 getInventory().setItem(49, makeItem(Material.RED_WOOL, format(d_tag_title), c_delete));
             }
         }
-        fillEmpty();
+        // Apply border layout consistent with other menus
+        String layout = SupremeTags.getInstance().getLayout();
+        if (layout == null) {
+            return;
+        }
+
+        if (layout.equalsIgnoreCase("FULL")) {
+            if (SupremeTags.getInstance().getConfig().getBoolean("gui.items.glass.enable")) {
+                for (int i = 36; i <= 44; i++) {
+                    String item_material = guis.getString("gui.items.glass.material");
+                    String item_displayname = guis.getString("gui.items.glass.displayname");
+                    int item_custom_model_data = guis.getInt("gui.items.glass.custom-model-data");
+
+                    boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
+
+                    if (item_material != null) {
+                        getInventory().setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
+                    }
+                }
+            }
+        } else if (layout.equalsIgnoreCase("BORDER")) {
+            for (int i = 0; i < 54; i++) {
+                if (getInventory().getItem(i) == null) {
+                    if (i < 9 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) {
+                        String item_material = guis.getString("gui.items.glass.material");
+                        String item_displayname = guis.getString("gui.items.glass.displayname");
+                        int item_custom_model_data = guis.getInt("gui.items.glass.custom-model-data");
+
+                        boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
+
+                        if (item_material != null) {
+                            getInventory().setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
+                        }
+                    }
+                }
+            }
+        }
     }
 }

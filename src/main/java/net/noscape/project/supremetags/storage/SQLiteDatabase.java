@@ -5,6 +5,7 @@ import net.noscape.project.supremetags.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SQLiteDatabase {
@@ -35,15 +36,46 @@ public class SQLiteDatabase {
     public void initialiseDatabase() {
         PreparedStatement preparedStatement;
 
-        String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name TEXT NOT NULL, UUID TEXT NOT NULL, Active TEXT NOT NULL, PRIMARY KEY (UUID))";
+        String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name TEXT NOT NULL, UUID TEXT NOT NULL, Active TEXT NOT NULL, Favourites TEXT, CustomTag TEXT DEFAULT '', PRIMARY KEY (UUID))";
 
         try {
             preparedStatement = getConnection().prepareStatement(userTable);
             preparedStatement.executeUpdate();
 
+            ensureActiveColumn(connection);
+            ensureCTColumn(connection);
+
             connection.close();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        }
+    }
+
+    private void ensureActiveColumn(Connection connection) throws SQLException {
+        boolean hasActiveColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "users", "Active")) {
+            hasActiveColumn = columns.next();
+        }
+
+        if (!hasActiveColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE `users` ADD COLUMN Active TEXT NOT NULL DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void ensureCTColumn(Connection connection) throws SQLException {
+        boolean hasCTColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "USERS", "CustomTag")) {
+            hasCTColumn = columns.next();
+        }
+
+        if (!hasCTColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN CustomTag Text DEFAULT ''")) {
+                statement.executeUpdate();
+            }
         }
     }
 

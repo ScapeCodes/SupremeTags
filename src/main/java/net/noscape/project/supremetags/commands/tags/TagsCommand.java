@@ -5,6 +5,7 @@ import de.rapha149.signgui.exception.SignGUIVersionException;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.enums.TPermissions;
+import net.noscape.project.supremetags.guis.FavouritesMenu;
 import net.noscape.project.supremetags.guis.MainMenu;
 import net.noscape.project.supremetags.guis.TagMenu;
 import net.noscape.project.supremetags.guis.configeditor.ConfigOneMenu;
@@ -96,11 +97,20 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                 case "set":
                     handleSet(sender, args);
                     break;
+                case "setcustomtag":
+                    handleSetCustomTag(sender, args);
+                    break;
+                case "resetcustomtag":
+                    handleResetCustomTag(sender, args);
+                    break;
                 case "edit":
                     handleEdit(sender, args);
                     break;
                 case "help":
                     sendHelp(sender);
+                    break;
+                case "favourites":
+                    handleFavourites(sender, player);
                     break;
                 default:
                     handleMainCommand(sender, player);
@@ -110,9 +120,23 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private void handleFavourites(CommandSender sender, Player player) {
+        if (player != null) {
+            new FavouritesMenu(SupremeTags.getMenuUtil(player)).open();
+            playConfigSound((Player) sender, "open-menus");
+        } else {
+            sender.sendMessage("Only players can use this command");
+        }
+    }
+
     private void handleEdit(CommandSender sender, String[] args) {
         if (!sender.hasPermission(TPermissions.ADMIN)) {
             msgPlayer(sender, noperm);
+            return;
+        }
+
+        if (args.length < 3) {
+            msgPlayer(sender, "&c/tags edit <tag> <option> <value...>");
             return;
         }
 
@@ -137,6 +161,11 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             t.setPermission(value);
             msgPlayer(sender, tagedited.replace("%tag%", t.getIdentifier()));
         } else if (option.equalsIgnoreCase("category")) {
+            if (!SupremeTags.getInstance().getCategoryManager().isCategory(value)) {
+                msgPlayer(sender, "&cThis category does not exist.");
+                return;
+            }
+
             t.setCategory(value);
             msgPlayer(sender, tagedited.replace("%tag%", t.getIdentifier()));
         } else if (option.equalsIgnoreCase("cost")) {
@@ -157,6 +186,14 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             } else {
                 msgPlayer(sender, "&cRequires: true or false.");
             }
+        } else if (option.equalsIgnoreCase("rarity")) {
+            if (!SupremeTags.getInstance().getRarityManager().isValid(value)) {
+                msgPlayer(sender, "&cThis rarity does not exist.");
+                return;
+            }
+
+            t.setRarity(value);
+            msgPlayer(sender, tagedited.replace("%tag%", t.getIdentifier()));
         }
     }
 
@@ -619,8 +656,66 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         SupremeTags.getInstance().getTagManager().setCategory(sender, name, category);
     }
 
-    private void handleSet(CommandSender sender, String[] args) {
+    private void handleSetCustomTag(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("supremetags.setcustomtag")) {
+            msgPlayer(sender, noperm);
+            return;
+        }
 
+        if (args.length < 3) {
+            msgPlayer(sender, "&cUsage: /tags setcustomtag <player> <tag-style>");
+            return;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+
+        if (!target.hasPlayedBefore() || target.getName() == null) {
+            msgPlayer(sender, player_not_online);
+            return;
+        }
+
+        // Join all remaining arguments into the tag
+        String tag = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+
+        UserData.setCustomTag(target, tag);
+
+        msgPlayer(sender, "&eSet &b" + target.getName() + "'s &eCustom tag to &b" + tag);
+
+        Player onlineTarget = target.getPlayer();
+        if (onlineTarget != null) {
+            msgPlayer(onlineTarget, "&aYour custom tag was set to &b" + tag + " &aby an administrator.");
+        }
+    }
+
+    private void handleResetCustomTag(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("supremetags.resetcustomtag")) {
+            msgPlayer(sender, noperm);
+            return;
+        }
+
+        if (args.length < 2) {
+            msgPlayer(sender, "&cUsage: /tags resetcustomtag <player>");
+            return;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+
+        if (!target.hasPlayedBefore() || target.getName() == null) {
+            msgPlayer(sender, player_not_online);
+            return;
+        }
+
+        UserData.setCustomTag(target, "");
+
+        msgPlayer(sender, "&eReset &b" + target.getName() + "'s &ecustom tag.");
+
+        Player onlineTarget = target.getPlayer();
+        if (onlineTarget != null) {
+            msgPlayer(onlineTarget, "&cYour custom tag has been reset by an administrator.");
+        }
+    }
+
+    private void handleSet(CommandSender sender, String[] args) {
         // ───────────────────────────────────────────────────────────────
         // ✅ /tags set <identifier>
         // ✅ /tags set <identifier> <player>
@@ -686,7 +781,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
 
-            if (target == null || target.getName() == null) {
+            if (!target.hasPlayedBefore() || target.getName() == null) {
                 msgPlayer(sender, player_not_online);
                 return;
             }
@@ -702,7 +797,6 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             }
         }
     }
-
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -727,13 +821,13 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         if (sender.hasPermission(TPermissions.ADMIN)) {
             subCommands = new String[]{
-                    "create", "delete", "set", "givevoucher", "reset",
+                    "create", "delete", "set", "setcustomtag", "resetcustomtag", "givevoucher", "reset",
                     "removetagp", "merge", "reload", "help", "config", "editor",
-                    "list", "withdraw", "debug", "search", "edit"
+                    "list", "withdraw", "debug", "search", "edit", "favourites"
             };
         } else if (!sender.hasPermission(TPermissions.ADMIN) && sender.hasPermission(TPermissions.WITHDRAW) && sender.hasPermission(TPermissions.SEARCH)) {
             subCommands = new String[]{
-                    "withdraw", "search"
+                    "withdraw", "search", "favourites"
             };
         }
 
@@ -768,12 +862,15 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                                 .forEach(tag -> completions.add(tag.getIdentifier()));
                         break;
                     case "removetagp":
+                    case "resetcustomtag":
+                    case "setcustomtag":
                     case "givevoucher":
                     case "reset":
                         completions.addAll(Bukkit.getOnlinePlayers().stream()
                                 .map(Player::getName)
                                 .toList());
                         break;
+
                     default:
                         break;
                 }
@@ -786,6 +883,9 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                 switch (firstArg) {
                     case "create":
                         completions.add("Tag");
+                        break;
+                    case "setcustomtag":
+                        completions.add("Tag Style Here");
                         break;
                     case "givevoucher":
                     case "set":
@@ -801,7 +901,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                         break;
                     case "edit":
                         edits = new String[]{
-                                "tag", "permission", "cost", "withdrawable", "category"
+                                "tag", "permission", "cost", "withdrawable", "category", "rarity"
                         };
 
                         completions.addAll(Arrays.stream(edits).toList());
@@ -819,6 +919,31 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
                     String tagName = args[1];
                     if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
                         completions.addAll(SupremeTags.getInstance().getTagManager().getTag(tagName).getTag());
+                    }
+                } else if (args[0].equalsIgnoreCase("edit") && args[2].equalsIgnoreCase("category")) {
+                    String tagName = args[1];
+                    if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
+                        completions.addAll(SupremeTags.getInstance().getCategoryManager().getCatorgies());
+                    }
+                } else if (args[0].equalsIgnoreCase("edit") && args[2].equalsIgnoreCase("permission")) {
+                    String tagName = args[1];
+                    if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
+                        completions.add(SupremeTags.getInstance().getTagManager().getTag(tagName).getPermission());
+                    }
+                } else if (args[0].equalsIgnoreCase("edit") && args[2].equalsIgnoreCase("rarity")) {
+                    String tagName = args[1];
+                    if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
+                        completions.addAll(SupremeTags.getInstance().getRarityManager().getRarityMap().keySet());
+                    }
+                } else if (args[0].equalsIgnoreCase("edit") && args[2].equalsIgnoreCase("cost")) {
+                    String tagName = args[1];
+                    if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
+                        completions.add(String.valueOf(SupremeTags.getInstance().getTagManager().getTag(tagName).getEconomy().getAmount()));
+                    }
+                } else if (args[0].equalsIgnoreCase("edit") && args[2].equalsIgnoreCase("withdrawable")) {
+                    String tagName = args[1];
+                    if (SupremeTags.getInstance().getTagManager().tagExists(tagName)) {
+                        completions.addAll(Arrays.asList("true", "false"));
                     }
                 }
             }
@@ -903,7 +1028,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         map.put("%hook_vault%", hookString(SupremeTags.getInstance().isVaultAPI()));
         map.put("%hook_playerpoints%", hookString(isPlugin("PlayerPoints")));
-        map.put("%hook_coinsengine%", hookString(SupremeTags.getInstance().isCoinsEngine()));
+        map.put("%hook_excellenteconomy%", hookString(SupremeTags.getInstance().isExcellentEconomy()));
         map.put("%hook_nbtapi%", hookString(isPlugin("NBTAPI")));
         map.put("%hook_papi%", hookString(SupremeTags.getInstance().isPlaceholderAPI()));
 
@@ -1174,10 +1299,10 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             msgPlayer(player, " &8● &7PlayerPoints: &fNot found.");
         }
 
-        if (SupremeTags.getInstance().isCoinsEngine()) {
-            msgPlayer(player, " &8● &7CoinsEngine: &fFound.");
+        if (SupremeTags.getInstance().isExcellentEconomy()) {
+            msgPlayer(player, " &8● &7ExcellentEconomy: &fFound.");
         } else {
-            msgPlayer(player, " &8● &7CoinsEngine: &fNot found.");
+            msgPlayer(player, " &8● &7ExcellentEconomy: &fNot found.");
         }
 
         if (SupremeTags.getInstance().getServer().getPluginManager().getPlugin("NBTAPI") != null) {

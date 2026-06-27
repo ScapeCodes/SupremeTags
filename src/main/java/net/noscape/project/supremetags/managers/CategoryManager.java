@@ -66,4 +66,11 @@ public class CategoryManager {
     public FileConfiguration getCatConfig() {
         return SupremeTags.getInstance().getConfigManager().getConfig("categories.yml").get();
     }
+
+    public void deleteCategory(String category) {
+        FileConfiguration config = getCatConfig();
+        config.set("categories." + category, null);
+        SupremeTags.getInstance().getConfigManager().saveConfig("categories.yml");
+        initCategories();
+    }
 }

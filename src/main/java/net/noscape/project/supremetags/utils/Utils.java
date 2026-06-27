@@ -30,7 +30,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import su.nightexpress.coinsengine.api.CoinsEngineAPI;
+import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
 
 import java.awt.*;
 import java.text.DecimalFormat;
@@ -437,9 +437,9 @@ public class Utils {
             return SupremeTags.getInstance().getPpAPI().look(player.getUniqueId()) >= cost;
         } else if (economyType.equalsIgnoreCase("EXP_LEVEL")) {
             return player.getLevel() >= cost;
-        } else if (economyType.startsWith("COINSENGINE-")) {
-            String eco_name = economyType.replace("COINSENGINE-", "");
-            return CoinsEngineAPI.getBalance(player.getUniqueId(), eco_name) >= cost;
+        } else if (economyType.startsWith("EXCELLENTECONOMY-")) {
+            String eco_name = economyType.replace("EXCELLENTECONOMY-", "");
+            return SupremeTags.getExcellentEconomy().getBalance(player, eco_name) >= cost;
         } else if (economyType.equalsIgnoreCase("CUSTOM")) {
             TagEconomy eco = SupremeTags.getInstance().getTagManager().getTag(tag).getEconomy();
             String condition = eco.getCondition();
@@ -463,9 +463,9 @@ public class Utils {
             SupremeTags.getInstance().getPpAPI().take(player.getUniqueId(), (int) cost);
         } else if (economyType.equalsIgnoreCase("EXP_LEVEL")) {
             player.setLevel((int) (player.getLevel() - cost));
-        } else if (economyType.startsWith("COINSENGINE-")) {
-            String eco_name = economyType.replace("COINSENGINE-", "");
-            CoinsEngineAPI.removeBalance(player.getUniqueId(), eco_name, cost);
+        } else if (economyType.startsWith("EXCELLENTECONOMY-")) {
+            String eco_name = economyType.replace("EXCELLENTECONOMY-", "");
+            SupremeTags.getExcellentEconomy().deposit(player, eco_name, cost);
         } else if (economyType.equalsIgnoreCase("CUSTOM")) {
             TagEconomy eco = SupremeTags.getInstance().getTagManager().getTag(tag).getEconomy();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), eco.getTake_cmd().replace("%player%", player.getName()).replace("%amount%", String.valueOf(cost)));

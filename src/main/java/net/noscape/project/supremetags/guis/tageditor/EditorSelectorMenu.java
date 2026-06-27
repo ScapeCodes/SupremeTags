@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.tageditor;
 
 import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.guis.categoryeditor.CategoryEditorMenu;
 import net.noscape.project.supremetags.handlers.menu.Menu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import org.bukkit.Material;
@@ -33,7 +34,7 @@ public class EditorSelectorMenu extends Menu {
         }
 
         if (slot == 14) {
-            // open categories editor
+            new CategoryEditorMenu(SupremeTags.getMenuUtil(menuUtil.getOwner())).open();
         }
     }
 

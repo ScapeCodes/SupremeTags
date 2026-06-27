@@ -49,6 +49,7 @@ public abstract class Paged extends Menu {
     private final int tagsCount;
     public static int currentItemsOnPage = 0;
     protected boolean isLast;
+    protected int totalItems;
 
     public Paged(MenuUtil menuUtil) {
         super(menuUtil);
@@ -86,19 +87,17 @@ public abstract class Paged extends Menu {
             inventory.setItem(close_slot, createCustomItem(closeMaterial, close, closeCmd, close_lore));
         }
 
-        if (getCurrentItemsOnPage() > maxItems) {
-            if (nextMaterial != null) {
-                inventory.setItem(next_slot, createCustomItem(nextMaterial, next, nextCmd, next_lore));
-            }
+        if (nextMaterial != null) {
+            inventory.setItem(next_slot, createCustomItem(nextMaterial, next, nextCmd, next_lore));
         }
 
-        for (int i = 36; i <= 44; i++) {
-            inventory.setItem(i, makeItem(XMaterial.matchXMaterial("GRAY_STAINED_GLASS_PANE").get().get(), "&6", 0, true));
+        // Apply border layout consistent with other menus
+        String layout = SupremeTags.getInstance().getLayout();
+        if (layout == null) {
+            return;
         }
-    }
 
-    public void applyLayout(boolean ptags, boolean categories, boolean variantsMenu) {
-        if (SupremeTags.getInstance().getLayout().equalsIgnoreCase("FULL")) {
+        if (layout.equalsIgnoreCase("FULL")) {
             if (SupremeTags.getInstance().getConfig().getBoolean("gui.items.glass.enable")) {
                 for (int i = 36; i <= 44; i++) {
                     String item_material = guis.getString("gui.items.glass.material");
@@ -111,7 +110,44 @@ public abstract class Paged extends Menu {
                     inventory.setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
                 }
             }
-        } else if (SupremeTags.getInstance().getLayout().equalsIgnoreCase("BORDER")) {
+        } else if (layout.equalsIgnoreCase("BORDER")) {
+            for (int i = 0; i < 54; i++) {
+                if (inventory.getItem(i) == null) {
+                    if (i < 9 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) {
+                        String item_material = guis.getString("gui.items.glass.material");
+                        String item_displayname = guis.getString("gui.items.glass.displayname");
+                        int item_custom_model_data = guis.getInt("gui.items.glass.custom-model-data");
+
+                        boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
+
+                        assert item_material != null;
+                        inventory.setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
+                    }
+                }
+            }
+        }
+    }
+
+    public void applyLayout(boolean ptags, boolean categories, boolean variantsMenu) {
+        String layout = SupremeTags.getInstance().getLayout();
+        if (layout == null) {
+            return;
+        }
+
+        if (layout.equalsIgnoreCase("FULL")) {
+            if (SupremeTags.getInstance().getConfig().getBoolean("gui.items.glass.enable")) {
+                for (int i = 36; i <= 44; i++) {
+                    String item_material = guis.getString("gui.items.glass.material");
+                    String item_displayname = guis.getString("gui.items.glass.displayname");
+                    int item_custom_model_data = guis.getInt("gui.items.glass.custom-model-data");
+
+                    boolean hideToolTip = guis.getBoolean("gui.items.glass.hide-tooltip");
+
+                    assert item_material != null;
+                    inventory.setItem(i, makeItem(XMaterial.matchXMaterial(item_material.toUpperCase()).get().get(), item_displayname, item_custom_model_data, hideToolTip));
+                }
+            }
+        } else if (layout.equalsIgnoreCase("BORDER")) {
             for (int i = 0; i < 54; i++) {
                 if (inventory.getItem(i) == null) {
                     if (i < 9 || i >= 45 || i % 9 == 0 || (i + 1) % 9 == 0) {
@@ -587,272 +623,12 @@ public abstract class Paged extends Menu {
         }
     }
 
-    // ===================================================================================
-    // EDITOR TAGS
-    // ===================================================================================
-
-    public void getTagItemsEditor() {
-        Map<String, Tag> tags = SupremeTags.getInstance().getTagManager().getTags();
-        ArrayList<Tag> tag = new ArrayList<>(tags.values());
-        if (!tag.isEmpty()) {
-            int maxItemsPerPage = 36;
-            int startIndex = this.page * maxItemsPerPage;
-            int endIndex = Math.min(startIndex + maxItemsPerPage, tag.size());
-            tag.sort((tag1, tag2) -> {
-                boolean hasPermission1 = this.menuUtil.getOwner().hasPermission(tag1.getPermission());
-                boolean hasPermission2 = this.menuUtil.getOwner().hasPermission(tag2.getPermission());
-                boolean isActiveUserTag1 = Objects.equals(UserData.getActive(this.menuUtil.getOwner().getUniqueId()), tag1.getIdentifier());
-                boolean isActiveUserTag2 = Objects.equals(UserData.getActive(this.menuUtil.getOwner().getUniqueId()), tag2.getIdentifier());
-                return (isActiveUserTag1 && !isActiveUserTag2) ? -1 : (
-
-                        (!isActiveUserTag1 && isActiveUserTag2) ? 1 : (
-
-                                (hasPermission1 && !hasPermission2) ? -1 : (
-
-                                        (!hasPermission1 && hasPermission2) ? 1 : tag1.getIdentifier().compareTo(tag2.getIdentifier()))));
-            });
-            currentItemsOnPage = 0;
-            for (int i = startIndex; i < endIndex; i++) {
-                Tag t = tag.get(i);
-                if (t != null) {
-                    String permission = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".permission");
-                    if (permission == null || SupremeTags.getInstance().getConfig().getBoolean("settings.locked-view") || SupremeTags.getInstance().getConfig().getBoolean("settings.cost-system") || this.menuUtil.getOwner().hasPermission(permission)) {
-                        String displayname, material;
-                        if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname") != null) {
-                            if (t.getCurrentTag() != null) {
-                                displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname")).replace("%tag%", t.getCurrentTag());
-                            } else {
-                                displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname")).replace("%tag%", t.getTag().get(0));
-                            }
-                        } else {
-                            displayname = format("&7Tag: " + t.getTag().get(0));
-                        }
-
-                        if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".display-item") != null) {
-                            material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".display-item");
-                        } else {
-                            material = "NAME_TAG";
-                        }
-
-                        displayname = globalPlaceholders(menuUtil.getOwner(), displayname);
-
-                        assert permission != null;
-                        if (material.contains("hdb-")) {
-                            HeadDatabaseAPI api = new HeadDatabaseAPI();
-                            int id = Integer.parseInt(material.replaceAll("hdb-", ""));
-                            ItemStack tagItem = api.getItemHead(String.valueOf(id));
-                            ItemMeta tagMeta = tagItem.getItemMeta();
-                            assert tagMeta != null;
-                            NBTItem nbt = new NBTItem(tagItem);
-                            nbt.setString("identifier", t.getIdentifier());
-                            tagMeta.setDisplayName(format(displayname));
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                            try {
-                                ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                                tagItem.addItemFlags(hideDye);
-                            } catch (IllegalArgumentException ignored) {
-                                // HIDE_DYE not available in this version — skip
-                            }
-                            tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-                            ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getConfig().getStringList("gui.tag-editor-menu.tag-item.lore");
-
-                            String descriptionPlaceholder = "%description%";
-                            String identifierPlaceholder = "%identifier%";
-                            String tagPlaceholder = "%tag%";
-                            String costPlaceholder = "%cost%";
-                            String costFormattedPlaceholder = "%cost_formatted%";
-                            String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
-                            String variantsPlaceholder = "%variants%";
-                            String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
-
-                            for (int l = 0; l < lore.size(); l++) {
-                                String line = lore.get(l);
-
-                                // Pattern for %custom-placeholder_?%
-                                Pattern customPlaceholderPattern = Pattern.compile("%custom-placeholder_(.*?)%");
-                                Matcher matcher = customPlaceholderPattern.matcher(line);
-
-                                while (matcher.find()) {
-                                    String dynamicPart = matcher.group(1);
-                                    line = line.replace(matcher.group(0), t.getCustomPlaceholder(t.getIdentifier(), dynamicPart));
-                                }
-
-                                if (line.contains(descriptionPlaceholder)) {
-                                    List<String> descriptionLines = Arrays.asList(joinedDescription.split("\n"));
-
-                                    lore.remove(l);
-
-                                    lore.addAll(l, descriptionLines);
-
-                                    l += descriptionLines.size() - 1;
-                                } else {
-                                    line = line.replace(identifierPlaceholder, t.getIdentifier());
-                                    line = line.replace(tagPlaceholder, t.getTag().get(0));
-                                    line = line.replace(costFormattedPlaceholder, "$" + formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costFormattedPlaceholderRaw, formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costPlaceholder, String.valueOf(t.getEconomy().getAmount()));
-                                    line = line.replace(variantsPlaceholder, String.valueOf(t.getVariants().size()));
-                                    line = globalPlaceholders(menuUtil.getOwner(), line);
-
-                                    lore.set(l, line);
-                                }
-                            }
-
-                            tagMeta.setLore(color(lore));
-                            nbt.getItem().setItemMeta(tagMeta);
-                            nbt.setString("identifier", t.getIdentifier());
-                            this.inventory.addItem(nbt.getItem());
-                        } else if (material.contains("basehead-")) {
-                            String id = material.replaceAll("basehead-", "");
-                            ItemStack tagItem = SkullUtil.getSkullByBase64EncodedTextureUrl(SupremeTags.getInstance(), id);
-                            ItemMeta tagMeta = tagItem.getItemMeta();
-                            assert tagMeta != null;
-                            NBTItem nbt = new NBTItem(tagItem);
-                            nbt.setString("identifier", t.getIdentifier());
-                            tagMeta.setDisplayName(format(displayname));
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                            try {
-                                ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                                tagItem.addItemFlags(hideDye);
-                            } catch (IllegalArgumentException ignored) {
-                                // HIDE_DYE not available in this version — skip
-                            }
-                            tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-                            ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getConfig().getStringList("gui.tag-editor-menu.tag-item.lore");
-
-                            String descriptionPlaceholder = "%description%";
-                            String identifierPlaceholder = "%identifier%";
-                            String tagPlaceholder = "%tag%";
-                            String costPlaceholder = "%cost%";
-                            String costFormattedPlaceholder = "%cost_formatted%";
-                            String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
-                            String variantsPlaceholder = "%variants%";
-                            String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
-
-                            for (int l = 0; l < lore.size(); l++) {
-                                String line = lore.get(l);
-
-                                // Pattern for %custom-placeholder_?%
-                                Pattern customPlaceholderPattern = Pattern.compile("%custom-placeholder_(.*?)%");
-                                Matcher matcher = customPlaceholderPattern.matcher(line);
-
-                                while (matcher.find()) {
-                                    String dynamicPart = matcher.group(1);
-                                    line = line.replace(matcher.group(0), t.getCustomPlaceholder(t.getIdentifier(), dynamicPart));
-                                }
-
-                                if (line.contains(descriptionPlaceholder)) {
-                                    List<String> descriptionLines = Arrays.asList(joinedDescription.split("\n"));
-
-                                    lore.remove(l);
-
-                                    lore.addAll(l, descriptionLines);
-
-                                    l += descriptionLines.size() - 1;
-                                } else {
-                                    line = line.replace(identifierPlaceholder, t.getIdentifier());
-                                    line = line.replace(tagPlaceholder, t.getTag().get(0));
-                                    line = line.replace(costFormattedPlaceholder, "$" + formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costFormattedPlaceholderRaw, formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costPlaceholder, String.valueOf(t.getEconomy().getAmount()));
-                                    line = line.replace(variantsPlaceholder, String.valueOf(t.getVariants().size()));
-                                    line = globalPlaceholders(menuUtil.getOwner(), line);
-
-                                    lore.set(l, line);
-                                }
-                            }
-
-                            tagMeta.setLore(color(lore));
-                            nbt.getItem().setItemMeta(tagMeta);
-                            nbt.setString("identifier", t.getIdentifier());
-                            this.inventory.addItem(nbt.getItem());
-                        } else {
-                            ItemStack tagItem = new ItemStack(XMaterial.matchXMaterial(material.toUpperCase()).get().get(), 1);
-                            ItemMeta tagMeta = tagItem.getItemMeta();
-                            assert tagMeta != null;
-                            NBTItem nbt = new NBTItem(tagItem);
-                            nbt.setString("identifier", t.getIdentifier());
-                            tagMeta.setDisplayName(format(displayname));
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                            try {
-                                ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                                tagItem.addItemFlags(hideDye);
-                            } catch (IllegalArgumentException ignored) {
-                                // HIDE_DYE not available in this version — skip
-                            }
-                            tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                            tagMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
-                            ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getConfig().getStringList("gui.tag-editor-menu.tag-item.lore");
-
-                            String descriptionPlaceholder = "%description%";
-                            String identifierPlaceholder = "%identifier%";
-                            String tagPlaceholder = "%tag%";
-                            String costPlaceholder = "%cost%";
-                            String costFormattedPlaceholder = "%cost_formatted%";
-                            String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
-                            String variantsPlaceholder = "%variants%";
-                            String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
-
-                            for (int l = 0; l < lore.size(); l++) {
-                                String line = lore.get(l);
-
-                                // Pattern for %custom-placeholder_?%
-                                Pattern customPlaceholderPattern = Pattern.compile("%custom-placeholder_(.*?)%");
-                                Matcher matcher = customPlaceholderPattern.matcher(line);
-
-                                while (matcher.find()) {
-                                    String dynamicPart = matcher.group(1);
-                                    line = line.replace(matcher.group(0), t.getCustomPlaceholder(t.getIdentifier(), dynamicPart));
-                                }
-
-                                if (line.contains(descriptionPlaceholder)) {
-                                    List<String> descriptionLines = Arrays.asList(joinedDescription.split("\n"));
-
-                                    lore.remove(l);
-
-                                    lore.addAll(l, descriptionLines);
-
-                                    l += descriptionLines.size() - 1;
-                                } else {
-                                    line = line.replace(identifierPlaceholder, t.getIdentifier());
-                                    line = line.replace(tagPlaceholder, t.getTag().get(0));
-                                    line = line.replace(costFormattedPlaceholder, "$" + formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costFormattedPlaceholderRaw, formatNumber(t.getEconomy().getAmount()));
-                                    line = line.replace(costPlaceholder, String.valueOf(t.getEconomy().getAmount()));
-                                    line = line.replace(variantsPlaceholder, String.valueOf(t.getVariants().size()));
-                                    line = globalPlaceholders(menuUtil.getOwner(), line);
-
-                                    lore.set(l, line);
-                                }
-                            }
-
-                            tagMeta.setLore(color(lore));
-                            nbt.getItem().setItemMeta(tagMeta);
-                            nbt.setString("identifier", t.getIdentifier());
-                            this.inventory.addItem(nbt.getItem());
-                        }
-                        currentItemsOnPage++;
-                    }
-                }
-            }
-        }
-    }
-
     public FileConfiguration getTagConfig() {
         return SupremeTags.getInstance().getConfigManager().getConfig("tags.yml").get();
     }
 
     public int getCurrentItemsOnPage() {
         return currentItemsOnPage;
-    }
-
-    public void increaseCurrentItemsOnPage() {
-        currentItemsOnPage++;
     }
 
     public void openSearchContainer(Player player) {
@@ -1111,6 +887,25 @@ public abstract class Paged extends Menu {
         }
 
         lore = guis.getStringList("gui.tag-menu.global-tag-lores." + lorePath);
+
+        return color(lore);
+    }
+
+    protected List<String> getFormattedLore(Tag t, String permission, String menuType) {
+        List<String> lore;
+        boolean isCostEnabled = t.isEcoEnabled();
+        boolean hasPermission = menuUtil.getOwner().hasPermission(permission) || permission.equalsIgnoreCase("none");
+        boolean isSelected = UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(t.getIdentifier());
+
+        String lorePath;
+
+        if (isCostEnabled) {
+            lorePath = hasPermission ? (isSelected ? "selected-lore" : "unlocked-lore") : "locked-lore";
+        } else {
+            lorePath = hasPermission ? (isSelected ? "selected-lore" : "unlocked-lore") : "locked-permission";
+        }
+
+        lore = guis.getStringList("gui." + menuType + ".global-tag-lores." + lorePath);
 
         return color(lore);
     }

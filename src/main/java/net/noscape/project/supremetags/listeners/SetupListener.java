@@ -1,7 +1,11 @@
 package net.noscape.project.supremetags.listeners;
 
+import io.papermc.paper.connection.PlayerGameConnection;
+import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.enums.TPermissions;
@@ -11,6 +15,7 @@ import net.noscape.project.supremetags.managers.PlayerManager;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -193,12 +198,128 @@ public class SetupListener implements Listener {
 
         tagManager.getTags().values().forEach(t -> allTags.add(deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT)));
         tagManager.getVariants().forEach(v -> allTags.add(deformat(v.getTag().getFirst()).toLowerCase(Locale.ROOT)));
-        Arrays.stream(Bukkit.getOfflinePlayers())
-                .flatMap(p -> playerManager.getPlayerTags(p.getUniqueId()).stream())
-                .map(t -> deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT))
-                .forEach(allTags::add);
+
+        // OLD
+//        Arrays.stream(Bukkit.getOfflinePlayers())
+//                .flatMap(p -> playerManager.getPlayerTags(p.getUniqueId()).stream())
+//                .map(t -> deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT))
+//                .forEach(allTags::add);
+
+        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            UUID uuid = player.getUniqueId();
+
+            for (var t : playerManager.getPlayerTags(uuid)) {
+                allTags.add(
+                        deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT)
+                );
+            }
+        }
 
         return allTags.contains(normalizedTag);
+    }
+
+    @EventHandler
+    public void onCreateTag(PlayerCustomClickEvent event) {
+
+        if (!event.getIdentifier().equals(Key.key("supremetags:create_tag"))) {
+            return;
+        }
+
+        if (event.getDialogResponseView() == null) {
+            return;
+        }
+
+        if (!(event.getCommonConnection() instanceof PlayerGameConnection connection)) {
+            return;
+        }
+
+        Player player = connection.getPlayer();
+
+        DialogResponseView view = event.getDialogResponseView();
+
+        String identifier = view.getText("identifier");
+        String tag = view.getText("tag");
+
+        FileConfiguration bannedWords = SupremeTags.getInstance()
+                .getConfigManager()
+                .getConfig("banned-words.yml")
+                .get();
+
+        FileConfiguration messages = SupremeTags.getInstance()
+                .getConfigManager()
+                .getConfig("messages.yml")
+                .get();
+
+        // Empty checks
+        if (identifier.isEmpty() || tag.isEmpty()) {
+            msgPlayer(player, "&cBoth fields must be filled in.");
+            return;
+        }
+
+        // Identifier bad words
+        for (String word : bannedWords.getStringList("banned-words")) {
+            if (isWordBlocked(identifier, word)) {
+                msgPlayer(player,
+                        messages.getString("messages.bad-word")
+                                .replace("%prefix%", messages.getString("messages.prefix")));
+                return;
+            }
+        }
+
+        // Tag bad words
+        for (String word : bannedWords.getStringList("banned-words")) {
+            if (isWordBlocked(tag, word)) {
+                msgPlayer(player,
+                        messages.getString("messages.bad-word")
+                                .replace("%prefix%", messages.getString("messages.prefix")));
+                return;
+            }
+        }
+
+        // Placeholder check
+        if (!player.hasPermission(TPermissions.ADMIN) && containsPlaceholders(tag)) {
+            msgPlayer(player,
+                    messages.getString("messages.placeholder-error")
+                            .replace("%prefix%", messages.getString("messages.prefix")));
+            return;
+        }
+
+        if (!player.hasPermission(TPermissions.ADMIN)
+                && isTooCloseToOthers(tag)) {
+
+            msgPlayer(player,
+                    messages.getString("messages.similar-error")
+                            .replace("%prefix%", messages.getString("messages.prefix")));
+            return;
+        }
+
+        identifier = deformat(identifier);
+
+        if (!player.hasPermission("supremetags.mytags.color")) {
+            tag = deformat(tag);
+        }
+
+        String formattedTag = SupremeTags.getInstance()
+                .getConfig()
+                .getString("settings.personal-tags.format-replace")
+                .replace("%tag%", tag);
+
+        List<String> tagList = new ArrayList<>();
+        tagList.add(formattedTag);
+
+        Tag personalTag = new Tag(identifier, tagList, new ArrayList<>());
+
+        SupremeTags.getInstance().getPlayerManager().addTag(player, personalTag);
+
+        PlayerConfig.save(player);
+        SupremeTags.getInstance().getPlayerManager().load(player);
+
+        String complete = messages.getString("messages.stages.complete")
+                .replace("%prefix%", messages.getString("messages.prefix"))
+                .replace("%identifier%", identifier)
+                .replace("%tag%", tag);
+
+        msgPlayer(player, complete);
     }
 
 }

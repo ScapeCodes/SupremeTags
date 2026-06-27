@@ -36,7 +36,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
+import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -50,6 +50,7 @@ public final class SupremeTags extends AxPlugin {
      */
     public final boolean dev_build;
     public final int build;
+
     {
         dev_build = false;
         build = 1;
@@ -67,6 +68,13 @@ public final class SupremeTags extends AxPlugin {
 
     private static Economy econ = null;
     private static Permission perms = null;
+
+    private static ExcellentEconomyAPI excellentEconomy;
+
+    public static ExcellentEconomyAPI getExcellentEconomy() {
+        return excellentEconomy;
+    }
+
     private PlayerPointsAPI ppAPI;
 
     private static MySQLDatabase mysql;
@@ -101,7 +109,7 @@ public final class SupremeTags extends AxPlugin {
     private String password;
     private boolean useSSL;
 
-    private String layout = getConfig().getString("setting.layout-type");
+    private String layout = getConfig().getString("settings.layout-type", "BORDER");
 
     private final CommandFramework commandFramework = new CommandFramework(this);
 
@@ -219,7 +227,7 @@ public final class SupremeTags extends AxPlugin {
         minimessage = getConfig().getBoolean("settings.use-minimessage");
         cmi_hex = getConfig().getBoolean("settings.color-formatting.cmi-color-support");
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
-        layout = getConfig().getString("settings.layout-type");
+        layout = getConfig().getString("settings.layout-type", "BORDER");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
         isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
@@ -362,7 +370,7 @@ public final class SupremeTags extends AxPlugin {
         minimessage = getConfig().getBoolean("settings.use-minimessage");
         cmi_hex = getConfig().getBoolean("settings.color-formatting.cmi-color-support");
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
-        layout = getConfig().getString("settings.layout-type");
+        layout = getConfig().getString("settings.layout-type", "BORDER");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
         isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
@@ -454,10 +462,14 @@ public final class SupremeTags extends AxPlugin {
             logger.info("> Vault: Not Found!");
         }
 
-        if (isCoinsEngine()) {
-            logger.info("> CoinsEngine: Found!");
+        if (isExcellentEconomy()) {
+            RegisteredServiceProvider<ExcellentEconomyAPI> provider = Bukkit.getServer().getServicesManager().getRegistration(ExcellentEconomyAPI.class);
+            if (provider != null) {
+                excellentEconomy = provider.getProvider();
+            }
+            logger.info("> ExcellentEconomy: Found!");
         } else {
-            logger.info("> CoinsEngine: Not Found!");
+            logger.info("> ExcellentEconomy: Not Found!");
         }
 
         if (isH2()) {
@@ -651,8 +663,8 @@ public final class SupremeTags extends AxPlugin {
         return getServer().getPluginManager().getPlugin("Vault") != null;
     }
 
-    public boolean isCoinsEngine() {
-        return getServer().getPluginManager().getPlugin("CoinsEngine") != null;
+    public boolean isExcellentEconomy() {
+        return getServer().getPluginManager().getPlugin("ExcellentEconomy") != null;
     }
 
     public String getLayout() {

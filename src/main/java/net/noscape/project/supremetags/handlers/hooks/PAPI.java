@@ -124,28 +124,65 @@ public class PAPI extends PlaceholderExpansion {
             if (variant != null) {
                 text = getVariantInfo(variant, params, player, activeTagId);
             } else {
-                if (params.equalsIgnoreCase("tag")) {
-                    if (activeTagId.equalsIgnoreCase("None")) {
-                        return SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output", "");
+
+                // Final fallback: Custom Tag
+                if (activeTagId.equalsIgnoreCase("None")) {
+                    String customTag = UserData.getCustomTag(uuid);
+
+                    if (customTag != null && !customTag.isEmpty()) {
+
+                        String format = switch (params.toLowerCase()) {
+                            case "tag" ->
+                                    SupremeTags.getInstance().getConfig().getString("placeholders.tag.format", "%tag%");
+                            case "chattag" ->
+                                    SupremeTags.getInstance().getConfig().getString("placeholders.chat.format", "%tag%");
+                            case "tabtag" ->
+                                    SupremeTags.getInstance().getConfig().getString("placeholders.tab.format", "%tag%");
+                            case "scoreboardtag" ->
+                                    SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.format", "%tag%");
+                            default -> null;
+                        };
+
+                        if (format != null) {
+                            return PlaceholderAPI.setPlaceholders(
+                                    player,
+                                    format(format.replace("%tag%", customTag))
+                            );
+                        }
+                    } else {
+                        if (params.equalsIgnoreCase("tag")) {
+                            return SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output", "");
+                        }
+
+                        if (params.equalsIgnoreCase("chattag")) {
+                            return SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output", "");
+                        }
+
+                        if (params.equalsIgnoreCase("tabtag")) {
+                            return SupremeTags.getInstance().getConfig().getString("placeholders.tab.none-output", "");
+                        }
+
+                        if (params.equalsIgnoreCase("scoreboardtag")) {
+                            return SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.none-output", "");
+                        }
                     }
+                }
+
+                // Existing None outputs
+                if (params.equalsIgnoreCase("tag")) {
+                    return SupremeTags.getInstance().getConfig().getString("placeholders.tag.none-output", "");
                 }
 
                 if (params.equalsIgnoreCase("chattag")) {
-                    if (activeTagId.equalsIgnoreCase("None")) {
-                        return SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output", "");
-                    }
+                    return SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output", "");
                 }
 
                 if (params.equalsIgnoreCase("tabtag")) {
-                    if (activeTagId.equalsIgnoreCase("None")) {
-                        return SupremeTags.getInstance().getConfig().getString("placeholders.tab.none-output", "");
-                    }
+                    return SupremeTags.getInstance().getConfig().getString("placeholders.tab.none-output", "");
                 }
 
                 if (params.equalsIgnoreCase("scoreboardtag")) {
-                    if (activeTagId.equalsIgnoreCase("None")) {
-                        return SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.none-output", "");
-                    }
+                    return SupremeTags.getInstance().getConfig().getString("placeholders.scoreboard.none-output", "");
                 }
             }
         }

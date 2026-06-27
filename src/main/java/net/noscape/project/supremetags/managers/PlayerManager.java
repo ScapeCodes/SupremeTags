@@ -15,7 +15,7 @@ public class PlayerManager {
     public PlayerManager() {}
 
     public List<Tag> getPlayerTags(UUID uuid) {
-        return playerTags.get(uuid);
+        return playerTags.getOrDefault(uuid, Collections.emptyList());
     }
 
     public Tag getTag(UUID uuid, String identifier) {

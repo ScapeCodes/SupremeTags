@@ -1,64 +1,70 @@
 package net.noscape.project.supremetags.guis;
 
 import de.tr7zw.nbtapi.NBTItem;
-import net.noscape.project.supremetags.*;
+import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.api.events.TagBuyEvent;
 import net.noscape.project.supremetags.api.events.TagResetEvent;
 import net.noscape.project.supremetags.guis.personaltags.PersonalTagsMenu;
 import net.noscape.project.supremetags.guis.tagactions.TagActionsMenu;
 import net.noscape.project.supremetags.guis.variant.TagVariantsMenu;
 import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.handlers.menu.*;
+import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.managers.TagManager;
-import net.noscape.project.supremetags.storage.*;
+import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.CompatUtils;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.Utils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
-import org.bukkit.event.inventory.*;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static net.noscape.project.supremetags.utils.Utils.*;
+import static net.noscape.project.supremetags.utils.Utils.addPerm;
+import static net.noscape.project.supremetags.utils.Utils.color;
+import static net.noscape.project.supremetags.utils.Utils.format;
+import static net.noscape.project.supremetags.utils.Utils.formatNumber;
+import static net.noscape.project.supremetags.utils.Utils.globalPlaceholders;
+import static net.noscape.project.supremetags.utils.Utils.hasAmount;
 import static net.noscape.project.supremetags.utils.Utils.msgPlayer;
+import static net.noscape.project.supremetags.utils.Utils.playConfigSound;
+import static net.noscape.project.supremetags.utils.Utils.replacePlaceholders;
+import static net.noscape.project.supremetags.utils.Utils.take;
 
-public class CategoryMenu extends Paged {
+public class FavouritesMenu extends Paged {
 
     private final Map<String, Tag> tags;
-    private final Map<Integer, String> dataItem;
     private FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
-    private FileConfiguration categories = SupremeTags.getInstance().getConfigManager().getConfig("categories.yml").get();
 
-    public CategoryMenu(MenuUtil menuUtil) {
+    public FavouritesMenu(MenuUtil menuUtil) {
         super(menuUtil);
         tags = SupremeTags.getInstance().getTagManager().getTags();
-        dataItem = SupremeTags.getInstance().getTagManager().getDataItem();
-
         enableAutoUpdate(true);
     }
 
     @Override
     public String getMenuName() {
-        String title = format(Objects.requireNonNull(SupremeTags.getInstance().getCategoryManager().getCatConfig().getString("categories." + menuUtil.getCategory() + ".title")).replace("%page%", String.valueOf(this.getPage())));
+        String title = format(Objects.requireNonNull(guis.getString("gui.favourites-menu.title")).replaceAll("%page%", String.valueOf(this.getPage())));
         title = globalPlaceholders(menuUtil.getOwner(), title);
         return title;
     }
 
     @Override
     public int getSlots() {
-        return 54;
+        return guis.getInt("gui.favourites-menu.size");
     }
 
     @Override
@@ -73,93 +79,45 @@ public class CategoryMenu extends Paged {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        String back = guis.getString("gui.items.back.displayname");
-        String close = guis.getString("gui.items.close.displayname");
-        String next = guis.getString("gui.items.next.displayname");
-        String reset = guis.getString("gui.items.reset.displayname");
-        String ptags = guis.getString("gui.items.personal-tags.displayname");
-        String search = guis.getString("gui.items.search.displayname");
+        String insufficient = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.insufficient-funds").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+        String unlocked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-unlocked").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
 
-        String insufficient = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.insufficient-funds").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
-        String unlocked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-unlocked").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
-
-        String no_tag_selected = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-tag-selected").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));;
+        String no_tag_selected = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-tag-selected").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
 
         insufficient = replacePlaceholders(player, insufficient);
 
-        ArrayList<String> tag = new ArrayList<>(tags.keySet());
-
-        if (isCustomGUIItemSlot(menuUtil.getOwner(), e.getCurrentItem()) == e.getSlot()) {
-            String name = isCustomGUIItemName(menuUtil.getOwner(), e.getCurrentItem());
-
-            List<String> click_commands = guis.getStringList("gui.tag-menu.custom-items." + name + ".click-commands");
-
-            for (String option : click_commands) {
-                if (option.startsWith("[message]") || option.startsWith("[MESSAGE]")) {
-                    String message = option.replace("[message] ", "");
-                    message = replacePlaceholders(menuUtil.getOwner(), message);
-                    msgPlayer(menuUtil.getOwner(), message);
-                }
-
-                if (option.startsWith("[player]") || option.startsWith("[PLAYER]")) {
-                    String command = option.replace("[player] ", "");
-                    command = command.replace("%player%", menuUtil.getOwner().getName());
-                    menuUtil.getOwner().performCommand(command);
-                }
-
-                if (option.startsWith("[console]") || option.startsWith("[CONSOLE]")) {
-                    String command = option.replace("[console] ", "");
-                    command = command.replace("%player%", menuUtil.getOwner().getName());
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", menuUtil.getOwner().getName()));
-                }
-
-                if (option.startsWith("[broadcast]") || option.startsWith("[BROADCAST]")) {
-                    String message = option.replace("[message] ", "");
-                    message = replacePlaceholders(menuUtil.getOwner(), message);
-                    Bukkit.broadcastMessage(message);
-                }
-
-                if (option.startsWith("[next-page]") || option.startsWith("[NEXT-PAGE]")) {
-                    if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
-                        if (!((index + 1) >= tag.size())) {
-                            page = page + 1;
-                            super.refresh();
-                        } else {
-                            e.setCancelled(true);
-                        }
-                    } else {
-                        e.setCancelled(true);
-                    }
-                }
-
-                if (option.startsWith("[previous-page]") || option.startsWith("[PREVIOUS-PAGE]")) {
-                    if (page != 0) {
-                        page = page - 1;
-                        super.refresh();
-                    }
-                }
-
-                if (option.startsWith("[close]") || option.startsWith("[CLOSE]")) {
-                    menuUtil.getOwner().closeInventory();
-                }
-            }
-            return;
-        }
-
-
-        if (e.getCurrentItem() != null && e.getCurrentItem().getType().equals(Material.valueOf(Objects.requireNonNull(guis.getString("gui.items.glass.material")).toUpperCase()))) {
+        if (e.getCurrentItem().getType().equals(Material.valueOf(Objects.requireNonNull(guis.getString("gui.items.glass.material")).toUpperCase()))) {
             e.setCancelled(true);
         }
 
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ArrayList<String> tag = new ArrayList<>(tags.keySet());
 
+        NBTItem nbt = new NBTItem(e.getCurrentItem());
         if (nbt.hasTag("identifier")) {
             String identifier = nbt.getString("identifier");
             Tag t = SupremeTags.getInstance().getTagManager().getTag(identifier);
             boolean tagActionsEnabled = guis.getBoolean("gui.tag-actions-menu.enable");
 
+            if (e.isShiftClick()) {
+                List<String> favourites = UserData.getFavourites(player.getUniqueId());
+
+                if (favourites.contains(identifier)) {
+                    // remove from favourites
+                    favourites.remove(identifier);
+                    UserData.setFavourites(player, favourites);
+
+                    msgPlayer(player, "&cRemoved &e" + identifier + " &cfrom your favourites!");
+                    playConfigSound(player, "favourite-removed");
+                }
+
+                super.refresh();
+
+                e.setCancelled(true);
+                return;
+            }
+
             if (tagActionsEnabled) {
-                if (!menuUtil.getOwner().hasPermission(t.getPermission()) && !t.getEconomy().isEnabled()) {
+                if (!menuUtil.getOwner().hasPermission(t.getPermission()) && !t.isCostTag()) {
                     sendLockedMessage(player);
                     return;
                 }
@@ -181,21 +139,6 @@ public class CategoryMenu extends Paged {
             boolean hasPerm = player.hasPermission(t.getPermission()) || t.getPermission().equalsIgnoreCase("none");
             boolean isActive = UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier);
             boolean canDeactivate = SupremeTags.getInstance().isDeactivateClick();
-
-            boolean isFavourites = guis.getBoolean("gui.items.favourites.enable");
-
-            // Add to favourites on left click (if not already in favourites)
-            if (isFavourites) {
-                if (e.getClick().isShiftClick() && e.getClick().isLeftClick() && hasPerm) {
-                    List<String> favourites = UserData.getFavourites(player.getUniqueId());
-                    if (!favourites.contains(identifier)) {
-                        favourites.add(identifier);
-                        UserData.setFavourites(player, favourites);
-                        msgPlayer(player, "&aAdded &e" + identifier + " &ato your favourites!");
-                        playConfigSound(player, "favourite-added");
-                    }
-                }
-            }
 
             if (hasPerm) {
                 if (!isActive && identifier != null) {
@@ -221,144 +164,202 @@ public class CategoryMenu extends Paged {
                 } else {
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         insufficient = replacePlaceholders(menuUtil.getOwner(), insufficient);
-                        msgPlayer(player, insufficient.replace("%cost%", String.valueOf(t.getEcoAmount())));
+                        msgPlayer(player, insufficient.replaceAll("%cost%", String.valueOf(t.getEcoAmount())));
                     }
                 }
             } else {
                 // Non-cost tag but no permission → treat as locked
                 sendLockedMessage(player);
             }
-        }
+        } else {
 
-        if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+            if (nbt.hasTag("custom-item")) {
+                String name = nbt.getString("custom-item");
 
-            if (name.equalsIgnoreCase("close")) {
-                player.closeInventory();
-            }
+                List<String> click_commands = guis.getStringList("gui.tag-menu.custom-items." + name + ".click-commands");
 
-            if (name.equalsIgnoreCase("personal-tags")) {
-                new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
-            }
+                for (String option : click_commands) {
+                    if (option.startsWith("[message]") || option.startsWith("[MESSAGE]")) {
+                        String message = option.replace("[message] ", "").replace("[MESSAGE] ", "");
+                        message = replacePlaceholders(menuUtil.getOwner(), message);
+                        msgPlayer(menuUtil.getOwner(), message);
+                    }
 
-            if (name.equalsIgnoreCase("search")) {
-                player.closeInventory();
-                openSearchContainer(player);
-            }
+                    if (option.startsWith("[player]") || option.startsWith("[PLAYER]")) {
+                        String command = option.replace("[player] ", "").replace("[PLAYER] ", "");
+                        command = command.replaceAll("%player%", menuUtil.getOwner().getName());
+                        menuUtil.getOwner().performCommand(command);
+                    }
 
-            if (name.equalsIgnoreCase("filter")) {
-                String current_filter = menuUtil.getFilter();
+                    if (option.startsWith("[console]") || option.startsWith("[CONSOLE]")) {
+                        String command = option.replace("[console] ", "").replace("[CONSOLE] ", "");
+                        command = command.replaceAll("%player%", menuUtil.getOwner().getName());
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replaceAll("%player%", menuUtil.getOwner().getName()));
+                    }
 
-                List<String> filterOptions = new ArrayList<>();
-                filterOptions.add("all");
-                filterOptions.add("players");
+                    if (option.startsWith("[broadcast]") || option.startsWith("[BROADCAST]")) {
+                        String message = option.replace("[message] ", "").replace("[BROADCAST] ", "");
+                        message = replacePlaceholders(menuUtil.getOwner(), message);
+                        Bukkit.broadcastMessage(message);
+                    }
 
-                String currentFilterLower = current_filter.toLowerCase();
-                int currentIndex = filterOptions.indexOf(currentFilterLower);
-                if (currentIndex == -1) currentIndex = 0;
-
-                int nextIndex = (currentIndex + 1) % filterOptions.size();
-                String nextFilter = filterOptions.get(nextIndex);
-
-                menuUtil.setFilter(nextFilter);
-                super.refresh();
-            }
-
-            if (name.equalsIgnoreCase("sort")) {
-                String current_sort = menuUtil.getSort();
-                Set<String> rarities = SupremeTags.getInstance().getRarityManager().getRarityMap().keySet();
-
-                List<String> sortOptions = new ArrayList<>();
-                sortOptions.add("none"); // no sorting
-                for (String rarity : rarities) {
-                    sortOptions.add("rarity:" + rarity);
-                }
-
-                int currentIndex = sortOptions.indexOf(current_sort == null ? "none" : current_sort.toLowerCase());
-                if (currentIndex == -1) currentIndex = 0;
-
-                int nextIndex = (currentIndex + 1) % sortOptions.size();
-                String nextSort = sortOptions.get(nextIndex);
-
-                menuUtil.setSort(nextSort);
-                super.refresh();
-            }
-
-            if (name.equalsIgnoreCase("reset")) {
-                if (menuUtil.getIdentifier() == null || (menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
-                    msgPlayer(player, no_tag_selected);
-                    return;
-                }
-
-                if (!SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag")) {
-                    TagResetEvent tagEvent = new TagResetEvent(player, false);
-                    Bukkit.getPluginManager().callEvent(tagEvent);
-
-                    if (tagEvent.isCancelled()) return;
-
-                    if (menuUtil.getIdentifier() != null || !(menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
-                        Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
-                        if (t != null) {
-                            t.removeEffects(menuUtil.getOwner());
+                    if (option.startsWith("[next-page]") || option.startsWith("[NEXT-PAGE]")) {
+                        if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
+                            if (!((index + 1) >= tag.size())) {
+                                page = page + 1;
+                                super.refresh();
+                            } else {
+                                e.setCancelled(true);
+                            }
+                        } else {
+                            e.setCancelled(true);
                         }
                     }
 
-                    UserData.setActive(player, "None");
-                    super.refresh();
-                    menuUtil.setIdentifier("None");
-
-                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
-                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
-                    }
-
-                    playConfigSound(player, "reset-tag");
-                } else {
-                    TagResetEvent tagEvent = new TagResetEvent(player, false);
-                    Bukkit.getPluginManager().callEvent(tagEvent);
-
-                    if (tagEvent.isCancelled()) return;
-
-                    String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag");
-
-                    if (menuUtil.getIdentifier() != null || !(menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
-                        Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
-                        if (t != null) {
-                            t.removeEffects(menuUtil.getOwner());
+                    if (option.startsWith("[previous-page]") || option.startsWith("[PREVIOUS-PAGE]")) {
+                        if (page != 0) {
+                            page = page - 1;
+                            super.refresh();
                         }
                     }
 
-                    UserData.setActive(player, defaultTag);
-                    super.refresh();
-                    menuUtil.setIdentifier(defaultTag);
-
-                    if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
-                        msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
+                    if (option.startsWith("[close]") || option.startsWith("[CLOSE]")) {
+                        menuUtil.getOwner().closeInventory();
                     }
-
-                    playConfigSound(player, "reset-tag");
                 }
+                return;
             }
 
-            if (name.equalsIgnoreCase("back")) {
-                if (page != 0) {
-                    page = page - 1;
-                    super.refresh();
-                } else {
+            if (nbt.hasTag("name")) {
+                String name = nbt.getString("name");
+
+                if (name.equalsIgnoreCase("close")) {
                     player.closeInventory();
-                    new MainMenu(SupremeTags.getMenuUtil(player)).open();
                 }
-            }
 
-            if (name.equalsIgnoreCase("next")) {
-                if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
-                    if (!((index + 1) >= tag.size())) {
-                        page = page + 1;
+                if (name.equalsIgnoreCase("personal-tags")) {
+                    new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
+                }
+
+                if (name.equalsIgnoreCase("search")) {
+                    player.closeInventory();
+                    openSearchContainer(player);
+                }
+
+                if (name.equalsIgnoreCase("filter")) {
+                    String current_filter = menuUtil.getFilter();
+
+                    List<String> categories = SupremeTags.getInstance().getCategoryManager().getCatorgies();
+                    List<String> filterOptions = new ArrayList<>();
+                    filterOptions.add("all");
+                    filterOptions.add("players");
+                    for (String category : categories) {
+                        filterOptions.add("category:" + category.toLowerCase());
+                    }
+
+                    String currentFilterLower = current_filter.toLowerCase();
+                    int currentIndex = filterOptions.indexOf(currentFilterLower);
+                    if (currentIndex == -1) currentIndex = 0;
+
+                    int nextIndex = (currentIndex + 1) % filterOptions.size();
+                    String nextFilter = filterOptions.get(nextIndex);
+
+                    menuUtil.setFilter(nextFilter);
+                    super.refresh();
+                }
+
+                if (name.equalsIgnoreCase("sort")) {
+                    String current_sort = menuUtil.getSort();
+                    Set<String> rarities = SupremeTags.getInstance().getRarityManager().getRarityMap().keySet();
+
+                    List<String> sortOptions = new ArrayList<>();
+                    sortOptions.add("none"); // no sorting
+                    for (String rarity : rarities) {
+                        sortOptions.add("rarity:" + rarity);
+                    }
+
+                    int currentIndex = sortOptions.indexOf(current_sort == null ? "none" : current_sort.toLowerCase());
+                    if (currentIndex == -1) currentIndex = 0;
+
+                    int nextIndex = (currentIndex + 1) % sortOptions.size();
+                    String nextSort = sortOptions.get(nextIndex);
+
+                    menuUtil.setSort(nextSort);
+                    super.refresh();
+                }
+
+                if (name.equalsIgnoreCase("reset")) {
+                    if (menuUtil.getIdentifier() == null || (menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
+                        msgPlayer(player, no_tag_selected);
+                        return;
+                    }
+
+                    if (!SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag")) {
+                        TagResetEvent tagEvent = new TagResetEvent(player, false);
+                        Bukkit.getPluginManager().callEvent(tagEvent);
+
+                        if (tagEvent.isCancelled()) return;
+
+                        if (menuUtil.getIdentifier() != null || !(menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
+                            Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
+                            if (t != null) {
+                                t.removeEffects(menuUtil.getOwner());
+                            }
+                        }
+
+                        UserData.setActive(player, "None");
                         super.refresh();
+                        menuUtil.setIdentifier("None");
+
+                        if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                            msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
+                        }
+
+                        playConfigSound(player, "reset-tag");
+                    } else {
+                        TagResetEvent tagEvent = new TagResetEvent(player, false);
+                        Bukkit.getPluginManager().callEvent(tagEvent);
+
+                        if (tagEvent.isCancelled()) return;
+
+                        String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag");
+
+                        if (menuUtil.getIdentifier() != null || !(menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
+                            Tag t = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
+                            if (t != null) {
+                                t.removeEffects(menuUtil.getOwner());
+                            }
+                        }
+
+                        UserData.setActive(player, defaultTag);
+                        super.refresh();
+                        menuUtil.setIdentifier(defaultTag);
+
+                        if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+                            msgPlayer(player, SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix"))));
+                        }
+                        playConfigSound(player, "reset-tag");
+                    }
+                }
+
+                if (name.equalsIgnoreCase("back")) {
+                    if (page != 0) {
+                        page = page - 1;
+                        super.refresh();
+                    }
+                }
+
+                if (name.equalsIgnoreCase("next")) {
+                    if (tag.size() > maxItems & currentItemsOnPage >= maxItems) {
+                        if (!((index + 1) >= tag.size())) {
+                            page = page + 1;
+                            super.refresh();
+                        } else {
+                            e.setCancelled(true);
+                        }
                     } else {
                         e.setCancelled(true);
                     }
-                } else {
-                    e.setCancelled(true);
                 }
             }
         }
@@ -367,11 +368,11 @@ public class CategoryMenu extends Paged {
     @Override
     public void setMenuItems() {
         getTagsCountOnPage();
-        applyLayout(false, true, false);
-        getTagItemsCategory();
+        applyLayout(false, false, false);
+        getTagItems();
     }
 
-    public void getTagItemsCategory() {
+    public void getTagItems() {
         Map<String, Tag> tags = SupremeTags.getInstance().getTagManager().getTags();
 
         List<Tag> tag = new ArrayList<>();
@@ -381,25 +382,19 @@ public class CategoryMenu extends Paged {
 
         String sort = menuUtil.getSort();
 
-        String category = menuUtil.getCategory();
-
-        if (SupremeTags.getInstance().getConfig().getBoolean("settings.only-show-player-access-tags")) {
-            for (Tag t : tags.values()) {
-                if (menuUtil.getOwner().hasPermission(t.getPermission())
-                        && t.getCategory().equalsIgnoreCase(category)) {
-                    tag.add(t);
-                }
-            }
-        } else {
-            for (Tag t : tags.values()) {
-                if (t.getCategory().equalsIgnoreCase(category)) {
-                    tag.add(t);
-                }
+        for (Tag t : tags.values()) {
+            if (UserData.getFavourites(menuUtil.getOwner().getUniqueId()).contains(t.getIdentifier())) {
+                tag.add(t);
             }
         }
 
         if (filter.equalsIgnoreCase("players")) {
             tag.removeIf(t -> !menuUtil.getOwner().hasPermission(t.getPermission()));
+        }
+
+        if (filter.startsWith("category:")) {
+            String category = filter.replace("category:", "");
+            tag.removeIf(t -> !t.getCategory().equalsIgnoreCase(category));
         }
 
         if (sort.startsWith("rarity:")) {
@@ -408,7 +403,7 @@ public class CategoryMenu extends Paged {
         }
 
         if (!tag.isEmpty()) {
-            int maxItemsPerPage = guis.getInt("gui.tag-menu.tags-per-page");
+            int maxItemsPerPage = guis.getInt("gui.favourites-menu.tags-per-page");
 
             int startIndex = page * maxItemsPerPage;
             int endIndex = Math.min(startIndex + maxItemsPerPage, tag.size());
@@ -417,27 +412,24 @@ public class CategoryMenu extends Paged {
 
             currentItemsOnPage = 0;
 
-            List<String> slots = guis.getStringList("gui.tag-menu.slots-tag.slots");
-
-            isLast = true;
+            List<String> slots = guis.getStringList("gui.favourites-menu.slots-tag.slots");
 
             for (int i = startIndex; i <= endIndex; i++) {
-                if(i > tag.size() - 1) {
+                if (i > tag.size() - 1) {
                     break;
                 }
 
                 Tag t = tag.get(i);
                 if (t == null) break;
 
-                if(i == endIndex) {
-                    isLast = false;
+                if (i == endIndex) {
                     continue;
                 }
 
                 String permission = t.getPermission();
 
                 if (SupremeTags.getInstance().getConfig().getBoolean("settings.only-show-player-access-tags")) {
-                    if (!menuUtil.getOwner().hasPermission(permission) &&
+                    if (!menuUtil.getOwner().hasPermission(permission) || !menuUtil.getOwner().hasPermission("supremetags.tag.*") &&
                             (!SupremeTags.getInstance().getConfig().getBoolean("settings.locked-view") &&
                                     !SupremeTags.getInstance().getConfig().getBoolean("settings.cost-system"))) {
                         continue;
@@ -446,7 +438,7 @@ public class CategoryMenu extends Paged {
 
                 String displayname;
 
-                if (menuUtil.getOwner().hasPermission(t.getPermission()) || permission.equalsIgnoreCase("none") ) {
+                if (menuUtil.getOwner().hasPermission(t.getPermission()) || permission.equalsIgnoreCase("none")) {
                     if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname") != null) {
                         if (t.getCurrentTag() != null) {
                             displayname = Objects.requireNonNull(SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".displayname")).replace("%tag%", t.getCurrentTag());
@@ -476,7 +468,7 @@ public class CategoryMenu extends Paged {
 
                 String material;
 
-                if (menuUtil.getOwner().hasPermission(t.getPermission()) || permission.equalsIgnoreCase("none") ) {
+                if (menuUtil.getOwner().hasPermission(t.getPermission()) || permission.equalsIgnoreCase("none")) {
                     if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".display-item") != null) {
                         material = SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".display-item");
                     } else {
@@ -499,7 +491,7 @@ public class CategoryMenu extends Paged {
 
                 nbt.setString("identifier", t.getIdentifier());
 
-                if (menuUtil.getOwner().hasPermission(t.getPermission())) {
+                if (menuUtil.getOwner().hasPermission(t.getPermission()) || permission.equalsIgnoreCase("none")) {
                     if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".custom-model-data") > 0) {
                         int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".custom-model-data");
                         if (tagMeta != null)
@@ -527,30 +519,30 @@ public class CategoryMenu extends Paged {
                 } catch (IllegalArgumentException ignored) {
                     // HIDE_DYE not available in this version — skip
                 }
-                tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+                tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 tagMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
-                List<String> lore = getFormattedLore(t, permission);
+                List<String> lore = getFormattedLore(t, permission, "favourites-menu");
 
-                String descriptionPlaceholder = "%description%";
-                String identifierPlaceholder = "%identifier%";
-                String tagPlaceholder = "%tag%";
-                String costPlaceholder = "%cost%";
-                String costFormattedPlaceholder = "%cost_formatted%";
-                String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
-                String variantsPlaceholder = "%variants%";
-                String orderPlaceholder = "%order%";
-                String trackPlaceholder = "%track_unlocked%";
-                String effectsPlaceholder = "%effects%";
-                String categoryPlaceholder = "%category%";
-                String rarityPlaceholder = "%rarity%";
-                String effectsListPlaceholder = "%effects_list%";
+                 String descriptionPlaceholder = "%description%";
+                 String identifierPlaceholder = "%identifier%";
+                 String tagPlaceholder = "%tag%";
+                 String costPlaceholder = "%cost%";
+                 String costFormattedPlaceholder = "%cost_formatted%";
+                 String costFormattedPlaceholderRaw = "%cost_formatted_raw%";
+                 String variantsPlaceholder = "%variants%";
+                 String orderPlaceholder = "%order%";
+                 String trackPlaceholder = "%track_unlocked%";
+                 String effectsPlaceholder = "%effects%";
+                 String categoryPlaceholder = "%category%";
+                 String rarityPlaceholder = "%rarity%";
+                 String effectsListPlaceholder = "%effects_list%";
                 String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
 
                 String joinedEffects;
 
-                String effects_list = "";
+                String effects_list;
 
                 if (!t.getEffects().isEmpty()) {
                     String formatEffectTemplate = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.effects-replace-style");
@@ -652,7 +644,6 @@ public class CategoryMenu extends Paged {
                         animatedSlots.add(placementSlot);
                     }
                 }
-
 
                 currentItemsOnPage++;
             }

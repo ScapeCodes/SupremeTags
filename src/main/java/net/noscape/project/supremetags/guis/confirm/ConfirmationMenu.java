@@ -48,6 +48,11 @@ public class ConfirmationMenu extends Menu {
                 player.closeInventory();
 
                 SupremeTags.getInstance().getTagManager().deleteTag(player, identifier);
+            } else if (action.startsWith("delete-category:")) {
+                String category = action.replace("delete-category:", "");
+                player.closeInventory();
+
+                SupremeTags.getInstance().getCategoryManager().deleteCategory(category);
             }
         }
 

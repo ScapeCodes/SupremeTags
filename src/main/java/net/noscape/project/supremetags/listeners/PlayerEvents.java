@@ -76,26 +76,38 @@ public class PlayerEvents implements Listener {
                 activeTag = defaultTag;
             }
 
-            // Validate tag existence
-            boolean isVariant = plugin.getTagManager().isVariant(activeTag);
-            boolean tagExists = tags.containsKey(activeTag);
-
-            // 5. PERMISSION CHECK + TAG VALIDATION must be applied back on MAIN THREAD:
             runMain(() -> {
-
                 String currentTag = UserData.getActive(player.getUniqueId());
 
-                if (!tagExists && !isVariant) {
+                boolean isVariant = plugin.getTagManager().isVariant(currentTag);
+                boolean tagExists = tags.containsKey(currentTag);
+                boolean isPersonalTag = plugin.getPlayerManager().doesTagExist(player.getUniqueId(), currentTag);
+
+                if (!tagExists && !isVariant && !isPersonalTag) {
                     UserData.setActive(player, "None");
                     return;
                 }
 
+                // PERSONAL TAG HANDLING (IMPORTANT)
+                if (isPersonalTag && !tagExists && !isVariant) {
+                    Tag personalTag =
+                            plugin.getPlayerManager().getTag(player.getUniqueId(), currentTag);
+
+                    if (personalTag != null) {
+                        UserData.setActive(player, personalTag.getIdentifier());
+                    }
+
+                    return; // stop here
+                }
+
+                // NORMAL TAG FLOW
                 Tag tag = tags.get(currentTag);
+
                 if (tag != null) {
                     if (!player.hasPermission(tag.getPermission())) {
                         UserData.setActive(player, "None");
                     } else {
-                        tag.applyEffects(player); // must be MAIN thread
+                        tag.applyEffects(player);
                     }
                 }
             });

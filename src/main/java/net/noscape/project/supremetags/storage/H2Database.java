@@ -5,6 +5,7 @@ import net.noscape.project.supremetags.SupremeTags;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class H2Database {
@@ -40,15 +41,19 @@ public class H2Database {
                 return;
             }
 
-            // USERS TABLE (unchanged)
+            // USERS TABLE
             String userTable = "CREATE TABLE IF NOT EXISTS users (" +
                     "Name VARCHAR(255) NOT NULL, " +
                     "UUID VARCHAR(255) NOT NULL, " +
                     "Active VARCHAR(255) NOT NULL, " +
+                    "Favourites TEXT, " +
+                    "CustomTag TEXT DEFAULT '', " +
                     "PRIMARY KEY (UUID)" +
                     ")";
             connection.prepareStatement(userTable).executeUpdate();
-
+            ensureActiveColumn(connection);
+            ensureCTColumn(connection);
+ 
             // SINGLE TAGS TABLE
             String tagsTable = "CREATE TABLE IF NOT EXISTS tags (" +
                     "identifier VARCHAR(255) PRIMARY KEY, " +
@@ -79,5 +84,33 @@ public class H2Database {
 
     public String getConnectionURL() {
         return ConnectionURL;
+    }
+
+    private void ensureActiveColumn(Connection connection) throws SQLException {
+        boolean hasActiveColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "users", "Active")) {
+            hasActiveColumn = columns.next();
+        }
+
+        if (!hasActiveColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN Active VARCHAR(255) NOT NULL DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void ensureCTColumn(Connection connection) throws SQLException {
+        boolean hasCTColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "users", "CustomTag")) {
+            hasCTColumn = columns.next();
+        }
+
+        if (!hasCTColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN CustomTag Text DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
     }
 }

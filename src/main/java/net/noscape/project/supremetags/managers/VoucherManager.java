@@ -173,7 +173,7 @@ public class VoucherManager {
             lore = new ArrayList<>(tags.getStringList("tags." + name + ".voucher-item.lore"));
             displayname = tags.getString("tags." + name + ".voucher-item.displayname");
             glow = tags.getBoolean("tags." + name + ".voucher-item.glow");
-            custom_model_data = tags.getInt("tags." + name + ".custom-model-data");
+            custom_model_data = tags.getInt("tags." + name + ".voucher-item.custom-model-data");
         }
 
         displayname = displayname.replace("%tag%", t.getTag().getFirst());
