@@ -41,6 +41,7 @@ settings:
   locked-view: true # this setting allows players to view locked/unlocked tags.
   personal-tags:
     enable: true # this setting allows players to make and access their own tags.
+    use-creation-dialogs: true # 1.21.8+ ONLY!
     limits:
       # permission limits: supremetags.mytags.limit.<group>
       ## example: supremetags.mytags.limit.default
@@ -60,31 +61,6 @@ settings:
   only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
   search-type: 'SIGN' # either 'SIGN' or 'ANVIL'
   update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
-
-############################################################
-# +------------------------------------------------------+ #
-# |                       GUI                            | #
-# +------------------------------------------------------+ #
-############################################################
-
-gui:
-  items:
-    glass:
-      enable: true
-      material: 'GRAY_STAINED_GLASS_PANE'
-      displayname: ''
-      custom-model-data: 0
-      hide-tooltip: false
-  tag-editor-menu:
-    tag-item:
-      lore:
-        - '&7Description: %description%'
-        - '&7Identifier: %identifier%'
-        - '&7Tag: %tag%'
-        - '&7Cost: %cost%'
-        - '&7Cost Formatted: %cost_formatted%'
-        - '&7Variants: %variants%'
-    editor-items: {}
 
 ############################################################
 # +------------------------------------------------------+ #

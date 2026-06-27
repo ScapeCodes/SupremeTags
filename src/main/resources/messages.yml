@@ -65,6 +65,14 @@ messages:
   stages:
     stage-1: '&6&lStage 1: &7Enter a name for the tag. &6&o(type in normal chat)'
     stage-2: '&6&lStage 2: &7What do you want the tag to look like? &6&o(type in normal chat)'
+    dialog:
+      title: '&eCreate Personal Tag'
+      q1: '&fWhat would you like the tag to be called?'
+      q2: '&fHow would you like the tag to look?'
+      button-create: 'Create'
+      button-create-hover: 'Create your personal tag.'
+      button-cancel: 'Cancel'
+      button-cancel-hover: 'Close'
     complete: '&6&lComplete: &7New Tag: &6%identifier% &7- %tag% &7has been created.'
     cancelled: '&6&lStage: &7Cancelled setup process.'
   help:
