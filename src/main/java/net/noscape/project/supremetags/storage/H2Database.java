@@ -1,0 +1,121 @@
+package net.noscape.project.supremetags.storage;
+
+import net.noscape.project.supremetags.SupremeTags;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class H2Database {
+
+    private final String ConnectionURL;
+    private Connection connection;
+    private final Object connectionLock = new Object();
+
+    public H2Database(String connectionURL) {
+        this.ConnectionURL = connectionURL;
+        this.initialiseDatabase();
+    }
+
+    public Connection getConnection() {
+        synchronized (connectionLock) {
+            try {
+                if (connection == null || connection.isClosed()) {
+                    Class.forName("org.h2.Driver");
+                    connection = DriverManager.getConnection(SupremeTags.getConnectionURL());
+                }
+            } catch (SQLException | ClassNotFoundException throwables) {
+                throwables.printStackTrace();
+                SupremeTags.getInstance().getLogger().warning("------------------------------");
+                SupremeTags.getInstance().getLogger().warning("H2: Could not connect to database.");
+                SupremeTags.getInstance().getLogger().warning("------------------------------");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return connection;
+        }
+    }
+
+    public void initialiseDatabase() {
+        try (Connection connection = getConnection()) {
+
+            if (connection == null) {
+                SupremeTags.getInstance().getLogger().warning("Failed to initialize H2: Connection is null");
+                return;
+            }
+
+            // USERS TABLE
+            String userTable = "CREATE TABLE IF NOT EXISTS users (" +
+                    "Name VARCHAR(255) NOT NULL, " +
+                    "UUID VARCHAR(255) NOT NULL, " +
+                    "Active VARCHAR(255) NOT NULL, " +
+                    "Favourites TEXT, " +
+                    "CustomTag TEXT DEFAULT '', " +
+                    "PRIMARY KEY (UUID)" +
+                    ")";
+            connection.prepareStatement(userTable).executeUpdate();
+            ensureActiveColumn(connection);
+            ensureCTColumn(connection);
+
+            // SINGLE TAGS TABLE
+            String tagsTable = "CREATE TABLE IF NOT EXISTS tags (" +
+                    "identifier VARCHAR(255) PRIMARY KEY, " +
+                    "tag_text TEXT, " +
+                    "category VARCHAR(255), " +
+                    "permission VARCHAR(255), " +
+                    "description TEXT, " +
+                    "rarity VARCHAR(100), " +
+                    "order_num INT, " +
+                    "is_withdrawable BOOLEAN, " +
+                    "eco_enabled BOOLEAN, " +
+                    "eco_type VARCHAR(100), " +
+                    "eco_amount DOUBLE, " +
+                    "effects TEXT, " +
+                    "variants TEXT, " +
+                    "custom_placeholders TEXT, " +
+                    "economy TEXT" +
+                    ")";
+            connection.prepareStatement(tagsTable).executeUpdate();
+
+            SupremeTags.getInstance().getLogger().info("H2 tables (users, tags) initialized successfully.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            SupremeTags.getInstance().getLogger().warning("Error while initializing H2 tables: " + e.getMessage());
+        }
+    }
+
+    public String getConnectionURL() {
+        return ConnectionURL;
+    }
+
+    private void ensureActiveColumn(Connection connection) throws SQLException {
+        boolean hasActiveColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "users", "Active")) {
+            hasActiveColumn = columns.next();
+        }
+
+        if (!hasActiveColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN Active VARCHAR(255) NOT NULL DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void ensureCTColumn(Connection connection) throws SQLException {
+        boolean hasCTColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "users", "CustomTag")) {
+            hasCTColumn = columns.next();
+        }
+
+        if (!hasCTColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN CustomTag Text DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+}

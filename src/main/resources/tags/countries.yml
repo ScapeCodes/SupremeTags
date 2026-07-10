@@ -1,0 +1,256 @@
+# ###########################################################
+# +------------------------------------------------------+ #
+# |                    Countries                         | #
+# +------------------------------------------------------+ #
+# ###########################################################
+#
+# |----| VARIANTS EXAMPLES |----|
+# ## - Variants are sub tags.
+# ## - Variant lores can be edit in guis.yml under 'gui > tag-variants-menu > item > lore'.
+# variants:
+#   vipplus_blue:
+#     enabled: true
+#     tag:
+#       - '&a[VIP&b+&a]'
+#     permission: 'supremetags.tag.vip.blue'
+#   vipplus_red:
+#     enabled: true
+#     tag:
+#       - '&a[VIP&c+&a]'
+#     permission: 'supremetags.tag.vip.red'
+#
+# groups: []
+# ## groups listed here will gain access to the tag, makes it easier than adding 100's of permissions-
+# ## inside the permission plugin.
+#
+# Economy Option Feature (PER TAG)
+# economy:
+#   enabled: true/false
+#   type: 'VAULT' # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, EXCELLENTECONOMY-currencyhere]
+#   amount: 200
+
+tags:
+  unitedkingdom:
+    tag:
+      - '&8[&#012169&lU&#11307A&ln&#214093&li&#3150AC&lt&#4160C5&le&#5170DE&ld&#6180F7&lK&#7188F8&li&#8190F9&ln&#9198FA&lg&#A1A0FB&ld&#B1A8FC&lo&#C1B0FD&lm&8]'
+    permission: supremetags.tag.unitedkingdom
+    groups: []
+    description:
+      - '&7Country Tag'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission.'
+      wheretofind: '&eObtain from the Countries Collection.'
+    category: countries
+    order: 1
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[United Kingdom] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  germany:
+    tag:
+      - '&8[&#000000&lG&#221100&le&#442200&lr&#663300&lm&#884400&la&#AA5500&ln&#CC6600&ly&8]'
+    permission: supremetags.tag.germany
+    groups: []
+    description:
+      - '&7Country Tag'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission.'
+      wheretofind: '&eObtain from the Countries Collection.'
+    category: countries
+    order: 2
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[Germany] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to equip!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  france:
+    tag:
+      - '&8[&#0055A4&lF&#336FBF&lr&#6688DA&la&#99A2F5&ln&#FFFFFF&lc&#FFB3B3&le&#EF4135&l]&8]'
+    permission: supremetags.tag.france
+    groups: []
+    description:
+      - '&7Represent France!'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission to use &8[&#0055A4&lF&#336FBF&lr&#6688DA&la&#99A2F5&ln&#FFFFFF&lc&#FFB3B3&le&#EF4135&l]&8]'
+      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+    category: countries
+    order: 3
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[France] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to unlock this tag!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  spain:
+    tag:
+      - '&8[&#AA151B&lS&#C83C1D&lp&#E66320&la&#F1BF00&li&#E66320&ln&#C83C1D&l]&8]'
+    permission: supremetags.tag.spain
+    groups: []
+    description:
+      - '&7Represent Spain!'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission to use this tag.'
+      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+    category: countries
+    order: 4
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[Spain] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to unlock this tag!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  italy:
+    tag:
+      - '&8[&#009246&lI&#2EA35F&lt&#5CC478&la&#FFFFFF&ll&#F18686&ly&#CE2B37&l]&8]'
+    permission: supremetags.tag.italy
+    groups: []
+    description:
+      - '&7Represent Italy!'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission to use this tag.'
+      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+    category: countries
+    order: 5
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[Italy] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to unlock this tag!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  portugal:
+    tag:
+      - '&8[&#006600&lP&#0F7A14&lo&#239027&lr&#37A63A&lt&#4BBC4D&lu&#D62612&lg&#FF0000&la&#E63333&ll&8]'
+    permission: supremetags.tag.portugal
+    groups: []
+    description:
+      - '&7Represent Portugal!'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission to use this tag.'
+      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+    category: countries
+    order: 6
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[Portugal] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to unlock this tag!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
+  netherlands:
+    tag:
+      - '&8[&#AE1C28&lN&#C94A52&le&#E5787D&lt&#FFFFFF&lh&#8CB4E8&le&#21468B&lr&#4166A8&ll&#5F86C5&la&#7DA6E2&ln&#9BC6FF&ld&#B6D7FF&ls&8]'
+    permission: supremetags.tag.netherlands
+    groups: []
+    description:
+      - '&7Represent the Netherlands!'
+    custom-placeholders:
+      nopermission: '&cYou do not have permission to use this tag.'
+      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+    category: countries
+    order: 7
+    withdrawable: true
+    displayname: '&7Tag: %tag%'
+    custom-model-data: 0
+    display-item: NAME_TAG
+    variants: []
+    effects: []
+    voucher-item:
+      material: NAME_TAG
+      displayname: '&8[Netherlands] &f&lVoucher'
+      custom-model-data: 0
+      glow: true
+      lore:
+        - '&7&m-----------------------------'
+        - '&eClick to unlock this tag!'
+        - '&7&m-----------------------------'
+    rarity: common
+    economy:
+      enabled: false
+      type: VAULT
+      amount: 0
