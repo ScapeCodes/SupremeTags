@@ -1,0 +1,44 @@
+:root {
+  --st-gradient: linear-gradient(135deg, #7c3aed 0%, #f59e0b 100%);
+}
+
+.md-header,
+.md-tabs {
+  background: #171126;
+}
+
+.hero {
+  border-radius: 1rem;
+  padding: 2.5rem;
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, .25), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(124, 58, 237, .35), transparent 40%),
+    #171126;
+  color: white;
+}
+
+.hero h1 {
+  color: white;
+  font-weight: 800;
+  margin-bottom: .5rem;
+}
+
+.hero p {
+  font-size: 1.05rem;
+  max-width: 48rem;
+}
+
+.grid.cards > ul > li {
+  border-radius: .75rem;
+}
+
+.st-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: .2rem .65rem;
+  background: var(--st-gradient);
+  color: white;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
