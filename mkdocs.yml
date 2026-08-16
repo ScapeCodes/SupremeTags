@@ -1,15 +1,15 @@
 site_name: SupremeTags Documentation
 site_description: Official documentation for SupremeTags 2.2.8, a modern Minecraft tag menu, voucher, personal tags, and PlaceholderAPI plugin.
 site_author: Scape
-repo_name: SupremeTags2
-repo_url: https://github.com/Scape-Development/SupremeTags2
+repo_name: SupremeTags
+repo_url: https://github.com/ScapeCodes/SupremeTags
 edit_uri: edit/main/docs/
 
 theme:
   name: material
   language: en
-  logo: assets/images/logo.svg
-  favicon: assets/images/logo.svg
+  logo: https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127
+  favicon: https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127
   palette:
     - scheme: slate
       primary: deep purple
