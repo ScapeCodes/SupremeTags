@@ -2,11 +2,13 @@
 
 <div class="hero" markdown>
 
-# SupremeTags Documentation
+# SupremeTags
 
-Modern tag menus, categories, rarities, vouchers, placeholders, personal tags, requirements, statistics, and developer hooks for Minecraft servers.
+Premium Minecraft tag menus, vouchers, personal tags, statistics, PlaceholderAPI output, and in-game editors built for modern Paper and Folia servers.
 
 <span class="st-badge">Version 2.2.8</span> <span class="st-badge">Folia supported</span> <span class="st-badge">PlaceholderAPI ready</span> <span class="st-badge">Personal tags</span>
+
+[Get started](quick-start.md){ .md-button .md-button--primary } [Discord support](https://discord.gg/PHpuzZS){ .md-button }
 
 </div>
 
@@ -24,7 +26,7 @@ SupremeTags lets players unlock, select, showcase, withdraw, favourite, and cust
 
     Set up the plugin, dependencies, and first restart.
 
-    [:octicons-arrow-right-24: Installation](installation.md)
+    [Open installation guide →](installation.md)
 
 -   :material-console:{ .lg .middle } **Commands**
 
@@ -32,7 +34,7 @@ SupremeTags lets players unlock, select, showcase, withdraw, favourite, and cust
 
     View player, admin, voucher, editor, and utility commands.
 
-    [:octicons-arrow-right-24: Commands](commands.md)
+    [View commands →](commands.md)
 
 -   :material-lock:{ .lg .middle } **Permissions**
 
@@ -40,7 +42,7 @@ SupremeTags lets players unlock, select, showcase, withdraw, favourite, and cust
 
     Add the correct permission nodes to your permission plugin.
 
-    [:octicons-arrow-right-24: Permissions](permissions.md)
+    [View permissions →](permissions.md)
 
 -   :material-code-json:{ .lg .middle } **Developer API**
 
@@ -48,7 +50,7 @@ SupremeTags lets players unlock, select, showcase, withdraw, favourite, and cust
 
     Use the API and events from your own plugins.
 
-    [:octicons-arrow-right-24: Developer API](api.md)
+    [View API docs →](api.md)
 
 -   :material-lifebuoy:{ .lg .middle } **Support**
 
@@ -56,7 +58,7 @@ SupremeTags lets players unlock, select, showcase, withdraw, favourite, and cust
 
     Join Discord for setup help, bug reports, and update support.
 
-    [:octicons-arrow-right-24: Discord Support](https://discord.gg/PHpuzZS)
+    [Join Discord →](https://discord.gg/PHpuzZS)
 
 </div>
 
