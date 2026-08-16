@@ -15,6 +15,10 @@ You can usually customize:
 - Locked and unlocked item states.
 - Navigation buttons.
 - Filter buttons.
+- Sort buttons for no sort, popularity, recently used, and rarity filters.
+- Personal tag hub, browser, and editor items.
+- Tag variant and tag action menus.
+- Confirmation menus for voucher redemption, purchases, selection, deletion, moving, and mass actions.
 
 ## Layout types
 
@@ -50,4 +54,13 @@ Common placeholders include:
 | `%tags_amount%` | Amount of tags in a category or menu context. |
 | `%identifier%` | Tag identifier. |
 | `%player%` | Player name where supported. |
+| `%page%` / `%max_pages%` | Current and maximum page numbers in paged menus. |
+| `%filter%` | Current filter label. |
+| `%sort%` | Current sort label. |
+| `%tag_credits%` | Player's Tag Credits balance in personal tag menus. |
+| `%tag_credits_creation_cost%` | Configured cost to create a personal tag. |
+
+## Search interfaces
+
+`settings.search-type` controls the search input. `SIGN` uses a sign GUI, `ANVIL` uses an anvil GUI, and `DIALOG` uses the newer Paper dialog flow on supported 1.21.8+ servers.
 

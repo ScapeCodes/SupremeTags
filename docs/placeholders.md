@@ -19,6 +19,7 @@ supremetags
 | `%supremetags_tags_amount%` | Total number of loaded tags. |
 | `%supremetags_tags_total%` | Total number of loaded tags. |
 | `%supremetags_player_track_unlocked%` | Number of tags the player can access. |
+| `%supremetags_credits%` | Player's personal Tag Credits balance. |
 
 ## Selected tag metadata
 
@@ -43,6 +44,26 @@ These return information about the player's selected tag.
 | `%supremetags_has_access_<identifier>%` | `true` if the player has access to the tag. |
 | `%supremetags_track_unlocked_<identifier>%` | Unlock count for a tag identifier. |
 | `%supremetags_tag_custom-placeholder_<placeholder>%` | Reads a custom placeholder value from the selected tag. |
+
+## Statistics placeholders
+
+These placeholders are backed by the built-in tag statistics tracker.
+
+| Placeholder | Description |
+| --- | --- |
+| `%supremetags_stats_total_selections%` | Total number of tracked tag selections. |
+| `%supremetags_stats_top_tag%` | Identifier of the most-selected tag. |
+| `%supremetags_stats_player_total_selections%` | Total selections made by the player. |
+| `%supremetags_stats_player_most_used%` | Player's most-used tag identifier. |
+| `%supremetags_stats_player_last_used%` | Player's last selected tag identifier. |
+| `%supremetags_stats_tag_selections_<identifier>%` | Selection count for a specific tag. |
+| `%supremetags_stats_tag_unique_users_<identifier>%` | Unique users who selected a specific tag. |
+| `%supremetags_stats_tag_active_users_<identifier>%` | Active users currently using a specific tag. |
+| `%supremetags_stats_tag_rank_<identifier>%` | Popularity rank for a specific tag. |
+
+## Output modes
+
+The `placeholders` section in `config.yml` controls output for tag, chat, scoreboard, and tab placeholders. Supported output modes are `legacy`, `minimessage`, `minimessage-text`, `raw`, and `plain`.
 
 ## Chat format example
 

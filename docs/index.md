@@ -4,15 +4,15 @@
 
 # SupremeTags Documentation
 
-Modern tag menus, categories, rarities, vouchers, placeholders, personal tags, and developer hooks for Minecraft servers.
+Modern tag menus, categories, rarities, vouchers, placeholders, personal tags, requirements, statistics, and developer hooks for Minecraft servers.
 
-<span class="st-badge">Version 2.2.4</span> <span class="st-badge">Folia supported</span> <span class="st-badge">PlaceholderAPI ready</span>
+<span class="st-badge">Version 2.2.8</span> <span class="st-badge">Folia supported</span> <span class="st-badge">PlaceholderAPI ready</span> <span class="st-badge">Personal tags</span>
 
 </div>
 
 ## What is SupremeTags?
 
-SupremeTags lets players unlock, select, showcase, withdraw, and customize chat tags through configurable menus. Server owners can build tag collections with categories, rarities, permissions, economy costs, vouchers, variants, and placeholders.
+SupremeTags lets players unlock, select, showcase, withdraw, favourite, and customize chat tags through configurable menus. Server owners can build tag collections with categories, rarities, permissions, economy costs, vouchers, variants, PlaceholderAPI output, unlock requirements, and statistics.
 
 ## Quick links
 
@@ -50,18 +50,30 @@ SupremeTags lets players unlock, select, showcase, withdraw, and customize chat 
 
     [:octicons-arrow-right-24: Developer API](api.md)
 
+-   :material-lifebuoy:{ .lg .middle } **Support**
+
+    ---
+
+    Join Discord for setup help, bug reports, and update support.
+
+    [:octicons-arrow-right-24: Discord Support](https://discord.gg/PHpuzZS)
+
 </div>
 
 ## Core features
 
 - Configurable tag menus and category menus.
-- Tag rarities and filter labels.
+- Tag rarities, filtering, popularity sorting, recently-used sorting, and selected-tag priority.
 - Tag variants for alternate versions of a tag.
-- Personal tags with permission-based limits.
+- Personal tags with creation dialogs, browsable public personal tags, permission-based limits, playtime/server-age creation requirements, and Tag Credits.
 - PlaceholderAPI expansion using the `supremetags` identifier.
-- Optional Vault, PlayerPoints, EXP levels, custom command, and ExcellentEconomy costs.
+- Optional Vault, PlayerPoints, EXP level, custom command, PlaceholderAPI condition, and ExcellentEconomy currency costs.
 - Tag vouchers and withdraw support.
-- Import tools for other tag plugins.
+- Tag showcase, favourites, search through sign, anvil, or dialog input, and optional confirmation menus.
+- Unlock requirements using permission, PlaceholderAPI, economy balance, and owns-tag checks.
+- Usage statistics for total selections, tag rankings, unique users, active users, and player history.
+- Import tools for DeluxeTags, AlonsoTags, EternalTags, and free SupremeTags formats.
+- Item hooks for HeadDatabase, ItemsAdder, Nexo, Oraxen, CraftEngine, SimpleItemGenerator, ExecutableItems/SCore, and normal Bukkit materials.
 - Folia support.
 
 ## Recommended reading order

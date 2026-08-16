@@ -60,6 +60,16 @@ After changing config files, use:
 /tags reload
 ```
 
+## 6. Optional: enable personal tags
+
+Personal tags are enabled by default. Players open them with:
+
+```text
+/mytags
+```
+
+Give players `supremetags.mytags`, then configure `settings.personal-tags.credits`, `settings.personal-tags.limits`, and `settings.personal-tags.create-requirements` if you want creation costs or playtime/server-age requirements.
+
 ## Common first settings
 
 | Setting | Recommended starting value |
@@ -69,4 +79,5 @@ After changing config files, use:
 | `settings.locked-view` | `true` to let players preview locked tags |
 | `settings.tag-vouchers` | `true` if you want voucher withdrawal |
 | `settings.personal-tags.enable` | `true` if players can create personal tags |
+| `statistics.enabled` | `true` if you want popularity and recently-used sorting |
 

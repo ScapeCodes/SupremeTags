@@ -1,5 +1,5 @@
 site_name: SupremeTags Documentation
-site_description: Official documentation for the SupremeTags Minecraft plugin.
+site_description: Official documentation for SupremeTags 2.2.8, a modern Minecraft tag menu, voucher, personal tags, and PlaceholderAPI plugin.
 site_author: Scape
 repo_name: SupremeTags2
 repo_url: https://github.com/Scape-Development/SupremeTags2
@@ -27,11 +27,24 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.sections
+    - navigation.tabs
+    - navigation.indexes
     - navigation.top
+    - navigation.footer
     - search.highlight
     - search.share
+    - search.suggest
     - content.code.copy
     - content.action.edit
+
+extra:
+  version:
+    provider: mike
+    default: 2.2.8
+  social:
+    - icon: material/lifebuoy
+      link: https://discord.gg/PHpuzZS
+      name: SupremeTags Support
 
 extra_css:
   - assets/stylesheets/extra.css
@@ -57,6 +70,7 @@ plugins:
 
 nav:
   - Home: index.md
+  - Support: https://discord.gg/PHpuzZS
   - Getting Started:
       - Installation: installation.md
       - Quick Start: quick-start.md
