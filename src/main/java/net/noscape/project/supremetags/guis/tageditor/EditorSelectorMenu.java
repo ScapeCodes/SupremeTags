@@ -42,10 +42,8 @@ public class EditorSelectorMenu extends Menu {
     public void setMenuItems() {
         fillEmpty();
 
-        // tags
         this.inventory.setItem(12, makeItem(Material.NAME_TAG, "&e&lTags", 0, false));
 
-        // categories
         this.inventory.setItem(14, makeItem(Material.BOOK, "&6&lCategories", 0, false));
     }
 }

@@ -133,7 +133,7 @@ public class ItemResolver {
             }
 
         } catch (Throwable ignored) {
-            // SkinRestorer not installed or API changed → ignore safely
+
         }
 
         try {

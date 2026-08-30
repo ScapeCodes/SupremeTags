@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.listeners;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
 import org.bukkit.Material;
@@ -28,8 +29,7 @@ public class VoucherListener implements Listener {
 
         if (item == null || item.getType() == Material.AIR) return;
 
-        NBTItem nbtItem = new NBTItem(item);
-        if (nbtItem.hasKey("identifier")) {
+        if (!ItemData.getVoucherIdentifier(item).isEmpty()) {
             event.setCancelled(true);
         }
     }
@@ -41,10 +41,8 @@ public class VoucherListener implements Listener {
 
         if (item == null || item.getType() == Material.AIR) return;
 
-        NBTItem nbtItem = new NBTItem(item);
-        if (!nbtItem.hasKey("tags:identifier")) return;
-
-        String identifier = nbtItem.getString("tags:identifier");
+        String identifier = ItemData.getVoucherIdentifier(item);
+        if (identifier.isEmpty()) return;
 
         Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
 

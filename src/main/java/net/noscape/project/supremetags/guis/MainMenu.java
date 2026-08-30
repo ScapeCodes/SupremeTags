@@ -1,11 +1,12 @@
 package net.noscape.project.supremetags.guis;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.noscape.project.supremetags.SupremeTags;
-import net.noscape.project.supremetags.handlers.menu.Menu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.SkullUtil;
@@ -25,7 +26,7 @@ import java.util.*;
 
 import static net.noscape.project.supremetags.utils.Utils.*;
 
-public class MainMenu extends Menu {
+public class MainMenu extends BaseTagsMenu {
 
     private final List<String> catorgies;
     private final Map<Integer, String> dataItem = new HashMap<>();
@@ -37,6 +38,16 @@ public class MainMenu extends Menu {
         super(menuUtil);
         this.catorgies = SupremeTags.getInstance().getCategoryManager().getCatorgies();
         this.categoriesTags = SupremeTags.getInstance().getCategoryManager().getCatorgiesTags();
+    }
+
+    @Override
+    protected boolean isCategoryMenu() {
+        return false;
+    }
+
+    @Override
+    protected String getRawTitle() {
+        return Objects.requireNonNull(guis.getString("gui.main-menu.title"));
     }
 
     @Override
@@ -63,12 +74,21 @@ public class MainMenu extends Menu {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        // Handle NBT click commands
-        NBTItem nbt = new NBTItem(clickedItem);
-        if (nbt.hasTag("supremetags_click_commands")) {
-            e.setCancelled(true); // cancel event if interacting with a custom item
+        ItemStack nbt = clickedItem;
+        if (ItemData.has(nbt, "identifier")) {
+            e.setCancelled(true);
 
-            String rawCommands = nbt.getString("supremetags_click_commands");
+            String insufficient = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.insufficient-funds").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+            String unlocked = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.tag-unlocked").replace("%prefix%", Objects.requireNonNull(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.prefix")));
+
+            handleTagClick(e, player, ItemData.getString(nbt, "identifier"), replacePlaceholders(player, insufficient), unlocked);
+            return;
+        }
+
+        if (ItemData.has(nbt, "supremetags_click_commands")) {
+            e.setCancelled(true);
+
+            String rawCommands = ItemData.getString(nbt, "supremetags_click_commands");
             List<String> clickCommands = Arrays.asList(rawCommands.split(";;"));
 
             for (String option : clickCommands) {
@@ -88,12 +108,13 @@ public class MainMenu extends Menu {
                     Bukkit.broadcastMessage(message);
                 } else if (option.toLowerCase().startsWith("[close]")) {
                     player.closeInventory();
+                } else if (option.toLowerCase().startsWith("[all-tags]")) {
+                    new TagMenu(SupremeTags.getMenuUtil(player)).open();
                 }
             }
             return;
         }
 
-        // Category slot logic
         String category = dataItem.get(e.getSlot());
 
         if (category != null) {
@@ -183,7 +204,7 @@ public class MainMenu extends Menu {
                         cat_itemMeta = cat_item.getItemMeta();
                     }
 
-                    cat_itemMeta.setDisplayName(format(displayname));
+                    cat_itemMeta.displayName(itemName(displayname));
 
                     if (glow) {
                         cat_itemMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
@@ -195,7 +216,7 @@ public class MainMenu extends Menu {
                         ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                         cat_itemMeta.addItemFlags(hideDye);
                     } catch (IllegalArgumentException ignored) {
-                        // HIDE_DYE not available
+
                     }
 
                     cat_itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
@@ -204,7 +225,6 @@ public class MainMenu extends Menu {
                         cat_itemMeta.setCustomModelData(custom_model_data);
                     }
 
-                    // Set lore
                     ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getCategoryManager().getCatConfig().getStringList("categories." + cats + ".lore");
                     if (categoriesTags.get(cats) != null) {
                         lore.replaceAll(s -> ChatColor.translateAlternateColorCodes('&', s).replaceAll("%tags_amount%", String.valueOf(categoriesTags.get(cats))));
@@ -212,7 +232,7 @@ public class MainMenu extends Menu {
                         lore.replaceAll(s -> ChatColor.translateAlternateColorCodes('&', s).replaceAll("%tags_amount%", String.valueOf(0)));
                     }
 
-                    cat_itemMeta.setLore(color(lore));
+                    cat_itemMeta.lore(itemLore(lore));
 
                     cat_item.setItemMeta(cat_itemMeta);
 
@@ -248,7 +268,7 @@ public class MainMenu extends Menu {
                     }
 
                     assert cat_itemMeta != null;
-                    cat_itemMeta.setDisplayName(format(displayname));
+                    cat_itemMeta.displayName(itemName(displayname));
 
                     if (glow) {
                         cat_itemMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
@@ -259,7 +279,7 @@ public class MainMenu extends Menu {
                         ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                         cat_itemMeta.addItemFlags(hideDye);
                     } catch (IllegalArgumentException ignored) {
-                        // HIDE_DYE not available
+
                     }
                     cat_itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
 
@@ -267,14 +287,13 @@ public class MainMenu extends Menu {
                         cat_itemMeta.setCustomModelData(custom_model_data);
                     }
 
-                    // Set lore
                     ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getCategoryManager().getCatConfig().getStringList("categories." + cats + ".lore");
                     if (categoriesTags.get(cats) != null) {
                         lore.replaceAll(s -> ChatColor.translateAlternateColorCodes('&', s).replaceAll("%tags_amount%", String.valueOf(categoriesTags.get(cats))));
                     } else {
                         lore.replaceAll(s -> ChatColor.translateAlternateColorCodes('&', s).replaceAll("%tags_amount%", String.valueOf(0)));
                     }
-                    cat_itemMeta.setLore(color(lore));
+                    cat_itemMeta.lore(itemLore(lore));
 
                     cat_item.setItemMeta(cat_itemMeta);
 
@@ -314,13 +333,13 @@ public class MainMenu extends Menu {
                     }
 
                     assert cat_itemMeta != null;
-                    cat_itemMeta.setDisplayName(format(displayname));
+                    cat_itemMeta.displayName(itemName(displayname));
                     cat_itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                     try {
                         ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                         cat_itemMeta.addItemFlags(hideDye);
                     } catch (IllegalArgumentException ignored) {
-                        // HIDE_DYE not available in this version — skip
+
                     }
                     cat_itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
 
@@ -328,10 +347,9 @@ public class MainMenu extends Menu {
                         cat_itemMeta.setCustomModelData(custom_model_data);
                     }
 
-                    // Set lore
                     ArrayList<String> lore = (ArrayList<String>) SupremeTags.getInstance().getCategoryManager().getCatConfig().getStringList("categories." + cats + ".lore");
                     lore.replaceAll(s -> ChatColor.translateAlternateColorCodes('&', s).replaceAll("%tags_amount%", String.valueOf(categoriesTags.get(cats))));
-                    cat_itemMeta.setLore(color(lore));
+                    cat_itemMeta.lore(itemLore(lore));
 
                     cat_item.setItemMeta(cat_itemMeta);
 
@@ -373,7 +391,6 @@ public class MainMenu extends Menu {
                 ItemStack item = resolved.item();
                 ItemMeta itemMeta = resolved.meta();
 
-                // Placeholder replacements
                 item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
                 String identifier = UserData.getActive(menuUtil.getOwner().getUniqueId());
 
@@ -401,10 +418,10 @@ public class MainMenu extends Menu {
                     item_lore.replaceAll(s -> s.replace("%identifier%", identifier));
                     item_lore.replaceAll(s -> s.replace("%tag%", tag));
                     item_lore.replaceAll(s -> globalPlaceholders(menuUtil.getOwner(), s));
-                    itemMeta.setLore(color(item_lore));
+                    itemMeta.lore(itemLore(item_lore));
                 }
 
-                itemMeta.setDisplayName(format(item_displayname));
+                itemMeta.displayName(itemName(item_displayname));
 
                 if (item_custom_model_data > 0) {
                     itemMeta.setCustomModelData(item_custom_model_data);
@@ -425,32 +442,102 @@ public class MainMenu extends Menu {
                     ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                     itemMeta.addItemFlags(hideDye);
                 } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available
+
                 }
 
-                // ✅ Apply meta before wrapping in NBTItem
-                item.setItemMeta(itemMeta);
+            item.setItemMeta(itemMeta);
 
-                // ✅ Wrap the updated item in NBT
-                NBTItem nbt = new NBTItem(item);
+            ItemStack nbt = item;
 
                 List<String> clickCommandsList = guis.getStringList("gui.main-menu.custom-items." + name + ".click-commands");
                 if (!clickCommandsList.isEmpty()) {
-                    nbt.setString("supremetags_click_commands", String.join(";;", clickCommandsList));
+                    ItemData.setString(nbt, "supremetags_click_commands", String.join(";;", clickCommandsList));
                 }
 
                 if (!isSlots) {
-                    inventory.setItem(item_slot, nbt.getItem());
+                    inventory.setItem(item_slot, nbt);
                 } else {
                     for (int slot : slots) {
-                        inventory.setItem(slot, nbt.getItem());
+                        inventory.setItem(slot, nbt);
                     }
                 }
             }
         }
 
+        renderTagSlots();
+
         if (SupremeTags.getInstance().getCategoryManager().getCatConfig().getBoolean("categories-menu-fill-empty")) {
             fillEmpty();
+        }
+    }
+
+    @Override
+    protected ItemStack buildAnimatedItem(int slot) {
+        String identifier = animatedTagSlots.get(slot);
+        if (identifier == null) return null;
+
+        Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
+        if (tag == null) return null;
+
+        return buildMenuTagItem(tag, tag.getPermission(), "tag-menu");
+    }
+
+    private void renderTagSlots() {
+        if (!guis.getBoolean("gui.main-menu.tag-slots.enable")) {
+            return;
+        }
+
+        if (guis.isConfigurationSection("gui.main-menu.tag-slots.tags")) {
+            for (String key : Objects.requireNonNull(guis.getConfigurationSection("gui.main-menu.tag-slots.tags")).getKeys(false)) {
+                String path = "gui.main-menu.tag-slots.tags." + key;
+                String identifier = guis.getString(path + ".identifier", key);
+                List<Integer> slots = getConfiguredSlots(path);
+                placeTag(identifier, slots);
+            }
+            return;
+        }
+
+        for (String entry : guis.getStringList("gui.main-menu.tag-slots.slots")) {
+            String[] parts = entry.split(":", 2);
+            if (parts.length != 2) {
+                continue;
+            }
+
+            try {
+                placeTag(parts[1].trim(), List.of(Integer.parseInt(parts[0].trim())));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+    }
+
+    private List<Integer> getConfiguredSlots(String path) {
+        if (guis.contains(path + ".slots")) {
+            return guis.getIntegerList(path + ".slots");
+        }
+
+        if (guis.contains(path + ".slot")) {
+            return List.of(guis.getInt(path + ".slot"));
+        }
+
+        return Collections.emptyList();
+    }
+
+    private void placeTag(String identifier, List<Integer> slots) {
+        Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
+        if (tag == null) {
+            return;
+        }
+
+        ItemStack item = buildMenuTagItem(tag, tag.getPermission(), "tag-menu");
+        for (int slot : slots) {
+            if (slot < 0 || slot >= getSlots()) {
+                continue;
+            }
+
+            inventory.setItem(slot, item);
+            if (tag.isAnimated()) {
+                registerAnimatedTagSlot(slot, identifier);
+            }
         }
     }
 

@@ -68,7 +68,7 @@ public class Rarity {
 
     public void checkRank() {
         Utils.runAsync(() -> ((Runnable) () -> {
-            // implement auto rankup for rarities.
+
         }).run());
     }
 }

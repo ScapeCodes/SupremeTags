@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.categoryeditor;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.guis.tageditor.EditorSelectorMenu;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
@@ -50,10 +51,10 @@ public class CategoryEditorMenu extends Paged {
         String back = this.guis.getString("gui.items.back.displayname");
         String close = this.guis.getString("gui.items.close.displayname");
         String next = this.guis.getString("gui.items.next.displayname");
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("category")) {
-            String category = nbt.getString("category");
+        if (ItemData.has(nbt, "category")) {
+            String category = ItemData.getString(nbt, "category");
             this.menuUtil.setIdentifier(category);
             (new SpecificCategoryMenu(SupremeTags.getMenuUtilIdentifier(player, category))).open();
         }
@@ -124,9 +125,9 @@ public class CategoryEditorMenu extends Paged {
             ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
             ItemStack categoryItem = resolved.item();
             ItemMeta categoryMeta = resolved.meta();
-            NBTItem nbt = new NBTItem(categoryItem);
+            ItemStack nbt = categoryItem;
 
-            nbt.setString("category", category);
+            ItemData.setString(nbt, "category", category);
 
             if (categoryMeta != null) {
                 categoryMeta.setCustomModelData(customModelData);
@@ -136,7 +137,7 @@ public class CategoryEditorMenu extends Paged {
                     ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                     categoryMeta.addItemFlags(hideDye);
                 } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available in this version — skip
+
                 }
                 categoryMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                 categoryMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -159,8 +160,8 @@ public class CategoryEditorMenu extends Paged {
 
             categoryMeta.setLore(color(lore));
 
-            nbt.getItem().setItemMeta(categoryMeta);
-            nbt.setString("category", category);
+            nbt.setItemMeta(categoryMeta);
+            ItemData.setString(nbt, "category", category);
 
             int placementSlot;
             boolean useDefinedSlots = guis.getBoolean("gui.category-editor-menu.slots-category.enable");
@@ -177,7 +178,7 @@ public class CategoryEditorMenu extends Paged {
             }
 
             if (placementSlot != -1) {
-                inventory.setItem(placementSlot, nbt.getItem());
+                inventory.setItem(placementSlot, nbt);
             }
 
             currentItemsOnPage++;

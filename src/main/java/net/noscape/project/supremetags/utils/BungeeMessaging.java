@@ -71,7 +71,7 @@ public class BungeeMessaging implements PluginMessageListener {
                     }
                 }
             } else {
-                // Velocity: no Forward structure, just the message
+
                 try (DataInputStream msgIn = new DataInputStream(new ByteArrayInputStream(message))) {
                     handleMessage(msgIn);
                 }

@@ -1,8 +1,7 @@
 name: 'SupremeTags'
 version: '${version}'
 main: net.noscape.project.supremetags.SupremeTags
-api-version: 1.13
-depend: [NBTAPI]
+api-version: '1.21'
 softdepend:
   - ProtocolLib
   - PlaceholderAPI

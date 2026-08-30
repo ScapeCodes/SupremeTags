@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.handlers;
 
 import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.handlers.requirements.TagRequirements;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -12,11 +13,19 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
 public class Tag {
+
+    private static final String DEFAULT_TAG = "";
+    private static final String DEFAULT_CATEGORY = "default";
+    private static final String DEFAULT_PERMISSION = "none";
+    private static final String DEFAULT_RARITY = "common";
+    private static final TagEconomy DEFAULT_ECONOMY = new TagEconomy("VAULT", 0.0D, false);
 
     private String identifier;
     private List<String> tag;
@@ -31,20 +40,26 @@ public class Tag {
 
     private String rarity;
 
-    //          key      value
-    // %supremetags.tag.custom-placeholder.<key>% - returns the value(message) in map from key<placeholder-name>.
-    //private Map<String, String> custom_placeholders;
-
     private BukkitTask animationTask;
     private Object foliaAnimationTask;
 
     private Map<PotionEffectType, Integer> effects;
 
-    // economy
     private TagEconomy economy;
 
-    // abilities
     private List<String> abilities;
+
+    private TagRequirements requirements;
+
+    private String displayName;
+    private String displayItem;
+    private int customModelData;
+    private String voucherDisplayName;
+    private String voucherMaterial;
+    private List<String> voucherLore;
+    private int voucherCustomModelData;
+    private boolean voucherGlow = true;
+    private Map<String, String> customPlaceholders;
 
     public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy, List<String> groups) {
         this.identifier = identifier;
@@ -103,6 +118,12 @@ public class Tag {
     }
 
     public List<String> getTag() {
+        if (tag == null) {
+            tag = new ArrayList<>(Collections.singletonList(DEFAULT_TAG));
+        } else if (tag.isEmpty()) {
+            tag.add(DEFAULT_TAG);
+        }
+
         return tag;
     }
 
@@ -111,6 +132,11 @@ public class Tag {
     }
 
     public String getCategory() {
+        if (category == null || category.isBlank()) {
+            String configuredDefault = SupremeTags.getInstance().getConfig().getString("settings.default-category");
+            return configuredDefault == null || configuredDefault.isBlank() ? DEFAULT_CATEGORY : configuredDefault;
+        }
+
         return category;
     }
 
@@ -119,7 +145,7 @@ public class Tag {
     }
 
     public String getPermission() {
-        return permission;
+        return permission == null || permission.isBlank() ? DEFAULT_PERMISSION : permission;
     }
 
     public void setPermission(String permission) {
@@ -127,6 +153,10 @@ public class Tag {
     }
 
     public List<String> getDescription() {
+        if (description == null) {
+            description = new ArrayList<>();
+        }
+
         return description;
     }
 
@@ -138,16 +168,17 @@ public class Tag {
         SupremeTags plugin = SupremeTags.getInstance();
         int defaultSpeed = plugin.getConfig().getInt("settings.animated-tag-speed");
 
-        // Get the tag-specific speed, if present
-        ConfigurationSection tagConfig = plugin.getTagManager().getTagConfig().getConfigurationSection("tags." + identifier);
+        ConfigurationSection tagConfig = null;
+        for (org.bukkit.configuration.file.FileConfiguration cfg : plugin.getConfigManager().getTagConfigs()) {
+            tagConfig = cfg.getConfigurationSection("tags." + identifier);
+            if (tagConfig != null) break;
+        }
         int animationSpeed = (tagConfig != null) ? tagConfig.getInt("animated-tag-speed", defaultSpeed) : defaultSpeed;
 
-        // Validate speed
         if (animationSpeed <= 0 || animationSpeed > 9999) {
             return;
         }
 
-        // Stop previous animation
         stopAnimation();
 
         Runnable animationTaskRunnable = new Runnable() {
@@ -161,7 +192,7 @@ public class Tag {
         };
 
         if (!plugin.isFoliaFound()) {
-            // Use BukkitRunnable for non-Folia environments
+
             animationTask = new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -169,7 +200,7 @@ public class Tag {
                 }
             }.runTaskTimerAsynchronously(plugin, 0L, animationSpeed);
         } else {
-            // Folia scheduler via reflection - store the task for cancellation
+
             try {
                 Object server = Bukkit.getServer();
                 Method getScheduler = server.getClass().getMethod("getGlobalRegionScheduler");
@@ -182,7 +213,7 @@ public class Tag {
                 Object result = runAtFixedRate.invoke(scheduler, plugin, animationTaskRunnable, 0L, animationSpeed);
                 foliaAnimationTask = result;
             } catch (Exception e) {
-                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+
             }
         }
     }
@@ -197,7 +228,7 @@ public class Tag {
                 java.lang.reflect.Method cancelMethod = foliaAnimationTask.getClass().getMethod("cancel");
                 cancelMethod.invoke(foliaAnimationTask);
             } catch (Exception e) {
-                // Fallback: try ScheduledFuture interface
+
                 if (foliaAnimationTask instanceof java.util.concurrent.ScheduledFuture) {
                     ((java.util.concurrent.ScheduledFuture<?>) foliaAnimationTask).cancel(false);
                 }
@@ -228,6 +259,10 @@ public class Tag {
     }
 
     public List<Variant> getVariants() {
+        if (variants == null) {
+            variants = new ArrayList<>();
+        }
+
         return variants;
     }
 
@@ -236,8 +271,12 @@ public class Tag {
     }
 
     public Variant getVariant(String var_identifier) {
+        if (var_identifier == null) {
+            return null;
+        }
+
         for (Variant var : getVariants()) {
-            if (var.getIdentifier().equalsIgnoreCase(var_identifier)) {
+            if (var.getIdentifier() != null && var.getIdentifier().equalsIgnoreCase(var_identifier)) {
                 return var;
             }
         }
@@ -246,53 +285,54 @@ public class Tag {
     }
 
     public boolean isCostTag() {
-        return this.economy.isEnabled();
+        return getEconomy().isEnabled();
     }
 
     public String getCustomPlaceholder(String identifier, String placeholder) {
-        if (!SupremeTags.getInstance().getTagManager().getTagConfig().isSet("tags." + identifier + ".custom-placeholders." + placeholder)) {
+        org.bukkit.configuration.file.FileConfiguration tagConfig = SupremeTags.getInstance().getTagManager().getConfigForTag(identifier);
+        if (!tagConfig.isSet("tags." + identifier + ".custom-placeholders." + placeholder)) {
             return SupremeTags.getInstance().getTagManager().getMessages().getString("invalid-custom-placeholder", "&cUnknown Placeholder");
         }
 
-        return SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + identifier + ".custom-placeholders." + placeholder);
+        return tagConfig.getString("tags." + identifier + ".custom-placeholders." + placeholder);
     }
 
     public Map<PotionEffectType, Integer> getEffects() {
+        if (effects == null) {
+            effects = new HashMap<>();
+        }
+
         return effects;
     }
 
     public void applyEffects(Player player) {
         Map<PotionEffectType, Integer> effects = getEffects();
 
-        //player.sendMessage("trying to add effects (" + effects.size() + ")");
-
         if (!effects.isEmpty()) {
             for (Map.Entry<PotionEffectType, Integer> entry : effects.entrySet()) {
                 player.addPotionEffect(new PotionEffect(entry.getKey(), Integer.MAX_VALUE, entry.getValue() - 1, true, false));
             }
-            //player.sendMessage("added effects: " + effects.size());
+
         }
     }
 
     public void removeEffects(Player player) {
         Map<PotionEffectType, Integer> effects = getEffects();
 
-        //player.sendMessage("trying to remove effects (" + effects.size() + ")");
-
         if (!effects.isEmpty()) {
             for (PotionEffectType type : effects.keySet()) {
                 player.removePotionEffect(type);
             }
-            //player.sendMessage("removed effects: " + effects.size());
+
         }
     }
 
     public boolean hasVariants() {
-        return !variants.isEmpty();
+        return !getVariants().isEmpty();
     }
 
     public String getRarity() {
-        return rarity;
+        return rarity == null || rarity.isBlank() ? DEFAULT_RARITY : rarity;
     }
 
     public void setRarity(String rarity) {
@@ -300,39 +340,59 @@ public class Tag {
     }
 
     public TagEconomy getEconomy() {
+        if (economy == null) {
+            economy = new TagEconomy(DEFAULT_ECONOMY.getType(), DEFAULT_ECONOMY.getAmount(), DEFAULT_ECONOMY.isEnabled());
+        }
+
         return economy;
     }
 
     public String getEcoType() {
-        return this.economy.getType();
+        return getEconomy().getType();
     }
 
     public void setEcoType(String ecoType) {
-        this.economy.setType(ecoType);
+        getEconomy().setType(ecoType);
     }
 
     public double getEcoAmount() {
-        return this.economy.getAmount();
+        return getEconomy().getAmount();
     }
 
     public void setEcoAmount(double ecoAmount) {
-        this.economy.setAmount(ecoAmount);
+        getEconomy().setAmount(ecoAmount);
     }
 
     public boolean isEcoEnabled() {
-        return this.economy.isEnabled();
+        return getEconomy().isEnabled();
     }
 
     public void setEcoEnabled(boolean ecoEnabled) {
-        this.economy.setEnabled(ecoEnabled);
+        getEconomy().setEnabled(ecoEnabled);
     }
 
     public List<String> getAbilities() {
+        if (abilities == null) {
+            abilities = new ArrayList<>();
+        }
+
         return abilities;
     }
 
     public void setAbilities(List<String> abilities) {
         this.abilities = abilities;
+    }
+
+    public TagRequirements getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(TagRequirements requirements) {
+        this.requirements = requirements;
+    }
+
+    public boolean hasRequirements() {
+        return requirements != null && requirements.isEnabled();
     }
 
     public List<String> getGroups() {
@@ -344,6 +404,88 @@ public class Tag {
     }
 
     public boolean isAnimated() {
-        return tag.size() > 1;
+        return getTag().size() > 1;
+    }
+
+    public String getDisplayName() {
+        return displayName == null || displayName.isBlank() ? "&7Tag: %tag%" : displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayItem() {
+        return displayItem == null || displayItem.isBlank() ? "NAME_TAG" : displayItem;
+    }
+
+    public void setDisplayItem(String displayItem) {
+        this.displayItem = displayItem;
+    }
+
+    public int getCustomModelData() {
+        return customModelData;
+    }
+
+    public void setCustomModelData(int customModelData) {
+        this.customModelData = customModelData;
+    }
+
+    public String getVoucherDisplayName() {
+        return voucherDisplayName == null || voucherDisplayName.isBlank() ? getCurrentTag() + " &f&lVoucher" : voucherDisplayName;
+    }
+
+    public void setVoucherDisplayName(String voucherDisplayName) {
+        this.voucherDisplayName = voucherDisplayName;
+    }
+
+    public String getVoucherMaterial() {
+        return voucherMaterial == null || voucherMaterial.isBlank() ? "NAME_TAG" : voucherMaterial;
+    }
+
+    public void setVoucherMaterial(String voucherMaterial) {
+        this.voucherMaterial = voucherMaterial;
+    }
+
+    public List<String> getVoucherLore() {
+        if (voucherLore == null) {
+            voucherLore = new ArrayList<>();
+            voucherLore.add("&7&m-----------------------------");
+            voucherLore.add("&eClick to equip!");
+            voucherLore.add("&7&m-----------------------------");
+        }
+
+        return voucherLore;
+    }
+
+    public void setVoucherLore(List<String> voucherLore) {
+        this.voucherLore = voucherLore == null ? new ArrayList<>() : voucherLore;
+    }
+
+    public int getVoucherCustomModelData() {
+        return voucherCustomModelData;
+    }
+
+    public void setVoucherCustomModelData(int voucherCustomModelData) {
+        this.voucherCustomModelData = voucherCustomModelData;
+    }
+
+    public boolean isVoucherGlow() {
+        return voucherGlow;
+    }
+
+    public void setVoucherGlow(boolean voucherGlow) {
+        this.voucherGlow = voucherGlow;
+    }
+
+    public Map<String, String> getCustomPlaceholders() {
+        if (customPlaceholders == null) {
+            customPlaceholders = new HashMap<>();
+        }
+        return customPlaceholders;
+    }
+
+    public void setCustomPlaceholders(Map<String, String> customPlaceholders) {
+        this.customPlaceholders = customPlaceholders == null ? new HashMap<>() : customPlaceholders;
     }
 }

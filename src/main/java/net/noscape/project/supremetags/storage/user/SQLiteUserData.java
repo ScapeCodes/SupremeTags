@@ -31,12 +31,14 @@ public class SQLiteUserData {
         }
 
         String defaultTag = SupremeTags.getInstance().getConfig().getString("settings.default-tag", "None");
+        long startingCredits = SupremeTags.getInstance().getConfig().getLong("settings.personal-tags.credits.starting-balance", 0L);
 
         try (PreparedStatement statement = SupremeTags.getSQLite().getConnection().prepareStatement(
-                "INSERT OR REPLACE INTO `users` (Name, UUID, Active) VALUES (?,?,?)")) {
+                "INSERT OR REPLACE INTO `users` (Name, UUID, Active, TagCredits) VALUES (?,?,?,?)")) {
             statement.setString(1, player.getName());
             statement.setString(2, player.getUniqueId().toString());
             statement.setString(3, defaultTag);
+            statement.setLong(4, startingCredits);
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -56,7 +58,6 @@ public class SQLiteUserData {
             statement.setString(2, player.getUniqueId().toString());
             statement.executeUpdate();
 
-            // Invalidate the cache for the updated data
             SupremeTags.getInstance().getDataCache().removeFromCache(player.getUniqueId().toString());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -64,15 +65,14 @@ public class SQLiteUserData {
     }
 
     public static String getActive(UUID uuid) {
-        // Check if data is in cache
+
         String cachedData = SupremeTags.getInstance().getDataCache().getCachedData(uuid.toString());
 
         if (cachedData != null) {
-            // Use cached data
+
             return cachedData;
         }
 
-        // If not in cache, fetch from the database
         String query = "SELECT Active FROM `users` WHERE UUID=?";
         String value = "";
 
@@ -85,7 +85,6 @@ public class SQLiteUserData {
                 if (resultSet.next()) {
                     value = resultSet.getString("Active");
 
-                    // Cache the result for future use
                     SupremeTags.getInstance().getDataCache().cacheData(uuid.toString(), value);
                 }
             }
@@ -108,7 +107,6 @@ public class SQLiteUserData {
             statement.setString(2, player.getUniqueId().toString());
             statement.executeUpdate();
 
-            // Invalidate the cache for the updated data
             SupremeTags.getInstance().getDataCache().removeFromCache(cacheKey);
             SupremeTags.getInstance().getDataCache().cacheData(cacheKey, tag != null ? tag : "");
         } catch (SQLException e) {
@@ -117,17 +115,15 @@ public class SQLiteUserData {
     }
 
     public static String getCustomTag(UUID uuid) {
-        // Check if data is in cache
 
         String cacheKey = "customtag_" + uuid;
         String cachedData = SupremeTags.getInstance().getDataCache().getCachedData(cacheKey);
 
         if (cachedData != null) {
-            // Use cached data
+
             return cachedData;
         }
 
-        // If not in cache, fetch from the database
         String query = "SELECT CustomTag FROM users WHERE UUID=?";
         String value = "";
 
@@ -140,7 +136,6 @@ public class SQLiteUserData {
                 if (resultSet.next()) {
                     value = resultSet.getString("CustomTag");
 
-                    // Cache the result for future use
                     SupremeTags.getInstance().getDataCache().cacheData(cacheKey, value);
                 }
             }
@@ -153,15 +148,14 @@ public class SQLiteUserData {
     }
 
     public static List<String> getFavourites(UUID uuid) {
-        // Check if data is in cache
+
         String cachedData = SupremeTags.getInstance().getDataCache().getCachedData("favourites_" + uuid.toString());
 
         if (cachedData != null) {
-            // Use cached data
+
             return deserializeFavourites(cachedData);
         }
 
-        // If not in cache, fetch from the database
         String query = "SELECT Favourites FROM `users` WHERE UUID=?";
         String value = "";
 
@@ -174,7 +168,6 @@ public class SQLiteUserData {
                 if (resultSet.next()) {
                     value = resultSet.getString("Favourites");
 
-                    // Cache the result for future use
                     SupremeTags.getInstance().getDataCache().cacheData("favourites_" + uuid.toString(), value != null ? value : "");
                 }
             }
@@ -195,7 +188,6 @@ public class SQLiteUserData {
             statement.setString(2, player.getUniqueId().toString());
             statement.executeUpdate();
 
-            // Invalidate the cache for the updated data
             SupremeTags.getInstance().getDataCache().removeFromCache("favourites_" + player.getUniqueId().toString());
             SupremeTags.getInstance().getDataCache().cacheData("favourites_" + player.getUniqueId().toString(), favouritesData);
         } catch (SQLException e) {
@@ -203,14 +195,116 @@ public class SQLiteUserData {
         }
     }
 
-    private static String serializeFavourites(List<String> favourites) {
-        if (favourites == null || favourites.isEmpty()) {
-            return "";
+    public static List<String> getUnlockedTags(UUID uuid) {
+        String cacheKey = "unlockedtags_" + uuid;
+        String cachedData = SupremeTags.getInstance().getDataCache().getCachedData(cacheKey);
+
+        if (cachedData != null) {
+            return deserializeList(cachedData);
         }
-        return String.join(",", favourites);
+
+        String query = "SELECT UnlockedTags FROM `users` WHERE UUID=?";
+        String value = "";
+
+        try (Connection connection = SupremeTags.getSQLite().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, uuid.toString());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    value = resultSet.getString("UnlockedTags");
+                    SupremeTags.getInstance().getDataCache().cacheData(cacheKey, value != null ? value : "");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return deserializeList(value);
+    }
+
+    public static void setUnlockedTags(OfflinePlayer player, List<String> unlockedTags) {
+        String unlockedTagsData = serializeList(unlockedTags);
+        String sql = "UPDATE `users` SET UnlockedTags=? WHERE (UUID=?)";
+        String cacheKey = "unlockedtags_" + player.getUniqueId();
+
+        try (PreparedStatement statement = SupremeTags.getSQLite().getConnection().prepareStatement(sql)) {
+            statement.setString(1, unlockedTagsData);
+            statement.setString(2, player.getUniqueId().toString());
+            statement.executeUpdate();
+
+            SupremeTags.getInstance().getDataCache().removeFromCache(cacheKey);
+            SupremeTags.getInstance().getDataCache().cacheData(cacheKey, unlockedTagsData);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static long getTagCredits(UUID uuid) {
+        String cacheKey = "tagcredits_" + uuid;
+        String cachedData = SupremeTags.getInstance().getDataCache().getCachedData(cacheKey);
+
+        if (cachedData != null) {
+            try {
+                return Long.parseLong(cachedData);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        String query = "SELECT TagCredits FROM `users` WHERE UUID=?";
+        long value = 0L;
+
+        try (Connection connection = SupremeTags.getSQLite().getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, uuid.toString());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    value = resultSet.getLong("TagCredits");
+                    SupremeTags.getInstance().getDataCache().cacheData(cacheKey, String.valueOf(value));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return value;
+    }
+
+    public static void setTagCredits(OfflinePlayer player, long credits) {
+        String sql = "UPDATE `users` SET TagCredits=? WHERE (UUID=?)";
+        String cacheKey = "tagcredits_" + player.getUniqueId();
+
+        try (PreparedStatement statement = SupremeTags.getSQLite().getConnection().prepareStatement(sql)) {
+            statement.setLong(1, credits);
+            statement.setString(2, player.getUniqueId().toString());
+            statement.executeUpdate();
+
+            SupremeTags.getInstance().getDataCache().removeFromCache(cacheKey);
+            SupremeTags.getInstance().getDataCache().cacheData(cacheKey, String.valueOf(credits));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String serializeFavourites(List<String> favourites) {
+        return serializeList(favourites);
     }
 
     private static List<String> deserializeFavourites(String data) {
+        return deserializeList(data);
+    }
+
+    private static String serializeList(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
+        return String.join(",", values);
+    }
+
+    private static List<String> deserializeList(String data) {
         if (data == null || data.isEmpty()) {
             return new ArrayList<>();
         }

@@ -6,17 +6,17 @@
 #
 # |----| VARIANTS EXAMPLES |----|
 # ## - Variants are sub tags.
-# ## - Variant lores can be edit in guis.yml under 'gui > tag-variants-menu > item > lore'.
+# ## - Variant lore's can be edit in guis.yml under 'gui > tag-variants-menu > item > lore'.
 # variants:
 #   vipplus_blue:
 #     enabled: true
 #     tag:
-#       - '&a[VIP&b+&a]'
+#       - '<reset><green>[VIP<reset><aqua>+<reset><green>]'
 #     permission: 'supremetags.tag.vip.blue'
 #   vipplus_red:
 #     enabled: true
 #     tag:
-#       - '&a[VIP&c+&a]'
+#       - '<reset><green>[VIP<reset><red>+<reset><green>]'
 #     permission: 'supremetags.tag.vip.red'
 #
 # groups: []
@@ -30,89 +30,51 @@
 #   amount: 200
 
 tags:
-  hexsupport: # 1.16+ server is required for hex colors to work.
-    # tags won't animate if there are only one string tag in the list.
-    tag:
-      - '&8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]'
-    permission: supremetags.tag.hex
-    groups: []
-    description:
-      - '&7This plugin supports normal/hex colors'
-    custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
-    category: default
-    order: 1
-    withdrawable: true
-    displayname: '&7Tag: %tag%'
-    custom-model-data: 0
-    display-item: NAME_TAG
-    variants: []
-    effects: []
-    voucher-item:
-      material: NAME_TAG
-      displayname: '&8[&#afe4a4&lH&#b1cdb1&le&#b3b6bd&lx&#b59fca&lC&#b688d7&lo&#b871e3&ll&#ba5af0&lo&#bc43fd&lr&8]
-        &f&lVoucher'
-      custom-model-data: 0
-      glow: true
-      lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
-    rarity: common
-    economy:
-      enabled: false
-      type: CUSTOM # Available eco types: [VAULT, PLAYERPOINTS, EXP_LEVELS, EXCELLENTECONOMY-currencyhere, CUSTOM]
-      take-cmd: 'eco take %player% %amount%'
-      condition: '%vault_eco_balance% >= %amount%' # requires placeholderapi
-      amount: 200
   santa: # Christmas themed tag, shows in the Xmas category.
     tag:
-      - '&8[&c&lSanta&8]'
+      - '<reset><dark_gray>[<bold><gradient:#ff3131:#ffffff>Santa</gradient><reset><dark_gray>]'
     permission: supremetags.tag.santa
     groups:
       - 'vip'
       - 'vip+'
     description:
-      - '&7ho ho hooooooo!'
+      - '<reset><gray>ho ho hooooooo!'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&c&lSanta&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><red><bold>Santa<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: holiday
     order: 2
     withdrawable: false
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants:
       white-santa:
         enabled: true
         tag:
-          - '&f[&cSanta&f]'
+          - '<reset><white>[<reset><red>Santa<reset><white>]'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
             custom-model-data: 0
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
             custom-model-data: 0
         permission: supremetags.tag.santa.white
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[&c&lSanta&8] &f&lVoucher'
+      displayname: '<reset><dark_gray>[<reset><red><bold>Santa<reset><dark_gray>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -120,33 +82,33 @@ tags:
       amount: 200
   kill_master: # Christmas themed tag, shows in the Xmas category.
     tag:
-      - '&8[&4&lKiller Master: &f%statistic_player_kills%&8]'
+      - '<reset><dark_gray>[<bold><gradient:#8b0000:#ff5555>Killer Master: %statistic_player_kills%</gradient><reset><dark_gray>]'
     permission: supremetags.tag.killer
     groups: []
     description:
-      - '&cRewarded for being the best pvper!'
+      - '<reset><red>Rewarded for being the best pvper!'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&4&lKiller Master&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
-    category: achivements
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><dark_red><bold>Killer Master<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
+    category: default
     order: 3
     withdrawable: false
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[&4&lKiller Master&8] &f&lVoucher'
+      displayname: '<reset><dark_gray>[<reset><dark_red><bold>Killer Master<reset><dark_gray>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -154,23 +116,23 @@ tags:
       amount: 200
   vipplus: # vip plus tag, this comes with multi different varients.
     tag:
-      - '&a[VIP+]'
+      - '<reset><dark_gray>[<bold><gradient:#00ff87:#00c3ff>VIP+</gradient><reset><dark_gray>]'
     permission: supremetags.tag.vip
     groups:
       - 'vip'
       - 'vip+'
       - 'mvp'
     description:
-      - '&aVIP donator tag!'
+      - '<reset><green>VIP donator tag!'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &a[VIP+]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
-    category: achivements
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><green>[VIP+]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
+    category: default
     order: 4
     withdrawable: false
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     animated-tag-speed: 10 # in ticks
@@ -178,103 +140,103 @@ tags:
       vipplus_blue:
         enabled: true
         tag:
-          - '&a[VIP&b+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#00c3ff>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aAqua VIP for VIP+'
+          - '<reset><green>Aqua VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.blue
         rarity: common
       vipplus_red:
         enabled: true
         tag:
-          - '&a[VIP&c+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#ff5555>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aRed VIP for VIP+'
+          - '<reset><green>Red VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.red
         rarity: rare
       vipplus_gold:
         enabled: true
         tag:
-          - '&a[VIP&6+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#ffd166>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aGold VIP for VIP+'
+          - '<reset><green>Gold VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.gol
         rarity: uncommon
       vipplus_pink:
         enabled: true
         tag:
-          - '&a[VIP&d+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#ff66c4>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aPink VIP for VIP+'
+          - '<reset><green>Pink VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.pin
         rarity: common
       vipplus_black:
         enabled: true
         tag:
-          - '&a[VIP&0+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#555555>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aBlack VIP for VIP+'
+          - '<reset><green>Black VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.bla
         rarity: common
       vipplus_yellow:
         enabled: true
         tag:
-          - '&a[VIP&e+&a]'
+          - '<reset><dark_gray>[<bold><gradient:#00ff87:#fff176>VIP+</gradient><reset><dark_gray>]'
         description:
-          - '&aYellow VIP for VIP+'
+          - '<reset><green>Yellow VIP for VIP+'
         item:
           locked:
             material: 'BARRIER'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
           unlocked:
             material: 'NAME_TAG'
-            displayname: '&7Variant: %tag%'
+            displayname: '<reset><gray>Variant: %tag%'
         permission: supremetags.tag.vip.yel
         rarity: common
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&a[VIP+] &f&lVoucher'
+      displayname: '<reset><green>[VIP+] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -282,33 +244,33 @@ tags:
       amount: 200
   epic:
     tag:
-      - '&8&l[&5&lEpic&8&l]'
+      - '<reset><dark_gray><bold>[<rainbow>Epic</rainbow><reset><dark_gray><bold>]'
     permission: supremetags.tag.epic
     groups: []
     description:
-      - '&7&oClick to select &7&l&oEpic &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Epic <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&5&lEpic&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><dark_purple><bold>Epic<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 5
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&5&lEpic&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><dark_purple><bold>Epic<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: rare
     economy:
       enabled: false
@@ -316,33 +278,33 @@ tags:
       amount: 200
   gg:
     tag:
-      - '&8&l[&e&lGG&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#fff176:#ff9800>GG</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.GG
     groups: []
     description:
-      - '&7&oClick to select &7&l&oGG &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>GG <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&e&lGGa&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><yellow><bold>GGa<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 6
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&e&lGG&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><yellow><bold>GG<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -350,33 +312,33 @@ tags:
       amount: 200
   banned:
     tag:
-      - '&8&l[&c&lBanned&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff1744:#7f0000>Banned</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Banned
     groups: []
     description:
-      - '&7&oClick to select &7&l&oBanned &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Banned <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&c&lBanned&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><red><bold>Banned<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 7
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&c&lBanned&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><red><bold>Banned<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -384,33 +346,33 @@ tags:
       amount: 200
   toxic:
     tag:
-      - '&8&l[&2&lToxic&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#39ff14:#0b6b2b>Toxic</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Toxic
     groups: []
     description:
-      - '&7&oClick to select &7&l&oToxic &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Toxic <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8[&2&lToxic&8]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray>[<reset><dark_green><bold>Toxic<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 8
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&2&lToxic&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><dark_green><bold>Toxic<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: legendary
     economy:
       enabled: false
@@ -418,33 +380,33 @@ tags:
       amount: 200
   heart:
     tag:
-      - '&8&l<&c&l♥&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff4d6d:#ffcad4>Heart</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Heart
     groups: []
     description:
-      - '&7&oClick to select &7&l&oHeart &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Heart <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&c&l♥&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><red><bold>♥<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 9
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&c&l♥&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><red><bold>♥<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: rare
     economy:
       enabled: false
@@ -452,33 +414,33 @@ tags:
       amount: 200
   star:
     tag:
-      - '&8&l<&6&l★&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ffd166:#fff3b0>Star</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Star
     groups: []
     description:
-      - '&7&oClick to select &7&l&oStar &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Star <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&6&l★&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><gold><bold>★<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 10
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&6&l★&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><gold><bold>★<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -486,33 +448,33 @@ tags:
       amount: 200
   star2:
     tag:
-      - '&8&l<&6&l☆&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#f4d35e:#ffffff>Star II</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Star2
     groups: []
     description:
-      - '&7&oClick to select &7&l&oStar V2 &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Star V2 <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&6&l☆&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><gold><bold>☆<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 11
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&6&l☆&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><gold><bold>☆<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -520,33 +482,33 @@ tags:
       amount: 200
   star3:
     tag:
-      - '&8&l<&6&l✰&8&l>'
+      - '<reset><dark_gray><bold>[<rainbow>Star III</rainbow><reset><dark_gray><bold>]'
     permission: supremetags.tag.Star3
     groups: []
     description:
-      - '&7&oClick to select &7&l&oStar V3 &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Star V3 <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&6&l✰&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><gold><bold>✰<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 12
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&6&l✰&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><gold><bold>✰<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -554,33 +516,33 @@ tags:
       amount: 200
   flower:
     tag:
-      - '&8&l<&d&l❀&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff80bf:#b388ff>Flower</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Flower
     groups: []
     description:
-      - '&7&oClick to select &7&l&oFlower &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Flower <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&d&l❀&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><light_purple><bold>❀<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 13
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&d&l❀&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><light_purple><bold>❀<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -588,33 +550,33 @@ tags:
       amount: 200
   starcircle:
     tag:
-      - '&8&l<&d&l✪&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#e040fb:#40c4ff>StarCircle</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.StarCircle
     groups: []
     description:
-      - '&7&oClick to select &7&l&oStarCircle &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>StarCircle <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&d&l✪&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><light_purple><bold>✪<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 14
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&d&l✪&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><light_purple><bold>✪<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -622,33 +584,33 @@ tags:
       amount: 200
   hacker:
     tag:
-      - '&8&l[&a&lHacker&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#00ff41:#008f11>Hacker</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Hacker
     groups: []
     description:
-      - '&7&oClick to select &7&l&oHacker &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Hacker <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&a&lHacker&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><green><bold>Hacker<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 15
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&a&lHacker&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><green><bold>Hacker<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -656,33 +618,33 @@ tags:
       amount: 200
   umbrella:
     tag:
-      - '&8&l<&b&l☂&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#80d8ff:#448aff>Umbrella</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Umbrella
     groups: []
     description:
-      - '&7&oClick to select &7&l&oUmbrella &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Umbrella <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&b&l☂&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><aqua><bold>☂<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 16
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&b&l☂&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><aqua><bold>☂<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -690,33 +652,33 @@ tags:
       amount: 200
   fire:
     tag:
-      - '&8&l[&6&lFi&c&lre&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#fff176:#ff1744>Fire</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Fire
     groups: []
     description:
-      - '&7&oClick to select &7&l&oFire &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Fire <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&6&lFi&c&lre&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><gold><bold>Fi<reset><red><bold>re<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 17
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&6&lFi&c&lre&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><gold><bold>Fi<reset><red><bold>re<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: rare
     economy:
       enabled: false
@@ -724,33 +686,33 @@ tags:
       amount: 200
   water:
     tag:
-      - '&8&l[&9&lWa&b&lter&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#2962ff:#84ffff>Water</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Water
     groups: []
     description:
-      - '&7&oClick to select &7&l&oWater &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Water <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&9&lWa&b&lter&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><blue><bold>Wa<reset><aqua><bold>ter<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 18
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&9&lWa&b&lter&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><blue><bold>Wa<reset><aqua><bold>ter<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -758,33 +720,33 @@ tags:
       amount: 200
   magic:
     tag:
-      - '&8&l[&5&lMagic&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#7c4dff:#ff80ab>Magic</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Magic
     groups: []
     description:
-      - '&7&oClick to select &7&l&oMagic &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Magic <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&5&lMagic&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><dark_purple><bold>Magic<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 19
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&5&lMagic&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><dark_purple><bold>Magic<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: rare
     economy:
       enabled: false
@@ -792,33 +754,33 @@ tags:
       amount: 200
   l:
     tag:
-      - '&8&l[&c&lL&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff5252:#ffab40>L</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.L
     groups: []
     description:
-      - '&7&oClick to select &7&l&oL &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>L <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&c&lL&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><red><bold>L<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 20
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&c&lL&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><red><bold>L<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -826,33 +788,33 @@ tags:
       amount: 200
   vape:
     tag:
-      - '&8&l[&9&lVape&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#40c4ff:#b388ff>Vape</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Vape
     groups: []
     description:
-      - '&7&oClick to select &7&l&oVape &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Vape <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&9&lVape&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><blue><bold>Vape<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 21
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&9&lVape&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><blue><bold>Vape<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -860,33 +822,33 @@ tags:
       amount: 200
   papiphulo:
     tag:
-      - '&8&l[&d&lPapiChulo&8&l]'
+      - '<reset><dark_gray><bold>[<rainbow>PapiChulo</rainbow><reset><dark_gray><bold>]'
     permission: supremetags.tag.PapiChulo
     groups: []
     description:
-      - '&7&oClick to select &7&l&oPapiChulo &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>PapiChulo <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&d&lPapiChulo&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><light_purple><bold>PapiChulo<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 22
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&d&lPapiChulo&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><light_purple><bold>PapiChulo<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -894,33 +856,33 @@ tags:
       amount: 200
   yinandyang:
     tag:
-      - '&8&l<&f&l☯&8&l>'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ffffff:#111111>YinYang</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.YinAndYang
     groups: []
     description:
-      - '&7&oClick to select &7&l&o☯ &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>☯ <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l<&f&l☯&8&l>'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>\<<reset><white><bold>☯<reset><dark_gray><bold>>'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 23
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l<&f&l☯&8&l> &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>\<<reset><white><bold>☯<reset><dark_gray><bold>> <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: legendary
     economy:
       enabled: false
@@ -928,33 +890,33 @@ tags:
       amount: 200
   rich:
     tag:
-      - '&8&l[&2&lRIC&6&lH&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#00c853:#ffd600>RICH</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Rich
     groups: []
     description:
-      - '&7&oClick to select &7&l&oRich &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Rich <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&2&lRIC&6&lH&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><dark_green><bold>RIC<reset><gold><bold>H<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 24
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&2&lRIC&6&lH&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><dark_green><bold>RIC<reset><gold><bold>H<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -962,33 +924,33 @@ tags:
       amount: 200
   parkour:
     tag:
-      - '&8&l[&7&lParkour&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#b0bec5:#ffab40>Parkour</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Parkour
     groups: []
     description:
-      - '&7&oClick to select &7&l&oParkour &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Parkour <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&7&lParkour&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><gray><bold>Parkour<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 25
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&7&lParkour&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><gray><bold>Parkour<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -996,35 +958,35 @@ tags:
       amount: 200
   ultra:
     tag:
-      - '&8&l[&b&lUltra&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#18ffff:#00b0ff>Ultra</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Ultra
     groups: []
     description:
-      - '&7&oClick to select &7&l&oUltra &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Ultra <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&b&lUltra&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><aqua><bold>Ultra<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 26
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&b&lUltra&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><aqua><bold>Ultra<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     locked-tag:
-      displayname: '&7Tag: %tag%'
+      displayname: '<reset><gray>Tag: %tag%'
       display-item: BARRIER
       custom-model-data: 0
     rarity: common
@@ -1034,33 +996,33 @@ tags:
       amount: 200
   mega:
     tag:
-      - '&8&l[&d&lMega&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff66c4:#7c4dff>Mega</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Mega
     groups: []
     description:
-      - '&7&oClick to select &7&l&oMega &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Mega <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&d&lMega&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><light_purple><bold>Mega<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 27
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&d&lMega&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><light_purple><bold>Mega<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1068,33 +1030,33 @@ tags:
       amount: 200
   pro:
     tag:
-      - '&8&l[&a&lPro&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#69f0ae:#00c853>Pro</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Pro
     groups: []
     description:
-      - '&7&oClick to select &7&l&oPro &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Pro <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&a&lPro&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><green><bold>Pro<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 28
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&a&lPro&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><green><bold>Pro<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1102,33 +1064,33 @@ tags:
       amount: 200
   professional:
     tag:
-      - '&8[&b&lProfessional&8]'
+      - '<reset><dark_gray>[<bold><gradient:#00e5ff:#2962ff>Professional</gradient><reset><dark_gray>]'
     permission: supremetags.tag.Professional
     groups: []
     description:
-      - '&7&oClick to select &7&l&oProfessional &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Professional <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&b&lProfessional&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><aqua><bold>Professional<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 29
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&7&oClick to select &7&l&oProfessional &7&oTag &f&lVoucher'
+      displayname: '<reset><gray><italic>Click to select <reset><gray><bold><italic>Professional <reset><gray><italic>Tag <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1136,33 +1098,33 @@ tags:
       amount: 200
   donator:
     tag:
-      - '&8[&aDon&2ator&8]'
+      - '<reset><dark_gray>[<bold><gradient:#76ff03:#00c853>Donator</gradient><reset><dark_gray>]'
     permission: supremetags.tag.Donator
     groups: []
     description:
-      - '&7&oClick to select &7&l&oDonator &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Donator <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&aDon&2ator&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><green>Don<reset><dark_green>ator<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 30
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[&aDon&2ator&8] &f&lVoucher'
+      displayname: '<reset><dark_gray>[<reset><green>Don<reset><dark_green>ator<reset><dark_gray>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1170,33 +1132,33 @@ tags:
       amount: 200
   teamkong:
     tag:
-      - '&8&l[&9&lTeamKong&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#448aff:#0d47a1>TeamKong</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.TeamKong
     groups: []
     description:
-      - '&7&oClick to select &7&l&oKong &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Kong <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&9&lTeamKong&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><blue><bold>TeamKong<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 31
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&9&lTeamKong&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><blue><bold>TeamKong<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1204,33 +1166,33 @@ tags:
       amount: 200
   teamgodzilla:
     tag:
-      - '&8&l[&6&lTeamGodzilla&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ffd600:#ff6d00>TeamGodzilla</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.TeamGodzilla
     groups: []
     description:
-      - '&7&oClick to select &7&l&oGodzilla &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Godzilla <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&6&lTeamGodzilla&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><gold><bold>TeamGodzilla<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 32
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&6&lTeamGodzilla&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><gold><bold>TeamGodzilla<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: legendary
     economy:
       enabled: false
@@ -1238,33 +1200,33 @@ tags:
       amount: 200
   experienced:
     tag:
-      - '&8&l[&3&lExperienced&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#00acc1:#80deea>Experienced</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Experienced
     groups: []
     description:
-      - '&7&oClick to select &7&l&oExperienced &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Experienced <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&3&lExperience&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><dark_aqua><bold>Experience<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 33
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&3&lExperienced&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><dark_aqua><bold>Experienced<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1272,20 +1234,20 @@ tags:
       amount: 200
   flash:
     tag:
-      - '&8&l[&c&lFla&e&lsh&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff1744:#ffff00>Flash</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Flash
     groups: []
     description:
-      - '&7&oClick to select &7&l&oFlash &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Flash <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&c&lFla&e&lsh&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><red><bold>Fla<reset><yellow><bold>sh<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 34
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
@@ -1293,13 +1255,13 @@ tags:
       - SPEED:1
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&c&lFla&e&lsh&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><red><bold>Fla<reset><yellow><bold>sh<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1307,33 +1269,33 @@ tags:
       amount: 200
   superman:
     tag:
-      - '&8&l[&9&lSuper&c&lman&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#2962ff:#ff1744>Superman</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Superman
     groups: []
     description:
-      - '&7&oClick to select &7&l&oSuperman &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Superman <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&9&lSuper&c&lman&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><blue><bold>Super<reset><red><bold>man<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 35
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&9&lSuper&c&lman&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><blue><bold>Super<reset><red><bold>man<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1341,33 +1303,33 @@ tags:
       amount: 200
   booster:
     tag:
-      - '&8&l[&d&lBooster&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ff80ab:#ff4081>Booster</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Booster
     groups: []
     description:
-      - '&7&oClick to select &7&l&oBooster &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Booster <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&d&lBooster&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><light_purple><bold>Booster<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 36
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&d&lBooster&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><light_purple><bold>Booster<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1375,33 +1337,33 @@ tags:
       amount: 200
   elite:
     tag:
-      - '&8&l[&f&lElite&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#ffffff:#9e9e9e>Elite</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.Elite
     groups: []
     description:
-      - '&7&oClick to select &7&l&oElite &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Elite <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&f&lElite&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><white><bold>Elite<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 37
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&f&lElite&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><white><bold>Elite<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1409,33 +1371,33 @@ tags:
       amount: 200
   superdonator:
     tag:
-      - '&8&l[&a&lSuper&e&lDonator&8&l]'
+      - '<reset><dark_gray><bold>[<bold><gradient:#00e676:#ffea00>SuperDonator</gradient><reset><dark_gray><bold>]'
     permission: supremetags.tag.SuperDonator
     groups: []
     description:
-      - '&7&oClick to select &7&l&oSuperDonator &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>SuperDonator <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&a&lSuper&e&lDonator&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><green><bold>Super<reset><yellow><bold>Donator<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 38
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&a&lSuper&e&lDonator&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><green><bold>Super<reset><yellow><bold>Donator<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -1443,33 +1405,33 @@ tags:
       amount: 200
   cool:
     tag:
-      - '&8&l[&c&lCool&8&l]'
+      - '<reset><dark_gray><bold>[<rainbow>Cool</rainbow><reset><dark_gray><bold>]'
     permission: supremetags.tag.Cool
     groups: []
     description:
-      - '&7&oClick to select &7&l&oCool &7&oTag'
+      - '<reset><gray><italic>Click to select <reset><gray><bold><italic>Cool <reset><gray><italic>Tag'
     custom-placeholders:
-      # %custom-placeholder_<placeholder>%
-      # %supremetags_tag_custom-placeholder_<placeholder>%
-      nopermission: '&cYou do not have any permission to use &8&l[&c&lCool&8&l]'
-      wheretofind: '&eYou find this tag in &e&lExample Crate&e!'
+      # %custom-placeholder_\<placeholder>%
+      # %supremetags_tag_custom-placeholder_\<placeholder>%
+      nopermission: '<reset><red>You do not have any permission to use <reset><dark_gray><bold>[<reset><red><bold>Cool<reset><dark_gray><bold>]'
+      wheretofind: '<reset><yellow>You find this tag in <reset><yellow><bold>Example Crate<reset><yellow>!'
     category: default
     order: 39
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8&l[&c&lCool&8&l] &f&lVoucher'
+      displayname: '<reset><dark_gray><bold>[<reset><red><bold>Cool<reset><dark_gray><bold>] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false

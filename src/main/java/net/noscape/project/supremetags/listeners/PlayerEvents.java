@@ -37,9 +37,6 @@ public class PlayerEvents implements Listener {
         Player player = e.getPlayer();
         SupremeTags plugin = SupremeTags.getInstance();
 
-        // ---------------------------
-        //  MAIN THREAD: Light checks
-        // ---------------------------
         if (plugin.dev_build) {
             if (player.isOp() || player.hasPermission(TPermissions.ADMIN)) {
                 String version = plugin.getDescription().getVersion() + "-DEV-" + plugin.build;
@@ -53,23 +50,28 @@ public class PlayerEvents implements Listener {
             }
         }
 
-        // -----------------------------------------------------------------------------------------
-        //  ASYNC SECTION — All database + file I/O must be done here (UserData / PlayerConfig).
-        // -----------------------------------------------------------------------------------------
         runAsync(() -> {
 
-            // 1. Load player data from DB (async)
             UserData.createPlayer(player);
+            UserData.getTagCredits(player.getUniqueId());
 
-            // 2. Load YAML per-player config (async)
+            if (plugin.getFileSyncingManager() != null) {
+                Utils.runMainLater(() -> {
+                    plugin.getFileSyncingManager().flushPendingSync();
+                    plugin.getFileSyncingManager().requestTagFilesSync();
+                }, 20L);
+            }
+
+            if ((plugin.isMySQL() || plugin.isMaria()) && plugin.isDataCache()) {
+                plugin.getDataCache().removeFromCache(player.getUniqueId().toString());
+            }
+
             if (plugin.getConfig().getBoolean("settings.personal-tags.enable")) {
                 plugin.getPlayerConfig().loadPlayer(player);
             }
 
-            // 3. Load active tag
             String activeTag = UserData.getActive(player.getUniqueId());
 
-            // 4. Apply forced/default tag logic
             if (plugin.getConfig().getBoolean("settings.forced-tag") &&
                     (activeTag == null || activeTag.equalsIgnoreCase("None"))) {
 
@@ -80,6 +82,9 @@ public class PlayerEvents implements Listener {
 
             runMain(() -> {
                 String currentTag = UserData.getActive(player.getUniqueId());
+                if (currentTag == null || currentTag.isBlank()) {
+                    currentTag = "None";
+                }
 
                 boolean isVariant = plugin.getTagManager().isVariant(currentTag);
                 boolean tagExists = tags.containsKey(currentTag);
@@ -87,22 +92,22 @@ public class PlayerEvents implements Listener {
 
                 if (!tagExists && !isVariant && !isPersonalTag) {
                     UserData.setActive(player, "None");
+                    if (plugin.getAutoApplyManager() != null) plugin.getAutoApplyManager().apply(player, "None");
                     return;
                 }
 
-                // PERSONAL TAG HANDLING (IMPORTANT)
                 if (isPersonalTag && !tagExists && !isVariant) {
                     Tag personalTag =
                             plugin.getPlayerManager().getTag(player.getUniqueId(), currentTag);
 
                     if (personalTag != null) {
                         UserData.setActive(player, personalTag.getIdentifier());
+                        if (plugin.getAutoApplyManager() != null) plugin.getAutoApplyManager().apply(player, personalTag.getIdentifier());
                     }
 
-                    return; // stop here
+                    return;
                 }
 
-                // NORMAL TAG FLOW
                 Tag tag = tags.get(currentTag);
 
                 if (tag != null) {
@@ -110,13 +115,11 @@ public class PlayerEvents implements Listener {
                         UserData.setActive(player, "None");
                     } else {
                         tag.applyEffects(player);
+                        if (plugin.getAutoApplyManager() != null) plugin.getAutoApplyManager().apply(player, currentTag);
                     }
                 }
             });
 
-            // -----------------------------------------------------------------------
-            //  OPTIONAL: Update Checker (safe to stay async except msgPlayer → main)
-            // -----------------------------------------------------------------------
             if (plugin.getConfig().getBoolean("settings.update-check") && player.isOp()) {
                 new UpdateChecker(plugin, 111481).getVersion(version -> {
                     if (version == null) {
@@ -135,7 +138,7 @@ public class PlayerEvents implements Listener {
                 });
             }
 
-        }); // end runAsync
+        });
     }
 
     @EventHandler
@@ -144,28 +147,20 @@ public class PlayerEvents implements Listener {
         SupremeTags plugin = SupremeTags.getInstance();
         UUID uuid = player.getUniqueId();
 
-        // -------------------------------------------------------
-        // 1. ASYNC SECTION — load active tag from DB/cache
-        // -------------------------------------------------------
         runAsync(() -> {
             String active = UserData.getActive(uuid);
             Tag activeTag = tags.get(active);
 
-            // -------------------------------------------------------
-            // 2. MAIN THREAD — remove tag effects and save data
-            // -------------------------------------------------------
             runMain(() -> {
+                if (plugin.getAutoApplyManager() != null) plugin.getAutoApplyManager().restore(player);
                 if (activeTag != null && !active.equalsIgnoreCase("none")) {
-                    activeTag.removeEffects(player); // must be main thread
+                    activeTag.removeEffects(player);
                 }
             });
 
-            // -----------------------------------------
-            // Save YAML player tag data (file I/O)
-            // -----------------------------------------
             if (plugin.getPlayerManager().getPlayerTags(uuid) != null) {
                 try {
-                    PlayerConfig.save(player.getUniqueId()); // file write = async
+                    PlayerConfig.save(player.getUniqueId());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -173,29 +168,21 @@ public class PlayerEvents implements Listener {
                 plugin.getPlayerManager().getPlayerTags().remove(uuid);
             }
 
-            // -----------------------------------------
-            // Use DataCache (if enabled)
-            // -----------------------------------------
             if (plugin.isDataCache()) {
                 try {
                     String cached = plugin.getDataCache().getCachedData(uuid.toString());
-                    UserData.setActiveManual(player, cached); // may write DB -> async
+                    UserData.setActiveManual(player, cached);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
 
-            // -----------------------------------------
-            // Remove setup/editor/voucher entries
-            // (pure memory ops → async safe)
-            // -----------------------------------------
             plugin.getSetupList().remove(uuid);
             plugin.getEditorList().remove(uuid);
             plugin.getVoucherManager().remove(player);
 
-        }); // end runAsync
+        });
     }
-
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
@@ -209,7 +196,7 @@ public class PlayerEvents implements Listener {
         Player player = e.getPlayer();
 
         if (e.getItem().getType().name().equalsIgnoreCase("MILK_BUCKET")) {
-            // Delay 1 tick so effects are actually cleared first
+
             Utils.runMainLater(() -> reapplyEffects(player), 1L);
         }
     }

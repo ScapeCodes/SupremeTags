@@ -16,7 +16,6 @@ public class RarityManager {
     public void loadRarities() {
         int count = 0;
 
-        // Temporary list to sort rarities before putting into the map
         List<Map.Entry<String, Rarity>> sortedRarities = new ArrayList<>();
 
         for (String name : SupremeTags.getInstance().getConfigManager().getConfig("rarities.yml").get().getConfigurationSection("rarities").getKeys(false)) {
@@ -33,10 +32,8 @@ public class RarityManager {
             }
         }
 
-        // Sort the list by the order value
         sortedRarities.sort(Comparator.comparingInt(entry -> entry.getValue().getOrder()));
 
-        // Clear the existing map and insert in sorted order
         rarityMap.clear();
         for (Map.Entry<String, Rarity> entry : sortedRarities) {
             rarityMap.put(entry.getKey(), entry.getValue());

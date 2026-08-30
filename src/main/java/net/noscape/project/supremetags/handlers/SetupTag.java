@@ -2,9 +2,9 @@ package net.noscape.project.supremetags.handlers;
 
 public class SetupTag {
 
-    private String identifier; // stage 1
+    private String identifier;
 
-    private String tag; // stage 2
+    private String tag;
 
     private int stage;
 

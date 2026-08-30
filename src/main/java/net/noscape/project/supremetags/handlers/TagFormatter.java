@@ -1,14 +1,16 @@
 package net.noscape.project.supremetags.handlers;
 
-import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.storage.UserData;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-import static net.noscape.project.supremetags.utils.Utils.format;
+import static net.noscape.project.supremetags.utils.Utils.deformat;
+import static net.noscape.project.supremetags.utils.Utils.formatComponent;
 import static net.noscape.project.supremetags.utils.Utils.replacePlaceholders;
+import static net.noscape.project.supremetags.utils.Utils.toMiniMessage;
 
 public final class TagFormatter {
 
@@ -30,6 +32,33 @@ public final class TagFormatter {
     }
 
     public static String getFormattedTag(Player player, Context context) {
+        String formatted = getFormattedTagText(player, context);
+        if (formatted.isEmpty()) return "";
+
+        return applyOutput(player, context, formatted);
+    }
+
+    public static Component getFormattedTagComponent(Player player, Context context) {
+        return formatComponent(getFormattedTagText(player, context));
+    }
+
+    public static String getFormattedTagPlaceholder(Player player, Context context) {
+        String formatted = getFormattedTagText(player, context);
+        if (formatted.isEmpty()) return "";
+
+        String output = SupremeTags.getInstance().getConfig().getString(
+                "placeholders." + context.getPath() + ".output",
+                "minimessage"
+        );
+
+        if (output != null && output.toLowerCase().startsWith("minimessage")) {
+            return toMiniMessage(formatted).replace("<reset>", "");
+        }
+
+        return applyOutput(player, context, formatted);
+    }
+
+    private static String getFormattedTagText(Player player, Context context) {
         if (player == null) return "";
 
         UUID uuid = player.getUniqueId();
@@ -37,18 +66,17 @@ public final class TagFormatter {
 
         String active = UserData.getActive(uuid);
 
-        // None selected -> Custom Tag
         if (active == null || active.isBlank() || active.equalsIgnoreCase("None")) {
             String custom = UserData.getCustomTag(uuid);
 
             if (custom != null && !custom.isBlank()) {
-                return applyFormat(player, context, custom);
+                return applyFormatText(player, context, custom);
             }
 
-            return plugin.getConfig().getString(
+            return replacePlaceholders(player, plugin.getConfig().getString(
                     "placeholders." + context.getPath() + ".none-output",
                     ""
-            );
+            ));
         }
 
         String tagText = null;
@@ -82,16 +110,16 @@ public final class TagFormatter {
         }
 
         if (tagText == null) {
-            return plugin.getConfig().getString(
+            return replacePlaceholders(player, plugin.getConfig().getString(
                     "placeholders." + context.getPath() + ".none-output",
                     ""
-            );
+            ));
         }
 
-        return applyFormat(player, context, tagText);
+        return applyFormatText(player, context, tagText);
     }
 
-    private static String applyFormat(Player player, Context context, String tag) {
+    private static String applyFormatText(Player player, Context context, String tag) {
         SupremeTags plugin = SupremeTags.getInstance();
 
         String format = plugin.getConfig().getString(
@@ -99,11 +127,30 @@ public final class TagFormatter {
                 "%tag%"
         );
 
-        tag = replacePlaceholders(player, tag);
-
-        return PlaceholderAPI.setPlaceholders(
-                player,
-                format(format.replace("%tag%", tag))
-        );
+        String formatted = format.replace("%tag%", replacePlaceholders(player, tag));
+        return replacePlaceholders(player, formatted);
     }
+
+    private static String applyOutput(Player player, Context context, String formatted) {
+        SupremeTags plugin = SupremeTags.getInstance();
+        formatted = replacePlaceholders(player, formatted);
+
+        String output = plugin.getConfig().getString(
+                "placeholders." + context.getPath() + ".output",
+                "minimessage"
+        );
+
+        if (output == null) {
+            return toMiniMessage(formatted);
+        }
+
+        return switch (output.toLowerCase()) {
+            case "raw" -> formatted;
+            case "plain" -> deformat(formatted);
+            case "minimessage-text" -> toMiniMessage(formatted);
+            case "minimessage" -> toMiniMessage(formatted);
+            default -> toMiniMessage(formatted);
+        };
+    }
+
 }

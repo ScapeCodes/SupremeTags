@@ -8,19 +8,15 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.google.gson.*;
 
-import net.noscape.project.supremetags.SupremeTags;
-import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.handlers.Variant;
-import net.noscape.project.supremetags.storage.UserData;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.noscape.project.supremetags.handlers.TagFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Map;
 import java.util.UUID;
-
-import static net.noscape.project.supremetags.utils.Utils.format;
-import static net.noscape.project.supremetags.utils.Utils.replacePlaceholders;
 
 public class SystemChatPacketListener extends PacketAdapter {
 
@@ -33,7 +29,7 @@ public class SystemChatPacketListener extends PacketAdapter {
     @Override
     public void onPacketSending(PacketEvent event) {
         PacketContainer packet = event.getPacket();
-        Player viewer = event.getPlayer(); // Player receiving the packet
+        Player viewer = event.getPlayer();
 
         WrappedChatComponent chatComponent = packet.getChatComponents().readSafely(0);
         if (chatComponent != null) {
@@ -41,74 +37,37 @@ public class SystemChatPacketListener extends PacketAdapter {
             try {
                 JsonObject jsonObject = JsonParser.parseString(messageJson).getAsJsonObject();
 
-                // Try to detect sender
                 String senderName = extractSenderFromJson(jsonObject);
                 Player sender = senderName != null ? Bukkit.getPlayerExact(senderName) : null;
                 UUID senderUUID = sender != null ? sender.getUniqueId() : null;
 
-                // Always replace placeholders (fallback to viewer if sender unknown)
-                replacePlaceholdersInJson(jsonObject, senderUUID, viewer);
+                Component component = GsonComponentSerializer.gson().deserialize(messageJson);
+                Component replacedComponent = replaceTagPlaceholders(component, senderUUID, viewer);
 
-                // Write modified JSON back
-                String replacedJson = jsonObject.toString();
+                String replacedJson = GsonComponentSerializer.gson().serialize(replacedComponent);
                 packet.getChatComponents().write(0, WrappedChatComponent.fromJson(replacedJson));
             } catch (Exception e) {
-                // Bukkit.getLogger().warning("[SupremeTags] Failed to parse chat JSON: " + e.getMessage());
+
             }
         }
     }
 
-    private void replacePlaceholdersInJson(JsonElement element, UUID senderUUID, Player viewer) {
-        if (element.isJsonObject()) {
-            JsonObject obj = element.getAsJsonObject();
-            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                if (entry.getValue().isJsonPrimitive() && entry.getValue().getAsJsonPrimitive().isString()) {
-                    String original = entry.getValue().getAsString();
-                    String replaced = replaceTagPlaceholders(original, senderUUID, viewer);
-                    obj.addProperty(entry.getKey(), replaced);
-                } else {
-                    replacePlaceholdersInJson(entry.getValue(), senderUUID, viewer);
-                }
-            }
-        } else if (element.isJsonArray()) {
-            for (JsonElement item : element.getAsJsonArray()) {
-                replacePlaceholdersInJson(item, senderUUID, viewer);
-            }
-        }
-    }
+    private Component replaceTagPlaceholders(Component component, UUID uuid, Player viewer) {
+        if (uuid == null) uuid = viewer.getUniqueId();
 
-    private String replaceTagPlaceholders(String text, UUID uuid, Player viewer) {
-        if (uuid == null) uuid = viewer.getUniqueId(); // Fallback to viewer
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) return component;
 
-        String activeTag = UserData.getActive(uuid);
-        String displayTag = SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output");
+        Component tag = TagFormatter.getFormattedTagComponent(player, TagFormatter.Context.CHAT);
 
-        Tag tag = SupremeTags.getInstance().getTagManager().getTags().get(activeTag);
-        Tag personalTag = SupremeTags.getInstance().getPlayerManager().loadAllPlayerTags(uuid).get(activeTag);
-        Variant var = SupremeTags.getInstance().getTagManager().getVariantTag(Bukkit.getPlayer(uuid));
-
-        if (tag != null && tag.getTag() != null) {
-            displayTag = tag.getCurrentTag() != null ? tag.getCurrentTag() : tag.getTag().get(0);
-        } else if (personalTag != null) {
-            displayTag = personalTag.getTag().get(0);
-        } else if (var != null) {
-            displayTag = var.getTag().get(0);
-        }
-
-        displayTag = replacePlaceholders(Bukkit.getPlayer(uuid), displayTag);
-        displayTag = format(displayTag);
-
-        String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
-        formatted = formatted.replace("%tag%", displayTag);
-
-        return format(text
-                .replace("{tag}", formatted)
-                .replace("{TAG}", formatted)
-                .replace("{supremetags_tag}", formatted));
+        return component
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{tag}").replacement(tag).build())
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{TAG}").replacement(tag).build())
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{supremetags_tag}").replacement(tag).build());
     }
 
     private String extractSenderFromJson(JsonObject jsonObject) {
-        // Try extra[] array first
+
         if (jsonObject.has("extra") && jsonObject.get("extra").isJsonArray()) {
             JsonArray extras = jsonObject.getAsJsonArray("extra");
             for (JsonElement element : extras) {
@@ -124,7 +83,6 @@ public class SystemChatPacketListener extends PacketAdapter {
             }
         }
 
-        // Fallback for "<Name>: message" style
         if (jsonObject.has("text")) {
             String raw = jsonObject.get("text").getAsString();
             if (raw.contains(":")) {

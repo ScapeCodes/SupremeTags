@@ -1,10 +1,10 @@
 package net.noscape.project.supremetags.managers;
 
-import de.tr7zw.nbtapi.NBTItem;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.enums.TPermissions;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.utils.ItemData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -33,15 +33,15 @@ public class VoucherManager {
 
     public VoucherManager() {
         if (!SupremeTags.getInstance().isFoliaFound()) {
-            // Non-Folia (Spigot/Paper) support using BukkitRunnable
+
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     delayList.clear();
                 }
-            }.runTaskTimerAsynchronously(SupremeTags.getInstance(), 0, 20 * 3); // Run every 3 seconds
+            }.runTaskTimerAsynchronously(SupremeTags.getInstance(), 0, 20 * 3);
         } else {
-            // Folia support using reflection to access GlobalRegionScheduler
+
             try {
                 Object server = Bukkit.getServer();
                 Method getSchedulerMethod = server.getClass().getMethod("getGlobalRegionScheduler");
@@ -52,7 +52,7 @@ public class VoucherManager {
                 );
 
                 Runnable task = delayList::clear;
-                runAtFixedRateMethod.invoke(scheduler, SupremeTags.getInstance(), task, 0L, 60L); // Runs every 60 ticks (3 seconds)
+                runAtFixedRateMethod.invoke(scheduler, SupremeTags.getInstance(), task, 0L, 60L);
             } catch (Exception e) {
                 SupremeTags.getInstance().getLogger().warning("Folia scheduler not found: " + e.getMessage());
             }
@@ -80,7 +80,6 @@ public class VoucherManager {
             return;
         }
 
-        // Check if the player is still within the cooldown period
         if (!SupremeTags.getInstance().isFoliaFound()) {
             if (delayList.containsKey(playerId)) {
                 long lastExecutionTime = delayList.get(playerId);
@@ -127,9 +126,6 @@ public class VoucherManager {
             delayList.put(playerId, currentTime);
         }
 
-        /*
-         * REMOVE THE PERMISSION FROM THE PLAYER.
-         */
         removePerm(player, t.getPermission());
 
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " permission set " + t.getPermission() + " false");
@@ -181,11 +177,11 @@ public class VoucherManager {
         displayname = replacePlaceholders(player, displayname);
 
         ItemMeta tagMeta = tag.getItemMeta();
-        tagMeta.setDisplayName(format(displayname));
+        tagMeta.displayName(itemName(displayname));
         if (custom_model_data > 0) {
             tagMeta.setCustomModelData(custom_model_data);
         }
-        tagMeta.setLore(color(lore));
+        tagMeta.lore(itemLore(lore));
 
         if (glow) {
             tagMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
@@ -195,11 +191,10 @@ public class VoucherManager {
 
         tag.setItemMeta(tagMeta);
 
-        // Apply NBT Data using NBT API
-        NBTItem nbtItem = new NBTItem(tag);
-        nbtItem.setString("tags:identifier", t.getIdentifier()); // Store the tag identifier
+            ItemStack nbtItem = tag;
+        ItemData.setVoucherIdentifier(nbtItem, t.getIdentifier());
 
-        player.getInventory().addItem(nbtItem.getItem()); // Give the modified item to the player
+        player.getInventory().addItem(nbtItem);
     }
 
     public void remove(Player player) {

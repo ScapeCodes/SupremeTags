@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.tageditor;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.guis.MainMenu;
 import net.noscape.project.supremetags.guis.TagMenu;
@@ -9,7 +10,6 @@ import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
-import net.noscape.project.supremetags.utils.CompatUtils;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -59,10 +59,10 @@ public class TagEditorMenu extends Paged {
         String next = this.guis.getString("gui.items.next.displayname");
         String reset = this.guis.getString("gui.items.reset.displayname");
         String active = this.guis.getString("gui.items.active.displayname");
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("identifier")) {
-            String identifier = nbt.getString("identifier");
+        if (ItemData.has(nbt, "identifier")) {
+            String identifier = ItemData.getString(nbt, "identifier");
             this.menuUtil.setIdentifier(identifier);
             (new SpecificTagMenu(SupremeTags.getMenuUtilIdentifier(player, identifier))).open();
         }
@@ -184,9 +184,9 @@ public class TagEditorMenu extends Paged {
                 ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
                 ItemStack tagItem = resolved.item();
                 ItemMeta tagMeta = resolved.meta();
-                NBTItem nbt = new NBTItem(tagItem);
+                ItemStack nbt = tagItem;
 
-                nbt.setString("identifier", t.getIdentifier());
+                ItemData.setString(nbt, "identifier", t.getIdentifier());
 
                 if (Utils.hasTagAccess(menuUtil.getOwner(), t)) {
                     if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".custom-model-data") > 0) {
@@ -214,7 +214,7 @@ public class TagEditorMenu extends Paged {
                     ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                     tagMeta.addItemFlags(hideDye);
                 } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available in this version — skip
+
                 }
                 tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                 tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -251,7 +251,7 @@ public class TagEditorMenu extends Paged {
                             .collect(Collectors.joining("\n"));
 
                     effects_list = t.getEffects().keySet().stream()
-                            .map(CompatUtils::getEffectKey)
+                            .map(effect -> effect.getKey().getKey().toUpperCase(Locale.ROOT))
                             .collect(Collectors.joining(", "));
                 } else {
                     joinedEffects = format(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-effects"));
@@ -261,7 +261,6 @@ public class TagEditorMenu extends Paged {
                 for (int l = 0; l < lore.size(); l++) {
                     String line = lore.get(l);
 
-                    // Pattern for %custom-placeholder_?%
                     Pattern customPlaceholderPattern = Pattern.compile("%custom-placeholder_(.*?)%");
                     Matcher matcher = customPlaceholderPattern.matcher(line);
 
@@ -315,8 +314,8 @@ public class TagEditorMenu extends Paged {
                 }
 
                 tagMeta.setLore(color(lore));
-                nbt.getItem().setItemMeta(tagMeta);
-                nbt.setString("identifier", t.getIdentifier());
+                nbt.setItemMeta(tagMeta);
+                ItemData.setString(nbt, "identifier", t.getIdentifier());
 
                 int placementSlot;
 
@@ -336,7 +335,7 @@ public class TagEditorMenu extends Paged {
                 }
 
                 if (placementSlot != -1) {
-                    inventory.setItem(placementSlot, nbt.getItem());
+                    inventory.setItem(placementSlot, nbt);
                     if (t.isAnimated()) {
                         animatedSlots.add(placementSlot);
                     }

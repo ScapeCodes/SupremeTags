@@ -6,7 +6,6 @@ public class TagEconomy {
     private double amount;
     private boolean enabled;
 
-    // custom economy
     private String take_cmd;
     private String condition;
 

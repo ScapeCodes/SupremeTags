@@ -215,7 +215,6 @@ public class SpecificCategoryMenu extends Menu {
             }
         }
 
-        // Apply border layout consistent with other menus
         String layout = SupremeTags.getInstance().getLayout();
         if (layout == null) {
             return;

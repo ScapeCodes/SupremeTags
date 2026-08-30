@@ -46,11 +46,12 @@ public class SQLiteDatabase {
                 return;
             }
 
-            // USERS TABLE
-            String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name TEXT NOT NULL, UUID TEXT NOT NULL, Active TEXT NOT NULL, Favourites TEXT, CustomTag TEXT DEFAULT '', PRIMARY KEY (UUID))";
+            String userTable = "CREATE TABLE IF NOT EXISTS `users` (Name TEXT NOT NULL, UUID TEXT NOT NULL, Active TEXT NOT NULL, Favourites TEXT, CustomTag TEXT DEFAULT '', UnlockedTags TEXT DEFAULT '', TagCredits INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (UUID))";
             connection.prepareStatement(userTable).executeUpdate();
             ensureActiveColumn(connection);
             ensureCTColumn(connection);
+            ensureUnlockedTagsColumn(connection);
+            ensureTagCreditsColumn(connection);
 
             SupremeTags.getInstance().getLogger().info("SQLite tables initialized successfully.");
 
@@ -83,6 +84,34 @@ public class SQLiteDatabase {
 
         if (!hasCTColumn) {
             try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN CustomTag Text DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void ensureUnlockedTagsColumn(Connection connection) throws SQLException {
+        boolean hasUnlockedTagsColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "USERS", "UnlockedTags")) {
+            hasUnlockedTagsColumn = columns.next();
+        }
+
+        if (!hasUnlockedTagsColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN UnlockedTags Text DEFAULT ''")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private void ensureTagCreditsColumn(Connection connection) throws SQLException {
+        boolean hasTagCreditsColumn = false;
+
+        try (ResultSet columns = connection.getMetaData().getColumns(null, null, "USERS", "TagCredits")) {
+            hasTagCreditsColumn = columns.next();
+        }
+
+        if (!hasTagCreditsColumn) {
+            try (PreparedStatement statement = connection.prepareStatement("ALTER TABLE users ADD COLUMN TagCredits INTEGER NOT NULL DEFAULT 0")) {
                 statement.executeUpdate();
             }
         }

@@ -30,25 +30,21 @@ public class MyTags implements CommandExecutor {
 
         Player player = (Player) sender;
 
-        // Permission check
         if (!player.hasPermission(TPermissions.MYTAGS)) {
             msgPlayer(player, messages.getString("messages.no-permission")
                     .replace("%prefix%", messages.getString("messages.prefix")));
             return true;
         }
 
-        // Disabled message
         String disabledMsg = messages
                 .getString("messages.ptags-disabled")
                 .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
 
-        // If personal tags disabled
         if (!SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.enable")) {
             msgPlayer(player, disabledMsg);
             return true;
         }
 
-        // Open menu
         new PersonalTagsMenu(SupremeTags.getMenuUtil(player)).open();
         return true;
     }

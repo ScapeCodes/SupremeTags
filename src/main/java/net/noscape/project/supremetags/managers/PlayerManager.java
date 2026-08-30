@@ -109,13 +109,12 @@ public class PlayerManager {
     }
 
     public void delete(UUID uuid, String identifier) {
-        // Remove the tag from memory
+
         Tag tagToRemove = getTag(uuid, identifier);
         if (tagToRemove != null) {
             removeTag(uuid, tagToRemove);
         }
 
-        // Remove from config
         PlayerConfig.resetTag(uuid, identifier);
     }
 
@@ -139,6 +138,6 @@ public class PlayerManager {
         tagSection.set("tag", tag.getCurrentTag());
         tagSection.set("description", tag.getDescription());
 
-        PlayerConfig.save(player.getUniqueId()); // Save the player's configuration to the file
+        PlayerConfig.save(player.getUniqueId());
     }
 }

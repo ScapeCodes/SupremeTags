@@ -1,7 +1,6 @@
 package net.noscape.project.supremetags.handlers.menu;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.cryptomorin.xseries.inventory.XInventoryView;
 import net.noscape.project.supremetags.handlers.Tag;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -23,10 +22,10 @@ public abstract class Menu implements InventoryHolder {
     private boolean autoUpdate = false;
     private boolean updating = false;
 
-    // Default old-style tick refresh
-    private int updateInterval = 1;
+    private int updateInterval = 10;
 
     protected final Set<Integer> animatedSlots = new HashSet<>();
+    protected final Map<Integer, String> animatedTagSlots = new HashMap<>();
 
     public Menu(MenuUtil menuUtil) {
         this.menuUtil = menuUtil;
@@ -36,33 +35,32 @@ public abstract class Menu implements InventoryHolder {
     public abstract int getSlots();
     public abstract void handleMenu(org.bukkit.event.inventory.InventoryClickEvent e);
 
-    /** Subclass will build items into "inventory". */
     public abstract void setMenuItems();
 
-    // ==================================================
-    // ✅ OPEN MENU
-    // ==================================================
     public void open() {
         inventory = Bukkit.createInventory(this, getSlots(), getMenuName());
 
-        setMenuItems(); // build items
+        clearAnimatedSlots();
+        setMenuItems();
 
         menuUtil.getOwner().openInventory(inventory);
 
-        if (autoUpdate) startAutoUpdate();
+        if (autoUpdate && !animatedSlots.isEmpty()) startAutoUpdate();
     }
 
-    // ==================================================
-    // ✅ DIFF-BASED REFRESH
-    // ==================================================
     public void refresh() {
         if (inventory == null) return;
 
-        // Build a temporary frame representing what setMenuItems() would produce
+        Player player = menuUtil.getOwner();
+        if (player != null
+                && player.getOpenInventory().getTopInventory().getHolder() == this) {
+            player.getOpenInventory().setTitle(getMenuName());
+        }
+
         Inventory temp = Bukkit.createInventory(null, inventory.getSize());
+        clearAnimatedSlots();
         buildVirtualFrame(temp);
 
-        // Diff update
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             ItemStack oldItem = inventory.getItem(slot);
             ItemStack newItem = temp.getItem(slot);
@@ -76,14 +74,22 @@ public abstract class Menu implements InventoryHolder {
     public void refreshAnimatedTags() {
         if (inventory == null || animatedSlots.isEmpty()) return;
 
-        // Build a virtual frame only once
-        Inventory temp = Bukkit.createInventory(null, inventory.getSize());
-        buildVirtualFrame(temp);
+        Set<Integer> slotsToRefresh = new HashSet<>(animatedSlots);
+        Inventory temp = null;
 
-        // Update ONLY animated slots
-        for (int slot : animatedSlots) {
+        for (int slot : slotsToRefresh) {
+            if (slot < 0 || slot >= inventory.getSize()) continue;
+
             ItemStack oldItem = inventory.getItem(slot);
-            ItemStack newItem = temp.getItem(slot);
+            ItemStack newItem = buildAnimatedItem(slot);
+
+            if (newItem == null) {
+                if (temp == null) {
+                    temp = Bukkit.createInventory(null, inventory.getSize());
+                    buildVirtualFrame(temp);
+                }
+                newItem = temp.getItem(slot);
+            }
 
             if (!isSame(oldItem, newItem)) {
                 inventory.setItem(slot, newItem);
@@ -91,10 +97,20 @@ public abstract class Menu implements InventoryHolder {
         }
     }
 
+    protected ItemStack buildAnimatedItem(int slot) {
+        return null;
+    }
 
-    // ==================================================
-    // ✅ Build "virtual" version of menu without affecting real inventory
-    // ==================================================
+    protected void clearAnimatedSlots() {
+        animatedSlots.clear();
+        animatedTagSlots.clear();
+    }
+
+    protected void registerAnimatedTagSlot(int slot, String identifier) {
+        animatedSlots.add(slot);
+        animatedTagSlots.put(slot, identifier);
+    }
+
     private void buildVirtualFrame(Inventory temp) {
         Inventory original = this.inventory;
         this.inventory = temp;
@@ -104,7 +120,6 @@ public abstract class Menu implements InventoryHolder {
         this.inventory = original;
     }
 
-    // For subclasses to override if needed
     protected void buildFrame(ItemStack[] frame) {
         setMenuItems();
     }
@@ -128,9 +143,6 @@ public abstract class Menu implements InventoryHolder {
         this.updateInterval = Math.max(1, ticks);
     }
 
-    // ==================================================
-    // ✅ AUTO-UPDATE LOOP
-    // ==================================================
     private void startAutoUpdate() {
         if (updating) return;
         updating = true;
@@ -143,7 +155,7 @@ public abstract class Menu implements InventoryHolder {
                 if (!updating) return;
 
                 if (player == null || !player.isOnline()
-                        || !(XInventoryView.of(player.getOpenInventory()).getTopInventory().getHolder() instanceof Menu)) {
+                        || !(player.getOpenInventory().getTopInventory().getHolder() instanceof Menu)) {
                     stopAutoUpdate();
                     return;
                 }
@@ -165,10 +177,6 @@ public abstract class Menu implements InventoryHolder {
     public Inventory getInventory() {
         return inventory;
     }
-
-    // ==================================================
-    // ✅ ITEM BUILDERS
-    // ==================================================
 
     public ItemStack makeItem(Material material, String displayName, int custom_model_data, boolean hideTooltip, String... lore) {
         return buildItem(material, displayName, custom_model_data, hideTooltip, Arrays.asList(lore));

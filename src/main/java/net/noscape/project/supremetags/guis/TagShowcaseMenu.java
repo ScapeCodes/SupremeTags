@@ -1,13 +1,13 @@
 package net.noscape.project.supremetags.guis;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.handlers.menu.Paged;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
-import net.noscape.project.supremetags.utils.CompatUtils;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.Bukkit;
@@ -46,7 +46,8 @@ public class TagShowcaseMenu extends Paged {
     public String getMenuName() {
         String title = format(Objects.requireNonNull(guis.getString("gui.tag-showcase-menu.title"))
                 .replace("%player%", targetPlayer.getName())
-                .replaceAll("%page%", String.valueOf(this.getPage())));
+                .replace("%page%", String.valueOf(this.getPage()))
+                .replace("%max_pages%", String.valueOf(getMaxPages(SupremeTags.getInstance().getTagManager().getTags().size()))));
         title = globalPlaceholders(menuUtil.getOwner(), title);
         return title;
     }
@@ -68,7 +69,6 @@ public class TagShowcaseMenu extends Paged {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        // Cancel all clicks - this is a read-only showcase
         e.setCancelled(true);
 
         if (clickedItem.getType().equals(Material.valueOf(Objects.requireNonNull(guis.getString("gui.items.glass.material")).toUpperCase()))) {
@@ -76,10 +76,10 @@ public class TagShowcaseMenu extends Paged {
             return;
         }
 
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+        if (ItemData.has(nbt, "name")) {
+            String name = ItemData.getString(nbt, "name");
 
             if (name.equalsIgnoreCase("close")) {
                 player.closeInventory();
@@ -172,9 +172,9 @@ public class TagShowcaseMenu extends Paged {
                 ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
                 ItemStack tagItem = resolved.item();
                 ItemMeta tagMeta = resolved.meta();
-                NBTItem nbt = new NBTItem(tagItem);
+                ItemStack nbt = tagItem;
 
-                nbt.setString("identifier", t.getIdentifier());
+                ItemData.setString(nbt, "identifier", t.getIdentifier());
 
                 if (SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".custom-model-data") > 0) {
                     int modelData = SupremeTags.getInstance().getTagManager().getTagConfig().getInt("tags." + t.getIdentifier() + ".custom-model-data");
@@ -184,13 +184,13 @@ public class TagShowcaseMenu extends Paged {
 
                 assert tagMeta != null;
 
-                tagMeta.setDisplayName(format(displayname));
+                tagMeta.displayName(itemName(displayname));
                 tagMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 try {
                     ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                     tagMeta.addItemFlags(hideDye);
                 } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available in this version — skip
+
                 }
                 tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                 tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -223,7 +223,7 @@ public class TagShowcaseMenu extends Paged {
                             .collect(Collectors.joining("\n"));
 
                     effects_list = t.getEffects().keySet().stream()
-                            .map(CompatUtils::getEffectKey)
+                            .map(effect -> effect.getKey().getKey().toUpperCase(Locale.ROOT))
                             .collect(Collectors.joining(", "));
                 } else {
                     joinedEffects = format(SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get().getString("messages.no-effects"));
@@ -233,7 +233,6 @@ public class TagShowcaseMenu extends Paged {
                 for (int l = 0; l < lore.size(); l++) {
                     String line = lore.get(l);
 
-                    // Pattern for %custom-placeholder_?%
                     Pattern customPlaceholderPattern = Pattern.compile("%custom-placeholder_(.*?)%");
                     Matcher matcher = customPlaceholderPattern.matcher(line);
 
@@ -283,9 +282,9 @@ public class TagShowcaseMenu extends Paged {
                     lore.set(l, line);
                 }
 
-                tagMeta.setLore(color(lore));
-                nbt.getItem().setItemMeta(tagMeta);
-                nbt.setString("identifier", t.getIdentifier());
+                tagMeta.lore(itemLore(lore));
+                nbt.setItemMeta(tagMeta);
+                ItemData.setString(nbt, "identifier", t.getIdentifier());
 
                 int placementSlot;
 
@@ -303,13 +302,13 @@ public class TagShowcaseMenu extends Paged {
                 }
 
                 if (placementSlot != -1) {
-                    inventory.setItem(placementSlot, nbt.getItem());
+                    inventory.setItem(placementSlot, nbt);
                 }
 
                 currentItemsOnPage++;
             }
         } else {
-            // No tags accessible - show a message item
+
             String noTagsDisplayname = format(Objects.requireNonNull(guis.getString("gui.tag-showcase-menu.no-tags-item.displayname"))
                     .replace("%player%", targetPlayer.getName()));
 
@@ -319,10 +318,10 @@ public class TagShowcaseMenu extends Paged {
             ItemMeta meta = resolved.meta();
 
             if (meta != null) {
-                meta.setDisplayName(noTagsDisplayname);
+                meta.displayName(itemName(noTagsDisplayname));
                 List<String> lore = guis.getStringList("gui.tag-showcase-menu.no-tags-item.lore");
                 lore.replaceAll(s -> s.replace("%player%", targetPlayer.getName()));
-                meta.setLore(color(lore));
+                meta.lore(itemLore(lore));
                 item.setItemMeta(meta);
             }
 

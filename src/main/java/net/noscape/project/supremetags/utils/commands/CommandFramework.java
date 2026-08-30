@@ -77,34 +77,30 @@ public class CommandFramework implements CommandExecutor {
 
     public void registerCommands(Object obj, List<String> aliases) {
         for (Method method : obj.getClass().getMethods()) {
-            // Check for @Command annotation
+
             if (method.getAnnotation(Command.class) != null) {
                 Command command = method.getAnnotation(Command.class);
 
-                // Verify method signature
                 if (method.getParameterTypes().length > 1 || method.getParameterTypes()[0] != CommandArguments.class) {
                     System.out.println("Unable to register command " + method.getName() + ". Unexpected method arguments");
                     continue;
                 }
 
-                // Add dynamic aliases if the command name matches the main command
                 if (command.name().equalsIgnoreCase(SupremeTags.getInstance().getConfig().getString("settings.commands.main-command"))) {
                     aliases = new ArrayList<>(SupremeTags.getInstance().getConfig().getStringList("settings.commands.aliases"));
                 }
 
-                // Register the command with its name and aliases from annotation
                 registerCommand(command, command.name(), method, obj);
 
                 if (aliases != null) {
                     for (String alias : aliases) {
                         registerCommand(command, alias, method, obj);
-                        registerCompleter(alias, method, obj); // Register completer for alias
+                        registerCompleter(alias, method, obj);
                     }
                 }
             } else if (method.getAnnotation(Completer.class) != null) {
                 Completer completer = method.getAnnotation(Completer.class);
 
-                // Verify method signature for the completer
                 if (method.getParameterTypes().length != 1 || method.getParameterTypes()[0] != CommandArguments.class) {
                     System.out.println("Unable to register tab completer " + method.getName() + ". Unexpected method arguments");
                     continue;
@@ -114,7 +110,6 @@ public class CommandFramework implements CommandExecutor {
                     continue;
                 }
 
-                // Register the completer for the command and its aliases
                 registerCompleter(completer.name(), method, obj);
                 for (String alias : completer.aliases()) {
                     registerCompleter(alias, method, obj);
@@ -128,7 +123,6 @@ public class CommandFramework implements CommandExecutor {
             label = SupremeTags.getInstance().getConfig().getString("settings.commands.main-command");
         }
 
-        // Map the main command and its aliases
         if (label != null) {
             commandMap.put(label.toLowerCase(), new AbstractMap.SimpleEntry<>(m, obj));
         }
@@ -137,14 +131,12 @@ public class CommandFramework implements CommandExecutor {
         String cmdLabel = label.replace(".", ",").split(",")[0].toLowerCase();
         org.bukkit.command.Command bukkitCommand = map.getCommand(cmdLabel);
 
-        // Register the command if not already registered
         if (bukkitCommand == null) {
             org.bukkit.command.Command cmd = new BukkitCommand(cmdLabel, this, plugin);
             map.register(plugin.getName(), cmd);
             bukkitCommand = cmd;
         }
 
-        // Set the command's description and usage
         if (!command.description().equalsIgnoreCase("") && cmdLabel.equals(label)) {
             bukkitCommand.setDescription(command.description());
         }
@@ -152,11 +144,9 @@ public class CommandFramework implements CommandExecutor {
             bukkitCommand.setUsage(command.usage());
         }
 
-        // Register aliases
         for (String alias : SupremeTags.getInstance().getConfig().getStringList("settings.commands.aliases")) {
             String aliasKey = alias.toLowerCase();
 
-            // Prevent registering aliases multiple times
             if (!commandMap.containsKey(aliasKey)) {
                 commandMap.put(aliasKey, new AbstractMap.SimpleEntry<>(m, obj));
                 map.register(plugin.getName(), new BukkitCommand(aliasKey, this, plugin));
@@ -172,11 +162,9 @@ public class CommandFramework implements CommandExecutor {
         String cmdLabel = label.replace(".", ",").split(",")[0].toLowerCase();
         org.bukkit.command.Command command = map.getCommand(cmdLabel);
 
-        // Check if command exists, and handle BukkitCommand or PluginCommand
         if (command instanceof BukkitCommand) {
             BukkitCommand bukkitCommand = (BukkitCommand) command;
 
-            // Check if the completer is already set, only add it if it's null
             if (bukkitCommand.completer == null) {
                 bukkitCommand.completer = new BukkitCompleter();
             }
@@ -189,7 +177,6 @@ public class CommandFramework implements CommandExecutor {
                 field.setAccessible(true);
                 Object completerField = field.get(pluginCommand);
 
-                // Only set the completer if it's not already set
                 if (completerField == null) {
                     BukkitCompleter completer = new BukkitCompleter();
                     completer.addCompleter(label, m, obj);
@@ -207,7 +194,6 @@ public class CommandFramework implements CommandExecutor {
             System.out.println("Command " + cmdLabel + " is not a valid BukkitCommand or PluginCommand!");
         }
     }
-
 
     private void defaultCommand(CommandArguments args) {
         args.getSender().sendMessage(args.getLabel() + " is not handled! Oh noes!");

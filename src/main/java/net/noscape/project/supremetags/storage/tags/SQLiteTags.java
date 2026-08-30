@@ -6,6 +6,7 @@ import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.TagEconomy;
 import net.noscape.project.supremetags.handlers.Variant;
+import net.noscape.project.supremetags.handlers.requirements.TagRequirements;
 import net.noscape.project.supremetags.storage.SQLiteDatabase;
 import org.bukkit.potion.PotionEffectType;
 
@@ -42,22 +43,44 @@ public class SQLiteTags {
                 "variants_json TEXT," +
                 "economy_json TEXT," +
                 "abilities_json TEXT," +
+                "groups_json TEXT," +
+                "requirements_json TEXT," +
+                "metadata_json TEXT," +
                 "FOREIGN KEY(identifier) REFERENCES tags(identifier) ON DELETE CASCADE" +
+                ");";
+
+        String versionTable = "CREATE TABLE IF NOT EXISTS tags_meta (" +
+                "meta_key TEXT PRIMARY KEY," +
+                "meta_value INTEGER NOT NULL" +
                 ");";
 
         try (Connection conn = db.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(tagsTable);
             stmt.execute(tagsDataTable);
+            stmt.execute(versionTable);
+            stmt.execute("INSERT OR IGNORE INTO tags_meta (meta_key, meta_value) VALUES ('version', 0)");
+            addColumnIfMissing(conn, "tags_data", "groups_json", "TEXT");
+            addColumnIfMissing(conn, "tags_data", "requirements_json", "TEXT");
+            addColumnIfMissing(conn, "tags_data", "metadata_json", "TEXT");
         } catch (SQLException e) {
             SupremeTags.getInstance().getLogger().log(Level.SEVERE, "SQLiteTags: Failed to create tables", e);
         }
     }
 
+    private void addColumnIfMissing(Connection conn, String table, String column, String definition) throws SQLException {
+        try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column)) {
+            if (rs.next()) return;
+        }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+        }
+    }
+
     public void saveTag(Tag tag) {
-        // use insert or replace so it works for both insert & update
+
         String insertTags = "INSERT OR REPLACE INTO tags (identifier, category, permission, order_id, withdrawable, rarity) VALUES (?, ?, ?, ?, ?, ?)";
-        String insertData = "INSERT OR REPLACE INTO tags_data (identifier, tag_json, description_json, effects_json, variants_json, economy_json, abilities_json) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String insertData = "INSERT OR REPLACE INTO tags_data (identifier, tag_json, description_json, effects_json, variants_json, economy_json, abilities_json, groups_json, requirements_json, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = db.getConnection();
              PreparedStatement psTags = conn.prepareStatement(insertTags);
@@ -73,13 +96,15 @@ public class SQLiteTags {
             psTags.setString(6, tag.getRarity());
             psTags.executeUpdate();
 
-            // serialize complex fields
             String tagJson = gson.toJson(tag.getTag());
             String descJson = gson.toJson(tag.getDescription());
             String effectsJson = gson.toJson(serializeEffects(tag.getEffects()));
             String variantsJson = gson.toJson(tag.getVariants());
             String economyJson = gson.toJson(tag.getEconomy());
             String abilitiesJson = gson.toJson(tag.getAbilities());
+            String groupsJson = gson.toJson(tag.getGroups());
+            String requirementsJson = gson.toJson(tag.getRequirements());
+            String metadataJson = gson.toJson(serializeMetadata(tag));
 
             psData.setString(1, tag.getIdentifier());
             psData.setString(2, tagJson);
@@ -88,7 +113,12 @@ public class SQLiteTags {
             psData.setString(5, variantsJson);
             psData.setString(6, economyJson);
             psData.setString(7, abilitiesJson);
+            psData.setString(8, groupsJson);
+            psData.setString(9, requirementsJson);
+            psData.setString(10, metadataJson);
             psData.executeUpdate();
+
+            touchDataVersion(conn);
 
             conn.commit();
             conn.setAutoCommit(true);
@@ -112,6 +142,8 @@ public class SQLiteTags {
             psTag.setString(1, identifier);
             psTag.executeUpdate();
 
+            touchDataVersion(conn);
+
             conn.commit();
             conn.setAutoCommit(true);
         } catch (SQLException e) {
@@ -122,7 +154,7 @@ public class SQLiteTags {
     public Map<String, Tag> loadTags() {
         Map<String, Tag> loaded = new LinkedHashMap<>();
         String q = "SELECT t.identifier, t.category, t.permission, t.order_id, t.withdrawable, t.rarity, " +
-                "d.tag_json, d.description_json, d.effects_json, d.variants_json, d.economy_json, d.abilities_json " +
+                "d.tag_json, d.description_json, d.effects_json, d.variants_json, d.economy_json, d.abilities_json, d.groups_json, d.requirements_json, d.metadata_json " +
                 "FROM tags t LEFT JOIN tags_data d ON t.identifier = d.identifier";
 
         try (Connection conn = db.getConnection();
@@ -143,6 +175,9 @@ public class SQLiteTags {
                 String variantsJson = rs.getString("variants_json");
                 String economyJson = rs.getString("economy_json");
                 String abilitiesJson = rs.getString("abilities_json");
+                String groupsJson = rs.getString("groups_json");
+                String requirementsJson = rs.getString("requirements_json");
+                String metadataJson = rs.getString("metadata_json");
 
                 List<String> tagList = tagJson == null ? new ArrayList<>() : gson.fromJson(tagJson, List.class);
                 List<String> description = descJson == null ? new ArrayList<>() : gson.fromJson(descJson, List.class);
@@ -153,11 +188,14 @@ public class SQLiteTags {
                 TagEconomy economy = economyJson == null ? new TagEconomy("VAULT", 0, false) : gson.fromJson(economyJson, TagEconomy.class);
 
                 List<String> abilities = abilitiesJson == null ? new ArrayList<>() : Arrays.asList(gson.fromJson(abilitiesJson, String[].class));
+                List<String> groups = groupsJson == null ? new ArrayList<>() : Arrays.asList(gson.fromJson(groupsJson, String[].class));
+                TagRequirements requirements = requirementsJson == null ? null : gson.fromJson(requirementsJson, TagRequirements.class);
 
-                Tag t = new Tag(identifier, tagList, category, permission, description, order, withdrawable, rarity, effects, economy, variants, new ArrayList<>());
+                Tag t = new Tag(identifier, tagList, category, permission, description, order, withdrawable, rarity, effects, economy, variants, groups);
                 t.setAbilities(abilities);
+                t.setRequirements(requirements);
+                applyMetadata(t, metadataJson);
 
-                // Ensure the quick setters that mirror economy are consistent
                 if (economy != null) {
                     t.setEcoEnabled(economy.isEnabled());
                     t.setEcoType(economy.getType());
@@ -175,11 +213,29 @@ public class SQLiteTags {
     }
 
     public void updateTag(Tag tag) {
-        // "saveTag" uses REPLACE semantics, so reuse it
+
         saveTag(tag);
     }
 
-    /* ---------------------- Helpers for effects map ---------------------- */
+    public long getDataVersion() {
+        String query = "SELECT meta_value FROM tags_meta WHERE meta_key='version'";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong("meta_value");
+            }
+        } catch (SQLException e) {
+            SupremeTags.getInstance().getLogger().log(Level.WARNING, "SQLiteTags: Failed to read tag data version", e);
+        }
+        return 0L;
+    }
+
+    private void touchDataVersion(Connection conn) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("UPDATE tags_meta SET meta_value = meta_value + 1 WHERE meta_key='version'")) {
+            ps.executeUpdate();
+        }
+    }
 
     private Map<String, Integer> serializeEffects(Map<PotionEffectType, Integer> effects) {
         Map<String, Integer> map = new HashMap<>();
@@ -190,11 +246,48 @@ public class SQLiteTags {
         return map;
     }
 
+    private Map<String, Object> serializeMetadata(Tag tag) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("displayName", tag.getDisplayName());
+        metadata.put("displayItem", tag.getDisplayItem());
+        metadata.put("customModelData", tag.getCustomModelData());
+        metadata.put("voucherDisplayName", tag.getVoucherDisplayName());
+        metadata.put("voucherMaterial", tag.getVoucherMaterial());
+        metadata.put("voucherLore", tag.getVoucherLore());
+        metadata.put("voucherCustomModelData", tag.getVoucherCustomModelData());
+        metadata.put("voucherGlow", tag.isVoucherGlow());
+        metadata.put("customPlaceholders", tag.getCustomPlaceholders());
+        return metadata;
+    }
+
+    private void applyMetadata(Tag tag, String json) {
+        if (json == null || json.isEmpty()) return;
+        try {
+            Map<String, Object> metadata = gson.fromJson(json, Map.class);
+            if (metadata == null) return;
+            if (metadata.get("displayName") != null) tag.setDisplayName(String.valueOf(metadata.get("displayName")));
+            if (metadata.get("displayItem") != null) tag.setDisplayItem(String.valueOf(metadata.get("displayItem")));
+            if (metadata.get("customModelData") instanceof Number number) tag.setCustomModelData(number.intValue());
+            if (metadata.get("voucherDisplayName") != null) tag.setVoucherDisplayName(String.valueOf(metadata.get("voucherDisplayName")));
+            if (metadata.get("voucherMaterial") != null) tag.setVoucherMaterial(String.valueOf(metadata.get("voucherMaterial")));
+            if (metadata.get("voucherLore") instanceof List<?> rawLore) tag.setVoucherLore(rawLore.stream().map(String::valueOf).toList());
+            if (metadata.get("voucherCustomModelData") instanceof Number number) tag.setVoucherCustomModelData(number.intValue());
+            if (metadata.get("voucherGlow") instanceof Boolean glow) tag.setVoucherGlow(glow);
+            if (metadata.get("customPlaceholders") instanceof Map<?, ?> raw) {
+                Map<String, String> placeholders = new LinkedHashMap<>();
+                raw.forEach((key, value) -> placeholders.put(String.valueOf(key), value == null ? "" : String.valueOf(value)));
+                tag.setCustomPlaceholders(placeholders);
+            }
+        } catch (Exception e) {
+            SupremeTags.getInstance().getLogger().warning("SQLiteTags: Could not deserialize metadata json: " + e.getMessage());
+        }
+    }
+
     private Map<PotionEffectType, Integer> deserializeEffects(String json) {
         Map<PotionEffectType, Integer> result = new HashMap<>();
         if (json == null || json.isEmpty()) return result;
         try {
-            Map<String, Double> temp = gson.fromJson(json, Map.class); // Gson deserializes numbers as Double
+            Map<String, Double> temp = gson.fromJson(json, Map.class);
             if (temp == null) return result;
             for (Map.Entry<String, Double> entry : temp.entrySet()) {
                 try {

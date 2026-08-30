@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.personaltags;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -52,7 +53,9 @@ public class PersonalTagsMenu extends Paged {
 
     @Override
     public String getMenuName() {
-        String title = format(Objects.requireNonNull(guis.getString("gui.personal-tags.title")));
+        String title = format(Objects.requireNonNull(guis.getString("gui.personal-tags.title"))
+                .replace("%page%", String.valueOf(this.getPage()))
+                .replace("%max_pages%", String.valueOf(getMaxPages(tags.size()))));
         title = globalPlaceholders(menuUtil.getOwner(), title);
         return title;
     }
@@ -76,10 +79,10 @@ public class PersonalTagsMenu extends Paged {
         displayname = replacePlaceholders(menuUtil.getOwner(), displayname);
         displayname = displayname.replace("%identifier%", menuUtil.getIdentifier());
 
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("identifier")) {
-            String identifier = nbt.getString("identifier");
+        if (ItemData.has(nbt, "identifier")) {
+            String identifier = ItemData.getString(nbt, "identifier");
 
             if (e.getClick() == ClickType.LEFT) {
                 if (!UserData.getActive(player.getUniqueId()).equalsIgnoreCase(identifier) && identifier != null) {
@@ -105,8 +108,8 @@ public class PersonalTagsMenu extends Paged {
             }
         }
 
-        if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+        if (ItemData.has(nbt, "name")) {
+            String name = ItemData.getString(nbt, "name");
 
             if (name.equalsIgnoreCase("close")) {
                 player.closeInventory();
@@ -126,10 +129,6 @@ public class PersonalTagsMenu extends Paged {
             }
 
             if (name.equalsIgnoreCase("reset")) {
-                //if (menuUtil.getIdentifier() == null || (menuUtil.getIdentifier().equalsIgnoreCase("none"))) {
-                //    msgPlayer(player, no_tag_selected);
-                //    return;
-                //}
 
                 if (!SupremeTags.getInstance().getConfig().getBoolean("settings.forced-tag")) {
                     TagResetEvent tagEvent = new TagResetEvent(player, false);
@@ -210,7 +209,7 @@ public class PersonalTagsMenu extends Paged {
                 int limit = 0;
 
                 if (player.isOp() || player.hasPermission("supremetags.mytags.limit.*")) {
-                    reachedLimit = false; // unlimited
+                    reachedLimit = false;
                 } else {
                     Set<String> keys = SupremeTags.getInstance().getConfig().getConfigurationSection("settings.personal-tags.limits").getKeys(false);
 
@@ -220,11 +219,10 @@ public class PersonalTagsMenu extends Paged {
                             if (this.tags.size() >= limit) {
                                 reachedLimit = true;
                             }
-                            break; // stop at first matching permission
+                            break;
                         }
                     }
 
-                    // If no matching permission found, restrict by default
                     if (limit == 0) {
                         reachedLimit = true;
                     }
@@ -233,7 +231,6 @@ public class PersonalTagsMenu extends Paged {
                 if (!reachedLimit) {
                     if (!SupremeTags.getInstance().getSetupList().containsKey(player)) {
                         player.closeInventory();
-
 
                         if (!Utils.isVersionLessThan("1.21.8") && SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.use-creation-dialogs")) {
                             Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -304,8 +301,8 @@ public class PersonalTagsMenu extends Paged {
                     ItemMeta tagMeta = tagItem.getItemMeta();
                     assert tagMeta != null;
 
-                    NBTItem nbt = new NBTItem(tagItem);
-                    nbt.setString("identifier", t.getIdentifier());
+                    ItemStack nbt = tagItem;
+                    ItemData.setString(nbt, "identifier", t.getIdentifier());
 
                     tagMeta.setDisplayName(format("&7Tag: " + t.getTag().get(0)));
                     tagMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -313,7 +310,7 @@ public class PersonalTagsMenu extends Paged {
                         ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                         tagMeta.addItemFlags(hideDye);
                     } catch (IllegalArgumentException ignored) {
-                        // HIDE_DYE not available in this version — skip
+
                     }
                     tagMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
                     tagMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -331,9 +328,9 @@ public class PersonalTagsMenu extends Paged {
                     }
 
                     tagMeta.setLore(color(lore));
-                    nbt.getItem().setItemMeta(tagMeta);
-                    nbt.setString("identifier", t.getIdentifier());
-                    this.inventory.addItem(nbt.getItem());
+                    nbt.setItemMeta(tagMeta);
+                    ItemData.setString(nbt, "identifier", t.getIdentifier());
+                    this.inventory.addItem(nbt);
                     this.tagsOnPage++;
                 }
             }

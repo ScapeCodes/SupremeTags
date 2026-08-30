@@ -8,22 +8,16 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerCh
 
 import com.google.gson.*;
 
-import net.noscape.project.supremetags.SupremeTags;
-import net.noscape.project.supremetags.handlers.Tag;
-import net.noscape.project.supremetags.handlers.Variant;
-import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.handlers.TagFormatter;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
 import java.util.UUID;
-
-import static net.noscape.project.supremetags.utils.Utils.format;
-import static net.noscape.project.supremetags.utils.Utils.replacePlaceholders;
 
 public class PacketEventsChatListener implements PacketListener {
 
@@ -35,83 +29,37 @@ public class PacketEventsChatListener implements PacketListener {
         WrapperPlayServerChatMessage packet = new WrapperPlayServerChatMessage(event);
 
         try {
-            // Get the original component from the packet
+
             Component originalComponent = packet.getMessage().getChatContent();
             if (originalComponent == null) return;
 
-            // Serialize component to JSON string
             String json = GsonComponentSerializer.gson().serialize(originalComponent);
 
-            // Parse JSON string to JsonObject for editing
             JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
 
-            // Extract sender name from JSON
             String senderName = extractSenderFromJson(jsonObject);
             Player sender = senderName != null ? Bukkit.getPlayerExact(senderName) : null;
             UUID senderUUID = (sender != null) ? sender.getUniqueId() : null;
 
-            // Replace placeholders recursively in JSON
-            replacePlaceholdersInJson(jsonObject, senderUUID);
+            Component modifiedComponent = replaceTagPlaceholders(originalComponent, senderUUID);
 
-            // Serialize modified JSON back to string
-            String replacedJson = jsonObject.toString();
-
-            // Deserialize back to Component
-            Component modifiedComponent = GsonComponentSerializer.gson().deserialize(replacedJson);
-
-            // Set the modified component back to the packet
             packet.setMessage((ChatMessage) modifiedComponent);
 
         } catch (Exception ignored) {}
     }
 
-    private void replacePlaceholdersInJson(JsonElement element, UUID senderUUID) {
-        if (element.isJsonObject()) {
-            JsonObject obj = element.getAsJsonObject();
-            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                if (entry.getValue().isJsonPrimitive() && entry.getValue().getAsJsonPrimitive().isString()) {
-                    String original = entry.getValue().getAsString();
-                    String replaced = replaceTagPlaceholders(original, senderUUID);
-                    obj.addProperty(entry.getKey(), replaced);
-                } else {
-                    replacePlaceholdersInJson(entry.getValue(), senderUUID);
-                }
-            }
-        } else if (element.isJsonArray()) {
-            for (JsonElement item : element.getAsJsonArray()) {
-                replacePlaceholdersInJson(item, senderUUID);
-            }
-        }
-    }
+    private Component replaceTagPlaceholders(Component component, UUID uuid) {
+        if (uuid == null) return component;
 
-    private String replaceTagPlaceholders(String text, UUID uuid) {
-        if (uuid == null) return text;
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) return component;
 
-        String activeTag = UserData.getActive(uuid);
-        String displayTag = SupremeTags.getInstance().getConfig().getString("placeholders.chat.none-output");
+        Component tag = TagFormatter.getFormattedTagComponent(player, TagFormatter.Context.CHAT);
 
-        Tag tag = SupremeTags.getInstance().getTagManager().getTags().get(activeTag);
-        Tag personalTag = SupremeTags.getInstance().getPlayerManager().loadAllPlayerTags(uuid).get(activeTag);
-        Variant var = SupremeTags.getInstance().getTagManager().getVariantTag(Bukkit.getPlayer(uuid));
-
-        if (tag != null && tag.getTag() != null) {
-            displayTag = tag.getCurrentTag() != null ? tag.getCurrentTag() : tag.getTag().get(0);
-        } else if (personalTag != null) {
-            displayTag = personalTag.getTag().get(0);
-        } else if (var != null) {
-            displayTag = var.getTag().get(0);
-        }
-
-        displayTag = replacePlaceholders(Bukkit.getPlayer(uuid), displayTag);
-        displayTag = format(displayTag);
-
-        String formatted = SupremeTags.getInstance().getConfig().getString("placeholders.chat.format");
-        formatted = formatted.replace("%tag%", displayTag);
-
-        return text
-                .replace("{tag}", formatted)
-                .replace("{TAG}", formatted)
-                .replace("{supremetags_tag}", formatted);
+        return component
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{tag}").replacement(tag).build())
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{TAG}").replacement(tag).build())
+                .replaceText(TextReplacementConfig.builder().matchLiteral("{supremetags_tag}").replacement(tag).build());
     }
 
     private String extractSenderFromJson(JsonObject jsonObject) {

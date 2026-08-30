@@ -5,17 +5,17 @@ import net.noscape.project.supremetags.enums.EditingType;
 import net.noscape.project.supremetags.guis.categoryeditor.SpecificCategoryMenu;
 import net.noscape.project.supremetags.guis.personaltags.PersonalTagEditorMenu;
 import net.noscape.project.supremetags.guis.tageditor.SpecificTagMenu;
+import net.noscape.project.supremetags.guis.tageditor.VoucherEditorMenu;
+import net.noscape.project.supremetags.guis.tageditor.VoucherLoreEditorMenu;
 import net.noscape.project.supremetags.handlers.Editor;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,25 +35,31 @@ public class EditorListener implements Listener {
 
     public void edit(AsyncPlayerChatEvent e) {
         Player player = e.getPlayer();
-        if (!SupremeTags.getInstance().getEditorList().containsKey(player)) return;
+        if (!SupremeTags.getInstance().getEditorList().containsKey(player.getUniqueId())) return;
 
         String message = e.getMessage();
         String deformat_message = deformat(message);
-        Editor editor = SupremeTags.getInstance().getEditorList().get(player);
+        Editor editor = SupremeTags.getInstance().getEditorList().get(player.getUniqueId());
         EditingType type = editor.getType();
 
         e.setCancelled(true);
 
-        // === Handle cancel input ===
         if (deformat_message.equalsIgnoreCase("cancel")) {
             SupremeTags.getInstance().removeEditor(player);
 
-            // Return to correct menu depending on edit type
             if (!editor.isPersonalEdit()) {
-                Tag tag = SupremeTags.getInstance().getTagManager().getTag(editor.getIdentifier());
+                Tag tag = SupremeTags.getInstance().getTagManager().getTag(getEditorTagIdentifier(editor));
                 if (tag != null) {
-                    runTaskLater(() -> new SpecificTagMenu(
-                            SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+                    if (isVoucherLoreEdit(type)) {
+                        runTaskLater(() -> new VoucherLoreEditorMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, getEditorTagIdentifier(editor))).open(), 1L);
+                    } else if (isVoucherEdit(type)) {
+                        runTaskLater(() -> new VoucherEditorMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, getEditorTagIdentifier(editor))).open(), 1L);
+                    } else {
+                        runTaskLater(() -> new SpecificTagMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+                    }
                 } else {
                     runTaskLater(() -> new SpecificCategoryMenu(
                             SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
@@ -69,13 +75,13 @@ public class EditorListener implements Listener {
             return;
         } else {
 
-            // === Continue normal editing ===
             if (!editor.isPersonalEdit()) {
-                Tag tag = SupremeTags.getInstance().getTagManager().getTag(editor.getIdentifier());
+                Tag tag = SupremeTags.getInstance().getTagManager().getTag(getEditorTagIdentifier(editor));
                 if (tag != null) {
+                    SupremeTags.getInstance().getTagEditorSessionManager().snapshot(player, tag);
                     switch (type) {
                         case CHANGING_TAG:
-                            List<String> tagList = tag.getTag();
+                            List<String> tagList = new ArrayList<>();
                             tagList.add(message);
                             tag.setTag(tagList);
                             break;
@@ -90,6 +96,40 @@ public class EditorListener implements Listener {
                             break;
                         case CHANGING_COST:
                             tag.getEconomy().setAmount(Double.parseDouble(deformat_message));
+                            break;
+                        case CHANGING_ECONOMY_TYPE:
+                            tag.getEconomy().setType(deformat_message.toUpperCase());
+                            break;
+                        case CHANGING_ECONOMY_TAKE_CMD:
+                            tag.getEconomy().setTake_cmd(message);
+                            break;
+                        case CHANGING_ECONOMY_CONDITION:
+                            tag.getEconomy().setCondition(message);
+                            break;
+                        case CHANGING_VOUCHER_DISPLAYNAME:
+                            tag.setVoucherDisplayName(message);
+                            break;
+                        case CHANGING_VOUCHER_MATERIAL:
+                            tag.setVoucherMaterial(deformat_message.toUpperCase());
+                            break;
+                        case CHANGING_VOUCHER_LORE:
+                            tag.setVoucherLore(List.of(message.split("\\|", -1)));
+                            break;
+                        case ADDING_VOUCHER_LORE_LINE:
+                            List<String> addedLore = new ArrayList<>(tag.getVoucherLore());
+                            addedLore.add(message);
+                            tag.setVoucherLore(addedLore);
+                            break;
+                        case CHANGING_VOUCHER_LORE_LINE:
+                            List<String> editedLore = new ArrayList<>(tag.getVoucherLore());
+                            int lineIndex = getLoreLineIndex(editor);
+                            if (lineIndex >= 0 && lineIndex < editedLore.size()) {
+                                editedLore.set(lineIndex, message);
+                                tag.setVoucherLore(editedLore);
+                            }
+                            break;
+                        case CHANGING_VOUCHER_MODEL_DATA:
+                            tag.setVoucherCustomModelData(Integer.parseInt(deformat_message));
                             break;
                         case CHANGING_DESCRIPTION:
                             List<String> desc = tag.getDescription();
@@ -108,10 +148,18 @@ public class EditorListener implements Listener {
                     SupremeTags.getInstance().getTagManager().loadTags(true);
                     SupremeTags.getInstance().getCategoryManager().initCategories();
 
-                    runTaskLater(() -> new SpecificTagMenu(
-                            SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+                    if (isVoucherLoreEdit(type)) {
+                        runTaskLater(() -> new VoucherLoreEditorMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, getEditorTagIdentifier(editor))).open(), 1L);
+                    } else if (isVoucherEdit(type)) {
+                        runTaskLater(() -> new VoucherEditorMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, getEditorTagIdentifier(editor))).open(), 1L);
+                    } else {
+                        runTaskLater(() -> new SpecificTagMenu(
+                                SupremeTags.getMenuUtilIdentifier(player, editor.getIdentifier())).open(), 1L);
+                    }
                 } else {
-                    // Category editing
+
                     String category = editor.getIdentifier();
                     FileConfiguration catConfig = SupremeTags.getInstance().getCategoryManager().getCatConfig();
                     switch (type) {
@@ -185,20 +233,41 @@ public class EditorListener implements Listener {
         }
     }
 
-    /**
-     * Runs a task later supporting Folia & Bukkit.
-     */
     private void runTaskLater(Runnable task, long delayTicks) {
-        Plugin plugin = SupremeTags.getInstance();
+        Utils.runMainLater(task, delayTicks);
+    }
 
-        if (SupremeTags.getInstance().isFoliaFound()) {
-            Bukkit.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin,
-                    scheduledTask -> task.run(),
-                    delayTicks,
-                    Long.MAX_VALUE // run once effectively, could cancel immediately after if needed
-            );
-        } else {
-            Utils.runMainLater(task, delayTicks);
+    private boolean isVoucherEdit(EditingType type) {
+        return type == EditingType.CHANGING_VOUCHER_DISPLAYNAME
+                || type == EditingType.CHANGING_VOUCHER_MATERIAL
+                || type == EditingType.CHANGING_VOUCHER_LORE
+                || type == EditingType.ADDING_VOUCHER_LORE_LINE
+                || type == EditingType.CHANGING_VOUCHER_LORE_LINE
+                || type == EditingType.CHANGING_VOUCHER_MODEL_DATA;
+    }
+
+    private boolean isVoucherLoreEdit(EditingType type) {
+        return type == EditingType.ADDING_VOUCHER_LORE_LINE
+                || type == EditingType.CHANGING_VOUCHER_LORE_LINE;
+    }
+
+    private String getEditorTagIdentifier(Editor editor) {
+        String identifier = editor.getIdentifier();
+        int separator = identifier.indexOf("::");
+        return separator == -1 ? identifier : identifier.substring(0, separator);
+    }
+
+    private int getLoreLineIndex(Editor editor) {
+        String identifier = editor.getIdentifier();
+        int separator = identifier.indexOf("::");
+        if (separator == -1) {
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(identifier.substring(separator + 2));
+        } catch (NumberFormatException ignored) {
+            return -1;
         }
     }
 }

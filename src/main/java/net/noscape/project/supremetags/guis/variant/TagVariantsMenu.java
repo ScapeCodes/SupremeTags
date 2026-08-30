@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.variant;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.api.events.TagAssignEvent;
 import net.noscape.project.supremetags.api.events.TagResetEvent;
@@ -55,6 +56,8 @@ public class TagVariantsMenu extends Paged {
         if (tag != null) {
             title = title.replace("%tag%", tag.getTag().get(0));
             title = title.replace("%identifier%", tag.getIdentifier());
+            title = title.replace("%page%", String.valueOf(this.getPage()));
+            title = title.replace("%max_pages%", String.valueOf(getMaxPages(variants.size())));
             title = globalPlaceholders(menuUtil.getOwner(), title);
         }
 
@@ -80,11 +83,11 @@ public class TagVariantsMenu extends Paged {
         if (e.getCurrentItem().getType().equals(Material.valueOf(Objects.requireNonNull(this.guis.getString("gui.items.glass.material")).toUpperCase())))
             e.setCancelled(true);
 
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("isVariant") && nbt.hasTag("variant_identifier")) {
-            if (nbt.getBoolean("isVariant").booleanValue()) {
-                String var_identifier = nbt.getString("variant_identifier");
+        if (ItemData.has(nbt, "isVariant") && ItemData.has(nbt, "variant_identifier")) {
+            if (ItemData.getBoolean(nbt, "isVariant")) {
+                String var_identifier = ItemData.getString(nbt, "variant_identifier");
                 Variant var = this.tag.getVariant(var_identifier);
                 if (player.hasPermission(var.getPermission()) &&
                         !UserData.getActive(player.getUniqueId()).equalsIgnoreCase(var_identifier) && var_identifier != null) {
@@ -123,8 +126,8 @@ public class TagVariantsMenu extends Paged {
             }
         }
 
-        if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+        if (ItemData.has(nbt, "name")) {
+            String name = ItemData.getString(nbt, "name");
 
             if (name.equalsIgnoreCase("close")) {
                 player.closeInventory();
@@ -199,7 +202,7 @@ public class TagVariantsMenu extends Paged {
                 Set<String> rarities = SupremeTags.getInstance().getRarityManager().getRarityMap().keySet();
 
                 List<String> sortOptions = new ArrayList<>();
-                sortOptions.add("none"); // no sorting
+                sortOptions.add("none");
                 for (String rarity : rarities) {
                     sortOptions.add("rarity:" + rarity);
                 }
@@ -216,14 +219,12 @@ public class TagVariantsMenu extends Paged {
 
             if (name.equalsIgnoreCase("back")) {
 
-                // If we're NOT on the first page, go back a page
                 if (page != 0) {
                     page = page - 1;
                     super.refresh();
                     return;
                 }
 
-                // Otherwise (page == 1), go back to TagMenu / MainMenu
                 player.closeInventory();
                 boolean isCategories = SupremeTags.getInstance().getConfig().getBoolean("settings.categories");
 
@@ -255,7 +256,6 @@ public class TagVariantsMenu extends Paged {
 
         String sort = menuUtil.getSort();
 
-        // Filter variants based on sorting
         List<Variant> filtered = new ArrayList<>(variants);
 
         if (sort != null && sort.startsWith("rarity:")) {
@@ -263,22 +263,17 @@ public class TagVariantsMenu extends Paged {
             filtered.removeIf(v -> !v.getRarity().equalsIgnoreCase(rarity));
         }
 
-        // Paging Setup
         int startIndex = page * maxItems;
         int endIndex = Math.min(startIndex + maxItems, filtered.size());
 
         currentItemsOnPage = 0;
-        index = startIndex; // ✅ VERY IMPORTANT
+        index = startIndex;
 
         for (int i = startIndex; i < endIndex; i++) {
             if (i >= filtered.size()) break;
 
             Variant var = filtered.get(i);
             if (var == null) continue;
-
-            // ------------------
-            // BUILD ITEM (your original item-building logic left untouched)
-            // ------------------
 
             String material;
             String item_displayname;
@@ -287,15 +282,12 @@ public class TagVariantsMenu extends Paged {
             boolean unlocked = menuUtil.getOwner().hasPermission(var.getPermission()) ||
                     var.getPermission().equalsIgnoreCase("none");
 
-            // Model data
             item_custom_model_data = unlocked ? var.getUnlocked_custom_model_data() : var.getLocked_custom_model_data();
 
-            // Display name
             item_displayname = unlocked ?
                     var.getUnlocked_displayname().replace("%tag%", var.getTag().get(0)) :
                     var.getLocked_displayname().replace("%tag%", var.getTag().get(0));
 
-            // Material
             material = unlocked ?
                     (var.getUnlocked_material() != null ? var.getUnlocked_material() : "NAME_TAG") :
                     (var.getLocked_material() != null ? var.getLocked_material() : "BARRIER");
@@ -303,9 +295,8 @@ public class TagVariantsMenu extends Paged {
             ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), material);
             ItemStack item = resolved.item();
             ItemMeta meta = resolved.meta();
-            NBTItem nbt = new NBTItem(item);
+            ItemStack nbt = item;
 
-            // Set model data
             if (meta != null) {
                 if (unlocked) {
                     if (item_custom_model_data > 0) {
@@ -319,7 +310,6 @@ public class TagVariantsMenu extends Paged {
                 }
             }
 
-            // Lore building
             List<String> lore = getFormattedLore(var, var.getPermission());
 
             String joinedDescription = var.getDescription().stream()
@@ -350,7 +340,6 @@ public class TagVariantsMenu extends Paged {
 
             meta.setLore(color(lore));
 
-            // Active glow
             if (UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(var.getIdentifier()) &&
                     SupremeTags.getInstance().getConfig().getBoolean("settings.active-tag-glow")) {
                 meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
@@ -359,12 +348,12 @@ public class TagVariantsMenu extends Paged {
             meta.setDisplayName(format(item_displayname));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
 
-            nbt.getItem().setItemMeta(meta);
+            nbt.setItemMeta(meta);
 
-            nbt.setString("variant_identifier", var.getIdentifier());
-            nbt.setBoolean("isVariant", true);
+            ItemData.setString(nbt, "variant_identifier", var.getIdentifier());
+            ItemData.setBoolean(nbt, "isVariant", true);
 
-            this.inventory.addItem(nbt.getItem());
+            this.inventory.addItem(nbt);
 
             currentItemsOnPage++;
         }

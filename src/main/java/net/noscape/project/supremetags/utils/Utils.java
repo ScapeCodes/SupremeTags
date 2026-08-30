@@ -1,14 +1,18 @@
 package net.noscape.project.supremetags.utils;
 
-import com.artillexstudios.axapi.utils.StringUtils;
+import com.cryptomorin.xseries.XItemFlag;
 import com.cryptomorin.xseries.XSound;
 import dev.lone.itemsadder.api.CustomStack;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import io.th0rgal.oraxen.api.OraxenItems;
+import me.clip.placeholderapi.PAPIComponents;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
@@ -16,23 +20,29 @@ import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.util.Tristate;
 import net.md_5.bungee.api.ChatColor;
 import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.api.events.TagBuyEvent;
+import net.noscape.project.supremetags.guis.confirm.ConfirmationMenu;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.TagEconomy;
 import net.noscape.project.supremetags.handlers.Variant;
+import net.noscape.project.supremetags.handlers.menu.MenuUtil;
+import net.noscape.project.supremetags.handlers.requirements.RequirementEvaluator;
+import net.noscape.project.supremetags.handlers.requirements.RequirementResult;
 import net.noscape.project.supremetags.managers.TagManager;
-import org.apache.commons.lang.Validate;
+import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
 
-import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
@@ -44,194 +54,157 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
-    private static final int VERSION = getVersion();
-    private static final boolean SUPPORTS_RGB = VERSION >= 16 || VERSION == -1;
-
-    private static final long CACHE_UPDATE_INTERVAL_TICKS = 20L * 60; // 1 minute
-
-    private static final int BATCH_SIZE = 100; // Number of players per chunk
-    private static final int BATCH_DELAY_TICKS = 2; // Delay between batches
-
-    private static final Pattern p1 = Pattern.compile("\\{#([0-9A-Fa-f]{6})\\}");
-    private static final Pattern p2 = Pattern.compile("&#([A-Fa-f0-9]{6})");
-    private static final Pattern p3 = Pattern.compile("#([A-Fa-f0-9]{6})");
-    private static final Pattern p4 = Pattern.compile("<#([A-Fa-f0-9]{6})>");
-    private static final Pattern p5 = Pattern.compile("<#&([A-Fa-f0-9]{6})>");
-
-//    private static final Pattern g1 = Pattern.compile("<gradient:([0-9A-Fa-f]{6})>(.*?)</gradient:([0-9A-Fa-f]{6})>");
-//    private static final Pattern g2 = Pattern.compile("<gradient:#([A-Fa-f0-9]{6})>(.*?)</gradient:#([A-Fa-f0-9]{6})>");
-//    private static final Pattern g3 = Pattern.compile("<gradient:&#([A-Fa-f0-9]{6})>(.*?)</gradient:&#([A-Fa-f0-9]{6})>");
-//
-//    private static final Pattern g4 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-//    private static final Pattern g5 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-//    private static final Pattern g6 = Pattern.compile("<g:&#([A-Fa-f0-9]){6}>(.*?)</g:&#([A-Fa-f0-9]){6}");
-//
-//    private static final Pattern rainbow1 = Pattern.compile("<rainbow>(.*?)</rainbow>");
-//    private static final Pattern rainbow2 = Pattern.compile("<r>(.*?)</r>");
-
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###.#");
-
+    private static final LegacyComponentSerializer LEGACY_SECTION = LegacyComponentSerializer.builder()
+            .character('\u00A7')
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    private static final PlainTextComponentSerializer PLAIN_TEXT = PlainTextComponentSerializer.plainText();
 
     public static String format(String message) {
         if (message == null || message.isEmpty()) return "";
-
-        if (isVersionLessThan("1.16")) {
-            message = ChatColor.translateAlternateColorCodes('&', message);
-            return message;
-        }
-
-        return StringUtils.formatToString(message, Collections.emptyMap());
+        return LEGACY_SECTION.serialize(formatComponent(message));
     }
 
-    public static String formatOLD(String message) {
+    public static String toMiniMessage(String message) {
         if (message == null || message.isEmpty()) return "";
 
-        try {
-            // --- If legacy detected, convert it first ---
-            if (containsLegacyFormatting(message)) {
+        String normalized = message.replace('\u00A7', '&');
+        StringBuilder output = new StringBuilder(normalized.length());
 
-                message = formatLegacy(message);
+        for (int i = 0; i < normalized.length(); i++) {
+            char current = normalized.charAt(i);
 
-                Component legacyComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(message);
-
-                // Optional: upgrade to MiniMessage string if you ever want to re-save
-                String upgradedMini = MiniMessage.miniMessage().serialize(legacyComponent);
-
-                // Return a version safe for GUI or chat
-                return LegacyComponentSerializer.legacySection().serialize(
-                        MiniMessage.miniMessage().deserialize(upgradedMini)
-                );
+            if (current != '&' || i + 1 >= normalized.length()) {
+                output.append(current);
+                continue;
             }
 
-            // --- Otherwise, assume it's MiniMessage and parse directly ---
-            Component component = MiniMessage.miniMessage().deserialize(message);
-            return LegacyComponentSerializer.legacySection().serialize(component);
+            if (Character.toLowerCase(normalized.charAt(i + 1)) == 'x' && i + 13 < normalized.length()) {
+                StringBuilder hex = new StringBuilder(6);
+                boolean validHex = true;
 
-        } catch (Exception e) {
-            // Last resort fallback — never crash on color parsing
-            message = formatLegacy(message);
-            return ChatColor.translateAlternateColorCodes('&', message);
+                for (int j = 0; j < 6; j++) {
+                    int ampIndex = i + 2 + (j * 2);
+                    int hexIndex = ampIndex + 1;
+
+                    if (normalized.charAt(ampIndex) != '&' || !isHexDigit(normalized.charAt(hexIndex))) {
+                        validHex = false;
+                        break;
+                    }
+
+                    hex.append(normalized.charAt(hexIndex));
+                }
+
+                if (validHex) {
+                    output.append("<#").append(hex).append(">");
+                    i += 13;
+                    continue;
+                }
+            }
+
+            if (normalized.charAt(i + 1) == '#' && i + 7 < normalized.length()) {
+                String hex = normalized.substring(i + 2, i + 8);
+                if (hex.chars().allMatch(value -> isHexDigit((char) value))) {
+                    output.append("<#").append(hex).append(">");
+                    i += 7;
+                    continue;
+                }
+            }
+
+            String replacement = legacyCodeToMiniMessage(normalized.charAt(i + 1));
+            if (replacement == null) {
+                output.append(current);
+                continue;
+            }
+
+            output.append(replacement);
+            i++;
         }
+
+        return output.toString();
     }
 
-    /**
-     * Detects legacy color codes (& or §)
-     */
-    private static boolean containsLegacyFormatting(String message) {
-        // § or & followed by a valid color/formatting char
-        return message.contains("§") || message.matches(".*&[0-9a-frklmnor].*");
+    private static boolean isHexDigit(char character) {
+        return (character >= '0' && character <= '9')
+                || (character >= 'a' && character <= 'f')
+                || (character >= 'A' && character <= 'F');
     }
 
-    /**
-     * Formats a string with & and hex color support (fallback mode).
-     */
-    private static String formatLegacy(String message) {
-        // Replace known hex formats (#RRGGBB, &#RRGGBB, etc.)
-        message = replacePatternWithMinecraftColor(message, p1);
-        message = replacePatternWithMinecraftColor(message, p2);
-        message = replacePatternWithMinecraftColor(message, p4);
-        message = replacePatternWithMinecraftColor(message, p5);
-        message = replacePatternWithMinecraftColor(message, p3);
-
-        // Translate MiniMessage-like color tags into legacy
-        message = message
-                .replace("<black>", "&0")
-                .replace("<dark_blue>", "&1")
-                .replace("<dark_green>", "&2")
-                .replace("<dark_aqua>", "&3")
-                .replace("<dark_red>", "&4")
-                .replace("<dark_purple>", "&5")
-                .replace("<gold>", "&6")
-                .replace("<gray>", "&7")
-                .replace("<dark_gray>", "&8")
-                .replace("<blue>", "&9")
-                .replace("<green>", "&a")
-                .replace("<aqua>", "&b")
-                .replace("<red>", "&c")
-                .replace("<light_purple>", "&d")
-                .replace("<yellow>", "&e")
-                .replace("<white>", "&f")
-                .replace("<obfuscated>", "&k")
-                .replace("<bold>", "&l")
-                .replace("<strikethrough>", "&m")
-                .replace("<underlined>", "&n")
-                .replace("<italic>", "&o")
-                .replace("<reset>", "&r");
-
-        // Apply final color codes
-        return ChatColor.translateAlternateColorCodes('&', message);
+    private static String legacyCodeToMiniMessage(char code) {
+        return switch (Character.toLowerCase(code)) {
+            case '0' -> "<reset><black>";
+            case '1' -> "<reset><dark_blue>";
+            case '2' -> "<reset><dark_green>";
+            case '3' -> "<reset><dark_aqua>";
+            case '4' -> "<reset><dark_red>";
+            case '5' -> "<reset><dark_purple>";
+            case '6' -> "<reset><gold>";
+            case '7' -> "<reset><gray>";
+            case '8' -> "<reset><dark_gray>";
+            case '9' -> "<reset><blue>";
+            case 'a' -> "<reset><green>";
+            case 'b' -> "<reset><aqua>";
+            case 'c' -> "<reset><red>";
+            case 'd' -> "<reset><light_purple>";
+            case 'e' -> "<reset><yellow>";
+            case 'f' -> "<reset><white>";
+            case 'k' -> "<obfuscated>";
+            case 'l' -> "<bold>";
+            case 'm' -> "<strikethrough>";
+            case 'n' -> "<underlined>";
+            case 'o' -> "<italic>";
+            case 'r' -> "<reset>";
+            default -> null;
+        };
     }
 
-    /**
-     * Handles both MiniMessage + legacy when using Adventure Components.
-     */
     public static Component formatComponent(String message) {
         if (message == null || message.isEmpty()) return Component.empty();
 
-        boolean useMiniMessage = SupremeTags.getInstance().isMiniMessage();
-
         try {
-            if (useMiniMessage) {
-                // Let MiniMessage handle the rich formatting
-                return MiniMessage.miniMessage().deserialize(message);
-            } else {
-                // Fallback: handle legacy codes and return a component
-                String formatted = formatLegacy(message);
-                return LegacyComponentSerializer.legacySection().deserialize(formatted);
-            }
+            return MINI_MESSAGE.deserialize(toMiniMessage(message));
         } catch (Exception e) {
-            e.printStackTrace();
-            return Component.text(ChatColor.stripColor(message));
+            return Component.text(message);
         }
     }
 
-    /**
-     * Checks whether Adventure API is available on the current server.
-     * (Prevents NoClassDefFoundError on legacy versions)
-     */
-    private static boolean isAdventureAvailable() {
-        try {
-            Class.forName("net.kyori.adventure.text.Component");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+    public static Component formatComponent(Player player, String message) {
+        Component component = formatComponent(message);
+        if (player == null || Bukkit.getServer().getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            return component;
         }
+
+        if (!PlaceholderAPI.containsPlaceholders(message)) {
+            return component;
+        }
+
+        try {
+            return PAPIComponents.setPlaceholders(player, component, Utils::placeholderComponent);
+        } catch (LinkageError | RuntimeException ignored) {
+            return formatComponent(PlaceholderAPI.setPlaceholders(player, message));
+        }
+    }
+
+    private static ComponentLike placeholderComponent(String value) {
+        return formatComponent(value);
     }
 
     public static void msgPlayer(CommandSender sender, String... messages) {
         if (messages == null || messages.length == 0) return;
 
-        boolean adventureAvailable = isAdventureAvailable();
-
         for (String msg : messages) {
             if (msg == null || msg.isEmpty()) continue;
 
-            try {
-                // If MiniMessage + Adventure API are supported, send as a Component
-                if (adventureAvailable && SupremeTags.getInstance().isMiniMessage()) {
-                    Component component = formatComponent(msg);
-
-                    // If it's a Player, send Adventure component directly
-                    if (sender instanceof Player player) {
-                        player.sendMessage(component);
-                    } else {
-                        // Console, command blocks, etc. — convert to legacy safely
-                        sender.sendMessage(LegacyComponentSerializer.legacySection().serialize(component));
-                    }
-                    continue;
-                }
-            } catch (Throwable ignored) {
-                // fallback below
-            }
-
-            // Fallback for non-Adventure servers or MiniMessage disabled
-            sender.sendMessage(format(msg));
+            Component component = sender instanceof Player player
+                    ? formatComponent(player, msg)
+                    : formatComponent(msg);
+            sender.sendMessage(component);
         }
     }
 
-    /**
-     * Backward-compatible overload for Player, calls main method.
-     */
     public static void msgPlayer(Player player, String... messages) {
         msgPlayer((CommandSender) player, messages);
     }
@@ -243,103 +216,16 @@ public class Utils {
                 .collect(Collectors.toList());
     }
 
-    private static String replacePatternWithMinecraftColor(String input, Pattern pattern) {
-        Matcher matcher = pattern.matcher(input);
-        StringBuffer buffer = new StringBuffer();
-
-        while (matcher.find()) {
-            String colorCode = matcher.group(1);
-            String replacement;
-
-            if (SUPPORTS_RGB) {
-                // Convert to §x§R§R§G§G§B§B
-                StringBuilder hex = new StringBuilder("§x");
-                for (char c : colorCode.toCharArray()) {
-                    hex.append('§').append(c);
-                }
-                replacement = hex.toString();
-            } else {
-                // Approximate to nearest ChatColor
-                ChatColor closest = ChatColor.of("#" + colorCode);
-                replacement = closest.toString();
-            }
-
-            matcher.appendReplacement(buffer, replacement);
-        }
-
-        matcher.appendTail(buffer);
-        return buffer.toString();
+    public static Component itemName(String text) {
+        return formatComponent(text).decoration(TextDecoration.ITALIC, false);
     }
 
-    private static String hexToMinecraftColorCode(String hex) {
-        // hex format: #aabbcc
-        char[] chars = hex.substring(1).toCharArray();
-        StringBuilder sb = new StringBuilder("§x");
-        for (char c : chars) {
-            sb.append('§').append(Character.toLowerCase(c));
-        }
-        return sb.toString();
-    }
-
-    private static String legacyToMiniMessage(String message) {
-        return message
-                .replace("&0", "<black>")
-                .replace("&1", "<dark_blue>")
-                .replace("&2", "<dark_green>")
-                .replace("&3", "<dark_aqua>")
-                .replace("&4", "<dark_red>")
-                .replace("&5", "<dark_purple>")
-                .replace("&6", "<gold>")
-                .replace("&7", "<gray>")
-                .replace("&8", "<dark_gray>")
-                .replace("&9", "<blue>")
-                .replace("&a", "<green>")
-                .replace("&b", "<aqua>")
-                .replace("&c", "<red>")
-                .replace("&d", "<light_purple>")
-                .replace("&e", "<yellow>")
-                .replace("&f", "<white>")
-                .replace("&k", "<obfuscated>")
-                .replace("&l", "<bold>")
-                .replace("&m", "<strikethrough>")
-                .replace("&n", "<underlined>")
-                .replace("&o", "<italic>")
-                .replace("&r", "<reset>");
-    }
-
-
-    private static String createRainbowTextWithFormatting(String text, String formatting) {
-        int length = text.length();
-        Color[] rainbowColors = {
-                Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.BLUE, Color.MAGENTA
-        };
-        int colorCount = rainbowColors.length;
-
-        StringBuilder rainbowBuilder = new StringBuilder();
-
-        for (int i = 0; i < length; i++) {
-            char currentChar = text.charAt(i);
-
-            // Calculate the color for this character
-            Color color = rainbowColors[i % colorCount];
-            String hexColor = String.format("%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
-
-            rainbowBuilder.append(toMinecraftHex(hexColor)).append(formatting).append(currentChar);
-        }
-
-        return rainbowBuilder.toString();
-    }
-
-    private static String toMinecraftHex(String hexColor) {
-        StringBuilder minecraftHex = new StringBuilder("§x");
-        for (char c : hexColor.toCharArray()) {
-            minecraftHex.append("§").append(c);
-        }
-        return minecraftHex.toString();
-    }
-
-    public static boolean isValidVersion(String version) {
-        return version.matches("\\d+(\\.\\d+)*"); // Matches version strings like "1", "1.2", "1.2.3", etc.
+    public static List<Component> itemLore(List<String> lore) {
+        if (lore == null) return Collections.emptyList();
+        return lore.stream()
+                .map(Utils::formatComponent)
+                .map(component -> component.decoration(TextDecoration.ITALIC, false))
+                .collect(Collectors.toList());
     }
 
     public static boolean isVersionLessThan(String version) {
@@ -365,75 +251,20 @@ public class Utils {
             }
 
             return false;
-
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-    }
-
-    private static int getVersion() {
-        if (!classExists("org.bukkit.Bukkit") &&
-                classExists("net.md_5.bungee.api.ChatColor")) {
-            return -1;
-        }
-
-        try {
-            String bukkitVersion = Bukkit.getBukkitVersion();
-
-            String mcVersion = bukkitVersion.split("-")[0];
-
-            String[] parts = mcVersion.split("\\.");
-
-            return Integer.parseInt(parts[1]);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 21; // safe fallback
-        }
-    }
-
-    /**
-     * Checks if a class exists in the current server
-     *
-     * @param path The path of that class
-     * @return true if the class exists, false if it doesn't
-     * @since 1.0.7
-     */
-    private static boolean classExists(final String path) {
-        try {
-            Class.forName(path);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    public static String colorizeRGB(String input) {
-        Matcher matcher = p1.matcher(input);
-        String color;
-        while (matcher.find()) {
-            color = matcher.group(1);
-            if (color == null) {
-                color = matcher.group(2);
-            }
-            input = input.replace(matcher.group(), ChatColor.of(color) + "");
-        }
-        return input;
     }
 
     public static void addPerm(OfflinePlayer player, String permission) {
-        SupremeTags.getPermissions().playerAdd(null, player, permission); // null = global
+        SupremeTags.getPermissions().playerAdd(null, player, permission);
     }
 
     public static void removePerm(OfflinePlayer player, String permission) {
         SupremeTags.getPermissions().playerRemove(null, player, permission);
     }
 
-    /**
-     * Checks if a player belongs to any of the required groups using VaultUnlockedAPI.
-     * Returns false if VaultUnlocked is not available or groups list is empty.
-     */
     public static boolean hasGroupAccess(Player player, List<String> groups) {
         if (groups == null || groups.isEmpty()) return false;
 
@@ -450,16 +281,12 @@ public class Utils {
                 }
             }
         } catch (Exception e) {
-            // VaultUnlocked not available or error occurred - silently fail
+
         }
 
         return false;
     }
 
-    /**
-     * Checks if a player has access to a tag via permission OR group membership.
-     * Permission "none" always grants access.
-     */
     public static boolean hasTagAccess(Player player, Tag tag) {
         if (player.hasPermission(tag.getPermission()) || tag.getPermission().equalsIgnoreCase("none")) {
             return true;
@@ -489,7 +316,6 @@ public class Utils {
             return evaluateCondition(condition);
         }
 
-
         return false;
     }
 
@@ -509,10 +335,6 @@ public class Utils {
         }
     }
 
-    /**
-     * Supports comparisons like:
-     * - >=, <=, >, <, ==, !=
-     */
     private static boolean evaluateCondition(String condition) {
         condition = condition.replace(" ", "");
 
@@ -546,9 +368,8 @@ public class Utils {
         return false;
     }
 
-
     public static String deformat(String str) {
-        return ChatColor.stripColor(format(str));
+        return PLAIN_TEXT.serialize(formatComponent(str));
     }
 
     public static void titlePlayer(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
@@ -559,101 +380,44 @@ public class Utils {
         player.playSound(player.getLocation(), sound, volume, pitch);
     }
 
-    private static final Pattern rgbPat = Pattern.compile("(?:#|0x)(?:[a-f0-9]{3}|[a-f0-9]{6})\\b|(?:rgb|hsl)a?\\([^\\)]*\\)");
-
-    public static String getRGB(String msg) {
-        String temp = msg;
-        try {
-
-            String status = "none";
-            String r = "";
-            String g = "";
-            String b = "";
-            Matcher match = rgbPat.matcher(msg);
-            while (match.find()) {
-                String color = msg.substring(match.start(), match.end());
-                for (char character : msg.substring(match.start(), match.end()).toCharArray()) {
-                    switch (character) {
-                        case '(':
-                            status = "r";
-                            continue;
-                        case ',':
-                            switch (status) {
-                                case "r":
-                                    status = "g";
-                                    continue;
-                                case "g":
-                                    status = "b";
-                                    continue;
-                                default:
-                                    break;
-                            }
-                        default:
-                            switch (status) {
-                                case "r":
-                                    r = r + character;
-                                    continue;
-                                case "g":
-                                    g = g + character;
-                                    continue;
-                                case "b":
-                                    b = b + character;
-                                    continue;
-                            }
-                            break;
-                    }
-
-
-                }
-                b = b.replace(")", "");
-                Color col = new Color(Integer.parseInt(r), Integer.parseInt(g), Integer.parseInt(b));
-                temp = temp.replaceFirst("(?:#|0x)(?:[a-f0-9]{3}|[a-f0-9]{6})\\b|(?:rgb|hsl)a?\\([^\\)]*\\)", ChatColor.of(col) + "");
-                r = "";
-                g = "";
-                b = "";
-                status = "none";
-            }
-        } catch (Exception e) {
-            return msg;
-        }
-        return temp;
-    }
-
     public static String replacePlaceholders(Player user, String base) {
         if (Bukkit.getServer().getPluginManager().getPlugin("PlaceholderAPI") == null) return base;
 
         return PlaceholderAPI.setPlaceholders(user, base);
     }
 
+    public static String replaceInternalPlaceholders(Player user, String message) {
+        if (message == null || message.isEmpty()) return "";
+
+        if (message.contains("%tag_credits%")) {
+            long credits = user != null ? UserData.getDisplayTagCredits(user.getUniqueId()) : 0;
+            message = message.replace("%tag_credits%", String.valueOf(credits));
+        }
+
+        if (message.contains("%tag_credits_creation_cost%")) {
+            int creationCost = SupremeTags.getInstance().getConfig()
+                    .getInt("settings.personal-tags.credits.creation-cost", 0);
+            message = message.replace("%tag_credits_creation_cost%", String.valueOf(creationCost));
+        }
+
+        return message;
+    }
+
+    public static List<String> replaceInternalPlaceholders(Player user, List<String> lore) {
+        if (lore == null) return Collections.emptyList();
+        return lore.stream()
+                .map(line -> replaceInternalPlaceholders(user, line))
+                .collect(Collectors.toList());
+    }
+
     public static String globalPlaceholders(Player user, String message) {
+        message = replaceInternalPlaceholders(user, message);
         message = replacePlaceholders(user, message);
         if (Bukkit.getServer().getPluginManager().getPlugin("ItemsAdder") != null) {
             message = FontImageWrapper.replaceFontImages(message);
         }
 
         return message;
-    }
-
-    public static boolean isCustomGUIItem(ItemStack itemStack) {
-        FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
-
-        ConfigurationSection customItemsSection = guis.getConfigurationSection("gui.tag-menu.custom-items");
-        if (customItemsSection == null) {
-            return false;
-        }
-
-        for (String key : customItemsSection.getKeys(false)) {
-            ConfigurationSection itemSection = customItemsSection.getConfigurationSection(key);
-            if (itemSection != null) {
-                if (itemStack.getItemMeta().getDisplayName().equals(itemSection.getString(format("displayname")))
-                        && itemStack.getItemMeta().getCustomModelData() == itemSection.getInt("custom-model-data")) {
-                    return true;
-                }
-            }
-            break;
-        }
-
-        return false; // Item not found in custom items
     }
 
     public static int isCustomGUIItemSlot(Player player, ItemStack itemStack) {
@@ -674,15 +438,8 @@ public class Utils {
 
             int customModelData = 0;
             int configCustomModelData = guis.getInt("gui.tag-menu.custom-items." + key + ".custom-model-data", 0);
-
-
-            try {
-                // Older Bukkit / Paper versions (pre-1.21.5)
-                if (meta.hasCustomModelData()) {
-                    customModelData = meta.getCustomModelData();
-                }
-            } catch (NoSuchMethodError ignored) {
-                // 1.12–1.13 (no custom model data support)
+            if (meta.hasCustomModelData()) {
+                customModelData = meta.getCustomModelData();
             }
             configDisplayName = replacePlaceholders(player, configDisplayName);
 
@@ -693,9 +450,8 @@ public class Utils {
             }
         }
 
-        return -1; // No match
+        return -1;
     }
-
 
     public static String isCustomGUIItemName(Player player, ItemStack itemStack) {
         FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
@@ -722,63 +478,7 @@ public class Utils {
             }
         }
 
-        return ""; // Indicates no match found
-    }
-
-    public static int isCustomGUIItemMMSlot(Player player, ItemStack itemStack) {
-        FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
-
-        for (String key : guis.getConfigurationSection("gui.main-menu.custom-items").getKeys(false)) {
-            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-                String displayName = deformat(itemStack.getItemMeta().getDisplayName());
-                int customModelData;
-                if (itemStack.getItemMeta().hasCustomModelData()) {
-                    customModelData = itemStack.getItemMeta().getCustomModelData();
-                } else {
-                    customModelData = 0;
-                }
-
-                String material = guis.getString("gui.main-menu.custom-items." + key + ".material");
-                String displaynameConfig = guis.getString("gui.main-menu.custom-items." + key + ".displayname");
-                int configCustomModelData = guis.getInt("gui.main-menu.custom-items." + key + ".custom-model-data");
-
-                displaynameConfig = replacePlaceholders(player, displaynameConfig);
-
-                if (material != null && displayName.equals(displaynameConfig) && customModelData == configCustomModelData) {
-                    return guis.getInt("gui.main-menu.custom-items." + key + ".slot");
-                }
-            }
-        }
-
-        return -1; // Indicates no match found
-    }
-
-    public static String isCustomGUIItemMMName(Player player, ItemStack itemStack) {
-        FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
-
-        for (String key : guis.getConfigurationSection("gui.main-menu.custom-items").getKeys(false)) {
-            if (itemStack != null && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
-                String displayName = deformat(itemStack.getItemMeta().getDisplayName());
-                int customModelData;
-                if (itemStack.getItemMeta().hasCustomModelData()) {
-                    customModelData = itemStack.getItemMeta().getCustomModelData();
-                } else {
-                    customModelData = 0;
-                }
-
-                String material = guis.getString("gui.main-menu.custom-items." + key + ".material");
-                String displaynameConfig = guis.getString("gui.main-menu.custom-items." + key + ".displayname");
-                int configCustomModelData = guis.getInt("gui.main-menu.custom-items." + key + ".custom-model-data");
-
-                displaynameConfig = replacePlaceholders(player, displaynameConfig);
-
-                if (material != null && displayName.equals(displaynameConfig) && customModelData == configCustomModelData) {
-                    return key;
-                }
-            }
-        }
-
-        return ""; // Indicates no match found
+        return "";
     }
 
     public static int compareVersions(String version1, String version2) {
@@ -797,7 +497,78 @@ public class Utils {
                 return 1;
             }
         }
-        return 0; // versions are equal
+        return 0;
+    }
+
+    public static void addItemFlags(ItemMeta meta, XItemFlag... flags) {
+        if (meta == null || flags == null)
+            return;
+        for (XItemFlag flag : flags) {
+            if (flag != null)
+                try {
+                    Object resolvedFlag = flag.getClass().getMethod("get", new Class[0]).invoke(flag, new Object[0]);
+                    if (resolvedFlag instanceof Optional) {
+                        Optional<?> optional = (Optional)resolvedFlag;
+                        resolvedFlag = optional.orElse(null);
+                    }
+                    if (resolvedFlag instanceof ItemFlag) {
+                        ItemFlag itemFlag = (ItemFlag)resolvedFlag;
+                        meta.addItemFlags(new ItemFlag[] { itemFlag });
+                    }
+                } catch (ReflectiveOperationException|LinkageError reflectiveOperationException) {}
+        }
+    }
+
+    public static boolean hasBaseTagAccess(Player player, Tag tag) {
+        if (player.hasPermission(tag.getPermission()) || tag.getPermission().equalsIgnoreCase("none"))
+            return true;
+        return hasGroupAccess(player, tag.getGroups());
+    }
+
+    public static boolean hasTagRequirements(Player player, Tag tag) {
+        return RequirementEvaluator.evaluate(player, tag).isPassed();
+    }
+
+    public static String getTagRequirementMessage(Player player, Tag tag) {
+        RequirementResult result = RequirementEvaluator.evaluate(player, tag);
+        return result.isPassed() ? "" : result.getMessage();
+    }
+
+    public static String getTagRequirementsStatus(Player player, Tag tag) {
+        return RequirementEvaluator.formatStatus(player, tag);
+    }
+
+    public static boolean shouldConfirmTagSelection() {
+        return SupremeTags.getInstance().getConfig().getBoolean("settings.tag-select-confirmation", false);
+    }
+
+    public static boolean shouldConfirmTagPurchase() {
+        return SupremeTags.getInstance().getConfig().getBoolean("settings.tag-purchase-confirmation", false);
+    }
+
+    public static void openTagSelectionConfirmation(Player player, String identifier) {
+        (new ConfirmationMenu(new MenuUtil(player, identifier), "select-tag:" + identifier)).open();
+    }
+
+    public static void openTagPurchaseConfirmation(Player player, String identifier) {
+        (new ConfirmationMenu(new MenuUtil(player, identifier), "purchase-tag:" + identifier)).open();
+    }
+
+    public static void purchaseTag(Player player, Tag tag) {
+        if (tag == null)
+            return;
+        TagBuyEvent tagEvent = new TagBuyEvent(player, tag.getIdentifier(), tag.getEcoAmount(), false);
+        Bukkit.getPluginManager().callEvent((Event)tagEvent);
+        if (tagEvent.isCancelled())
+            return;
+        take(player, tag.getEcoType(), tag.getEcoAmount(), tag.getIdentifier());
+        addPerm((OfflinePlayer)player, tag.getPermission());
+        if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+            YamlConfiguration yamlConfiguration = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get();
+            String unlocked = yamlConfiguration.getString("messages.tag-unlocked", "%prefix% &7You have unlocked the tag: &6%identifier%").replace("%prefix%", Objects.<CharSequence>requireNonNull(yamlConfiguration.getString("messages.prefix", "")));
+            unlocked = replacePlaceholders(player, unlocked);
+            msgPlayer(player, new String[] { unlocked.replace("%identifier%", tag.getIdentifier()).replace("%tag%", tag.getCurrentTag()) });
+        }
     }
 
     private static String formatLarge(double n, int iteration) {
@@ -828,100 +599,6 @@ public class Utils {
     public static ItemStack getItemWithOraxen(String id) {
         return OraxenItems.getItemById(id).build();
     }
-
-    public static void addTagDisplayName(Player player, String identifier) {
-        boolean isDisplayName = SupremeTags.getInstance().getConfig().getBoolean("settings.auto-apply.displayname");
-        boolean isTab = SupremeTags.getInstance().getConfig().getBoolean("settings.auto-apply.tab");
-
-        // =============================================================
-        // TAB -
-        // =============================================================
-        String oldPlayerName = player.getPlayerListName();
-        System.out.println("Before Tag Removal (Tab): " + oldPlayerName); // Log for debugging
-
-        if (isTab) {
-            // Remove all existing tags from player list name
-            oldPlayerName = removeAllTagsFromString(oldPlayerName);
-
-            System.out.println("After Tag Removal (Tab): " + oldPlayerName); // Log for debugging
-
-            if (identifier.equalsIgnoreCase("none")) {
-                player.setPlayerListName(format(oldPlayerName));
-                return;
-            }
-
-            // Determine the new tag to add
-            String addTag = getTagForIdentifier(identifier, player);
-            String newPlayerName = SupremeTags.getInstance().getConfig().getString("settings.auto-apply.tab-format")
-                    .replaceAll("%playerlistname%", oldPlayerName).replaceAll("%tag%", addTag);
-
-            System.out.println("Final Player Name (Tab): " + newPlayerName); // Log for debugging
-
-            player.setPlayerListName(format(newPlayerName));
-        }
-
-        // =============================================================
-        // DISPLAYNAME -
-        // =============================================================
-        String currentDisplayName = player.getDisplayName();
-        System.out.println("Before Tag Removal (Display Name): " + currentDisplayName); // Log for debugging
-
-        if (isDisplayName) {
-            // Remove all existing tags from display name
-            currentDisplayName = removeAllTagsFromString(currentDisplayName);
-
-            System.out.println("After Tag Removal (Display Name): " + currentDisplayName); // Log for debugging
-
-            if (identifier.equalsIgnoreCase("none")) {
-                player.setDisplayName(format(currentDisplayName));
-                return;
-            }
-
-            // Determine the new tag to add
-            String addTag = getTagForIdentifier(identifier, player);
-            String newDisplayName = SupremeTags.getInstance().getConfig().getString("settings.auto-apply.displayname-format")
-                    .replaceAll("%displayname%", currentDisplayName).replaceAll("%tag%", addTag);
-
-            System.out.println("Final Display Name: " + newDisplayName); // Log for debugging
-
-            player.setDisplayName(format(newDisplayName));
-        }
-    }
-
-    // Helper method to remove all tags from a string (for both tab list and display name)
-    private static String removeAllTagsFromString(String name) {
-        // First, strip color formatting to ensure consistency
-        String strippedName = ChatColor.stripColor(name);
-
-        for (Tag tags : SupremeTags.getInstance().getTagManager().getTags().values()) {
-            for (String t : tags.getTag()) {
-                strippedName = strippedName.replace(t, "").trim();
-            }
-            for (Variant v : tags.getVariants()) {
-                for (String t : v.getTag()) {
-                    strippedName = strippedName.replace(t, "").trim();
-                }
-            }
-        }
-
-        return strippedName;
-    }
-
-    // Helper method to get the appropriate tag for an identifier (normal tag, variant, or player-specific)
-    private static String getTagForIdentifier(String identifier, Player player) {
-        String addTag = "";
-
-        if (SupremeTags.getInstance().getTagManager().doesTagExist(identifier)) {
-            addTag = SupremeTags.getInstance().getTagManager().getTag(identifier).getTag().get(0);
-        } else if (SupremeTags.getInstance().getTagManager().isVariant(identifier)) {
-            addTag = SupremeTags.getInstance().getTagManager().getVariant(identifier).getTag().get(0);
-        } else if (SupremeTags.getInstance().getPlayerManager().doesTagExist(player.getUniqueId(), identifier)) {
-            addTag = SupremeTags.getInstance().getPlayerManager().getTag(player.getUniqueId(), identifier).getTag().get(0);
-        }
-
-        return addTag;
-    }
-
     public static void calculateUnlockedTagCounts() {
         runAsync(() -> {
             LuckPerms luckPerms = LuckPermsProvider.get();
@@ -934,10 +611,8 @@ public class Utils {
             OfflinePlayer[] offlinePlayers = Bukkit.getOfflinePlayers();
             Map<UUID, User> userCache = new ConcurrentHashMap<>();
 
-            // Batch size: adjust if needed
             final int batchSize = 200;
 
-            // Split offline players into batches
             List<List<OfflinePlayer>> batches = new ArrayList<>();
             for (int i = 0; i < offlinePlayers.length; i += batchSize) {
                 batches.add(Arrays.asList(Arrays.copyOfRange(
@@ -947,7 +622,6 @@ public class Utils {
                 )));
             }
 
-            // Process batches sequentially
             CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
 
             for (List<OfflinePlayer> batch : batches) {
@@ -961,16 +635,15 @@ public class Utils {
                                                                 userCache.put(player.getUniqueId(), user);
                                                             }
                                                         })
-                                                        .exceptionally(ex -> null) // skip errors silently
+                                                        .exceptionally(ex -> null)
                                         )
                                         .toArray(CompletableFuture[]::new)
                         )
                 );
             }
 
-            // After all batches are done
             chain.thenRun(() -> {
-                // Process tags
+
                 for (Tag tag : tagsSnapshot) {
                     long unlocked = userCache.values().stream()
                             .filter(user -> user.getCachedData().getPermissionData().checkPermission(tag.getPermission()) == Tristate.TRUE)
@@ -978,7 +651,6 @@ public class Utils {
                     result.put(tag.getIdentifier(), (int) unlocked);
                 }
 
-                // Process variants
                 for (Variant var : variantsSnapshot) {
                     long unlocked = userCache.values().stream()
                             .filter(user -> user.getCachedData().getPermissionData().checkPermission(var.getPermission()) == Tristate.TRUE)
@@ -986,7 +658,6 @@ public class Utils {
                     result.put(var.getIdentifier(), (int) unlocked);
                 }
 
-                // Push result back to main thread
                 runMain(() -> {
                     TagManager.tagUnlockCounts.clear();
                     TagManager.tagUnlockCounts.putAll(result);
@@ -997,7 +668,7 @@ public class Utils {
 
     public static void scheduleUnlockCount() {
         long intervalTicks = 20L * SupremeTags.getInstance().getConfig().getInt("settings.update-unlocked-cache");
-        long initialDelay = Math.max(1L, intervalTicks); // Ensure at least 1 tick delay
+        long initialDelay = Math.max(1L, intervalTicks);
 
         if (SupremeTags.getInstance().isFoliaFound()) {
             Object future = Bukkit.getServer().getGlobalRegionScheduler().runAtFixedRate(
@@ -1011,7 +682,7 @@ public class Utils {
             Bukkit.getScheduler().runTaskTimer(
                     SupremeTags.getInstance(),
                     () -> calculateUnlockedTagCounts(),
-                    1L, // Always use at least 1 tick for compatibility
+                    1L,
                     intervalTicks
             );
         }
@@ -1027,7 +698,7 @@ public class Utils {
 
     public static void runMain(Runnable task) {
         if (SupremeTags.isFoliaFound()) {
-            Bukkit.getServer().getGlobalRegionScheduler().execute(SupremeTags.getInstance(), task); // global sync task
+            Bukkit.getServer().getGlobalRegionScheduler().execute(SupremeTags.getInstance(), task);
         } else {
             Bukkit.getScheduler().runTask(SupremeTags.getInstance(), task);
         }
@@ -1043,7 +714,7 @@ public class Utils {
     }
 
     public static boolean isPaperVersionAtLeast(int major, int minor, int patch) {
-        String version = Bukkit.getVersion(); // Example: git-Paper-441 (MC: 1.21.5)
+        String version = Bukkit.getVersion();
         Pattern pattern = Pattern.compile("\\(MC: (\\d+)\\.(\\d+)(?:\\.(\\d+))?\\)");
         Matcher matcher = pattern.matcher(version);
 
@@ -1162,7 +833,6 @@ public class Utils {
 
         return formattedList;
     }
-
 
     public static void playConfigSound(Player player, String value) {
         if (player == null || value == null) return;

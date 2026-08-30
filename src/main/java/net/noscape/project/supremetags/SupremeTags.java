@@ -1,7 +1,5 @@
 package net.noscape.project.supremetags;
 
-import com.artillexstudios.axapi.AxPlugin;
-import com.artillexstudios.axapi.utils.featureflags.FeatureFlags;
 import com.nexomc.nexo.api.NexoItems;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -16,6 +14,7 @@ import net.noscape.project.supremetags.handlers.hooks.EssentialsChatListener;
 import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 import net.noscape.project.supremetags.managers.*;
+import net.noscape.project.supremetags.redis.RedisUpdateService;
 import net.noscape.project.supremetags.storage.*;
 import net.noscape.project.supremetags.storage.tags.MySQLTags;
 import net.noscape.project.supremetags.storage.tags.SQLiteTags;
@@ -36,6 +35,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
 import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
 
 import java.util.*;
@@ -44,11 +44,8 @@ import java.util.logging.Logger;
 
 import static net.noscape.project.supremetags.utils.Utils.*;
 
-public final class SupremeTags extends AxPlugin {
+public final class SupremeTags extends JavaPlugin {
 
-    /*
-     * Specified by Scape if the plugin is in development build or is a release.
-     */
     public final boolean dev_build;
     public final int build;
 
@@ -58,12 +55,18 @@ public final class SupremeTags extends AxPlugin {
     }
 
     private static SupremeTags instance;
+    private Metrics metrics;
     private ConfigManager configManager;
     private TagManager tagManager;
     private CategoryManager categoryManager;
     private MergeManager mergeManager;
     private VoucherManager voucherManager;
     private RarityManager rarityManager;
+    private TagStatisticsManager tagStatisticsManager;
+    private FileSyncingManager fileSyncingManager;
+    private AutoApplyManager autoApplyManager;
+    private TagEditorSessionManager tagEditorSessionManager;
+    private RedisUpdateService redisUpdateService;
 
     private static SupremeTagsAPI api;
 
@@ -93,12 +96,11 @@ public final class SupremeTags extends AxPlugin {
     private final ConcurrentHashMap<UUID, Editor> editorList = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, SetupTag> setupList = new ConcurrentHashMap<>();
 
-    private boolean legacy_format;
-    private boolean minimessage;
-    private boolean cmi_hex;
     private boolean disabledWorldsTag;
     private boolean deactivateClick;
     private boolean isDBTags;
+    private volatile boolean refreshingDatabaseTags;
+    private volatile long lastKnownTagDataVersion;
 
     private PlayerManager playerManager;
     private PlayerConfig playerConfig;
@@ -129,14 +131,22 @@ public final class SupremeTags extends AxPlugin {
 
     @Override
     public void onDisable() {
-        tagManager.unloadTags();
+        if (metrics != null) {
+            metrics.shutdown();
+            metrics = null;
+        }
+        if (redisUpdateService != null) redisUpdateService.shutdown();
+        if (autoApplyManager != null) autoApplyManager.restoreAll();
+        if (tagStatisticsManager != null) tagStatisticsManager.save();
+        if (tagManager != null) tagManager.unloadTags();
+        if (fileSyncingManager != null) fileSyncingManager.unregisterChannels();
         editorList.clear();
         setupList.clear();
-        dataCache.clearCache();
+        if (dataCache != null) dataCache.clearCache();
         if (!isFoliaFound()) {
             this.getServer().getScheduler().cancelTasks(this);
         } else {
-            // Cancel all Folia global region scheduler tasks
+
             for (Object task : foliaScheduledTasks) {
                 if (task instanceof java.util.concurrent.ScheduledFuture) {
                     ((java.util.concurrent.ScheduledFuture<?>) task).cancel(false);
@@ -158,7 +168,7 @@ public final class SupremeTags extends AxPlugin {
                 Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
                 clazz.getMethod("unRegister").invoke(handler);
             } catch (Exception e) {
-                //logger.warning("Failed to register ProtocolLib listener: " + e.getMessage());
+
             }
         }
 
@@ -168,7 +178,7 @@ public final class SupremeTags extends AxPlugin {
                 Object handler = clazz.getConstructor(Plugin.class).newInstance(this);
                 clazz.getMethod("unRegister").invoke(handler);
             } catch (Exception e) {
-                //logger.warning("Failed to register PacketEvents listener: " + e.getMessage());
+
             }
         }
 
@@ -181,7 +191,7 @@ public final class SupremeTags extends AxPlugin {
     }
 
     private void registerCommand(String mainCommand, List<String> aliases) {
-        // Register the main command dynamically
+
         PluginCommand command = getCommand(mainCommand);
 
         if (command == null) {
@@ -198,10 +208,18 @@ public final class SupremeTags extends AxPlugin {
         instance = this;
 
         Logger logger = Bukkit.getLogger();
+        boolean firstInstall = !getDataFolder().exists();
 
         this.getConfig().options().copyDefaults(true);
         this.saveConfig();
-        configManager = new ConfigManager(this);
+        configManager = new ConfigManager(this, firstInstall);
+        ColorMigrationManager colorMigrationManager = new ColorMigrationManager(this, configManager);
+        if (colorMigrationManager.needsMigration()) {
+            getLogger().info("[SupremeTags] Legacy color codes detected. Converting configuration files to MiniMessage...");
+            colorMigrationManager.migrate();
+            getLogger().info("[SupremeTags] Legacy color conversion complete.");
+        }
+        isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         host = configManager.getConfig("data.yml").get().getString("data.address");
         port = configManager.getConfig("data.yml").get().getInt("data.port");
@@ -224,6 +242,18 @@ public final class SupremeTags extends AxPlugin {
         mergeManager = new MergeManager(this);
         playerConfig = new PlayerConfig();
         rarityManager = new RarityManager();
+        tagStatisticsManager = new TagStatisticsManager(this);
+        fileSyncingManager = new FileSyncingManager(this);
+        fileSyncingManager.registerChannels();
+        autoApplyManager = new AutoApplyManager(this);
+        tagEditorSessionManager = new TagEditorSessionManager();
+        redisUpdateService = new RedisUpdateService(this);
+        redisUpdateService.start();
+
+        if (isDBTags) {
+            lastKnownTagDataVersion = TagData.getTagDataVersion();
+        }
+        startDatabaseTagRefreshTask();
 
         String mainCommand = getConfig().getString("settings.commands.main-command", "tags");
         List<String> aliases = getConfig().getStringList("settings.commands.aliases");
@@ -240,13 +270,9 @@ public final class SupremeTags extends AxPlugin {
             getLogger().warning("> EssentialsX or EssentialsXChat not found. Skipping Essentials listener registration.");
         }
 
-        legacy_format = getConfig().getBoolean("settings.color-formatting.legacy-hex-format");
-        minimessage = getConfig().getBoolean("settings.use-minimessage");
-        cmi_hex = getConfig().getBoolean("settings.color-formatting.cmi-color-support");
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type", "BORDER");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
-        isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
 
         merge();
 
@@ -259,7 +285,6 @@ public final class SupremeTags extends AxPlugin {
 
         api = new SupremeTagsAPI();
 
-        // load tags again incase they did not load properly, on first installment.
         if (tagManager.getTags().isEmpty()) {
             tagManager.loadTags(false);
         }
@@ -271,30 +296,42 @@ public final class SupremeTags extends AxPlugin {
             logger.warning("> Luckperms not found! disabling unlocked count function.");
         }
 
-        Material skullMaterial;
-        try {
-            skullMaterial = Material.valueOf("PLAYER_HEAD"); // 1.13+
-        } catch (IllegalArgumentException e) {
-            skullMaterial = Material.valueOf("SKULL_ITEM");  // 1.12-
-            this.head = new ItemStack(skullMaterial, 1, (short) 3);
-            return;
-        }
-        this.head = new ItemStack(skullMaterial, 1);
+        this.head = new ItemStack(Material.PLAYER_HEAD, 1);
 
         if (getConfig().getBoolean("settings.bungee-messaging")) {
             BungeeMessaging.registerChannels();
         }
 
         validateDefaultSounds();
-
-        updateFlags();
     }
 
-    public static SupremeTags getInstance() { return instance; }
+    public static SupremeTags getInstance() {
+        return instance;
+    }
 
-    public TagManager getTagManager() { return tagManager; }
+    public TagManager getTagManager() {
+        return tagManager;
+    }
 
-    public CategoryManager getCategoryManager() { return categoryManager; }
+    public FileSyncingManager getFileSyncingManager() {
+        return fileSyncingManager;
+    }
+
+    public AutoApplyManager getAutoApplyManager() {
+        return autoApplyManager;
+    }
+
+    public TagEditorSessionManager getTagEditorSessionManager() {
+        return tagEditorSessionManager;
+    }
+
+    public RedisUpdateService getRedisUpdateService() {
+        return redisUpdateService;
+    }
+
+    public CategoryManager getCategoryManager() {
+        return categoryManager;
+    }
 
     public static MenuUtil getMenuUtil(Player player) {
         MenuUtil menuUtil;
@@ -327,7 +364,7 @@ public final class SupremeTags extends AxPlugin {
 
         return menuUtil;
     }
- 
+
     public static MenuUtil getMenuUtil(Player player, String category) {
         MenuUtil menuUtil;
         UUID uuid = player.getUniqueId();
@@ -352,9 +389,13 @@ public final class SupremeTags extends AxPlugin {
         return connectionURL;
     }
 
-    public H2UserData getUserData() { return h2user; }
+    public H2UserData getUserData() {
+        return h2user;
+    }
 
-    public static H2Database getH2Database() { return h2; }
+    public static H2Database getH2Database() {
+        return h2;
+    }
 
     public MySQLUserData getUser() {
         return instance.user;
@@ -369,7 +410,7 @@ public final class SupremeTags extends AxPlugin {
     }
 
     public void reload() {
-        /// reloading the config.yml
+
         super.reloadConfig();
 
         saveDefaultConfig();
@@ -380,13 +421,10 @@ public final class SupremeTags extends AxPlugin {
         configManager.reloadConfig("banned-words.yml");
         configManager.reloadConfig("data.yml");
         configManager.reloadConfig("guis.yml");
-        configManager.reloadConfig("tags.yml");
+        configManager.reloadConfig("statistics.yml");
         configManager.reloadConfig("messages.yml");
         configManager.reloadConfig("rarities.yml");
 
-        legacy_format = getConfig().getBoolean("settings.color-formatting.legacy-hex-format");
-        minimessage = getConfig().getBoolean("settings.use-minimessage");
-        cmi_hex = getConfig().getBoolean("settings.color-formatting.cmi-color-support");
         disabledWorldsTag = getConfig().getBoolean("settings.tag-command-in-disabled-worlds");
         layout = getConfig().getString("settings.layout-type", "BORDER");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
@@ -404,6 +442,11 @@ public final class SupremeTags extends AxPlugin {
         categoryManager.initCategories();
 
         configManager.reloadConfig("messages.yml");
+        if (tagStatisticsManager != null) tagStatisticsManager.load();
+
+        if (autoApplyManager != null) autoApplyManager.applyAll();
+        if (fileSyncingManager != null) fileSyncingManager.syncTagFiles();
+        if (redisUpdateService != null) redisUpdateService.reload();
     }
 
     private void loadDatabases() {
@@ -422,7 +465,7 @@ public final class SupremeTags extends AxPlugin {
         }
 
         if (isDBTags) {
-            if (isH2() || isSQLite()) {
+            if (isSQLite()) {
                 sqLiteTags = new SQLiteTags(sqlite);
             }
 
@@ -430,10 +473,6 @@ public final class SupremeTags extends AxPlugin {
                 mySQLTags = new MySQLTags(mysql);
             }
         }
-    }
-
-    public boolean isLegacyFormat() {
-        return legacy_format;
     }
 
     public void merge() {
@@ -537,7 +576,7 @@ public final class SupremeTags extends AxPlugin {
             } catch (ClassNotFoundException ignored) {
                 foliaDetected = false;
             }
-            foliaChecked = true; // Cache result forever
+            foliaChecked = true;
         }
         return foliaDetected;
     }
@@ -564,24 +603,23 @@ public final class SupremeTags extends AxPlugin {
 
     private void callMetrics() {
         int pluginId = 18038;
-        Metrics metrics = new Metrics(this, pluginId);
+        metrics = new Metrics(this, pluginId);
 
         metrics.addCustomChart(new Metrics.SimplePie("used_language", () -> getConfig().getString("language", "en")));
+        metrics.addCustomChart(new Metrics.SingleLineChart("loaded_tags", metrics::getLoadedTagCount));
+        metrics.addCustomChart(new Metrics.SingleLineChart("max_loaded_tags", metrics::getMaxLoadedTagCount));
+        metrics.addCustomChart(new Metrics.SingleLineChart("loaded_variants", metrics::getLoadedVariantCount));
+        metrics.addCustomChart(new Metrics.SingleLineChart("loaded_categories", metrics::getLoadedCategoryCount));
+        metrics.addCustomChart(new Metrics.SingleLineChart("animated_tags", metrics::getAnimatedTagCount));
+        metrics.addCustomChart(new Metrics.SingleLineChart("economy_tags", metrics::getEconomyTagCount));
+        metrics.addCustomChart(new Metrics.SimplePie("largest_category", metrics::getLargestCategoryName));
 
         metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
             Map<String, Map<String, Integer>> map = new HashMap<>();
             String javaVersion = System.getProperty("java.version");
             Map<String, Integer> entry = new HashMap<>();
             entry.put(javaVersion, 1);
-            if (javaVersion.startsWith("1.7")) {
-                map.put("Java 1.7", entry);
-            } else if (javaVersion.startsWith("1.8")) {
-                map.put("Java 1.8", entry);
-            } else if (javaVersion.startsWith("1.9")) {
-                map.put("Java 1.9", entry);
-            } else {
-                map.put("Other", entry);
-            }
+            map.put("Java", entry);
             return map;
         }));
     }
@@ -620,7 +658,9 @@ public final class SupremeTags extends AxPlugin {
         return api;
     }
 
-    public DataCache getDataCache() { return dataCache; }
+    public DataCache getDataCache() {
+        return dataCache;
+    }
 
     public static java.util.Set<Object> getFoliaScheduledTasks() {
         return foliaScheduledTasks;
@@ -636,14 +676,6 @@ public final class SupremeTags extends AxPlugin {
 
     public void removeSetup(Player player) {
         setupList.remove(player.getUniqueId());
-    }
-
-    public boolean isCMIHex() {
-        return cmi_hex;
-    }
-
-    public boolean isMiniMessage() {
-        return minimessage;
     }
 
     public boolean isDisabledWorldsTag() {
@@ -668,6 +700,10 @@ public final class SupremeTags extends AxPlugin {
 
     public RarityManager getRarityManager() {
         return rarityManager;
+    }
+
+    public TagStatisticsManager getTagStatisticsManager() {
+        return tagStatisticsManager;
     }
 
     public ConcurrentHashMap<UUID, SetupTag> getSetupList() {
@@ -732,7 +768,45 @@ public final class SupremeTags extends AxPlugin {
     }
 
     public boolean isDBTags() {
-        return false;
+        return isDBTags;
+    }
+
+    private void startDatabaseTagRefreshTask() {
+        if (!isDBTags || tagManager == null) {
+            return;
+        }
+
+        long intervalTicks = Math.max(20L, getConfig().getLong("settings.db-tags-refresh-interval", 5L) * 20L);
+
+        Runnable refresh = () -> {
+            if (refreshingDatabaseTags || tagManager == null || !isDBTags) {
+                return;
+            }
+
+            refreshingDatabaseTags = true;
+            runAsync(() -> {
+                try {
+                    long currentVersion = TagData.getTagDataVersion();
+                    if (currentVersion > lastKnownTagDataVersion) {
+                        lastKnownTagDataVersion = currentVersion;
+                        tagManager.refreshDatabaseTags(false);
+                        if (categoryManager != null) {
+                            categoryManager.initCategories();
+                        }
+                    }
+                } catch (Exception exception) {
+                    getLogger().warning("[SupremeTags] Failed to refresh database tags: " + exception.getMessage());
+                } finally {
+                    refreshingDatabaseTags = false;
+                }
+            });
+        };
+
+        if (!isFoliaFound()) {
+            Bukkit.getScheduler().runTaskTimer(this, refresh, intervalTicks, intervalTicks);
+        } else {
+            Bukkit.getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> refresh.run(), intervalTicks, intervalTicks);
+        }
     }
 
     private void validateDefaultSounds() {
@@ -767,10 +841,6 @@ public final class SupremeTags extends AxPlugin {
         }
 
         SupremeTags.getInstance().saveConfig();
-    }
-
-    public void updateFlags() {
-        FeatureFlags.USE_LEGACY_HEX_FORMATTER.set(true);
     }
 
     public MySQLTags getMySQLTags() {

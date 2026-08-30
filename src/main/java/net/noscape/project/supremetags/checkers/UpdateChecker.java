@@ -12,7 +12,6 @@ import java.net.URL;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
-// From: https://www.spigotmc.org/wiki/creating-an-update-checker-that-checks-for-updates
 public class UpdateChecker {
 
     private final JavaPlugin plugin;
@@ -36,10 +35,10 @@ public class UpdateChecker {
         };
 
         if (!SupremeTags.getInstance().isFoliaFound()) {
-            // Non-Folia (Spigot/Paper) support
+
             Bukkit.getScheduler().runTaskAsynchronously(this.plugin, task);
         } else {
-            // Folia support using reflection
+
             try {
                 Object server = Bukkit.getServer();
                 Method getSchedulerMethod = server.getClass().getMethod("getGlobalRegionScheduler");
@@ -47,7 +46,7 @@ public class UpdateChecker {
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Runnable.class);
                 runMethod.invoke(scheduler, this.plugin, task);
             } catch (Exception e) {
-                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+
             }
         }
     }

@@ -21,7 +21,6 @@ public class Variant {
     private String rarity;
     private BukkitTask animationTask;
 
-    // item
     private String unlocked_material;
     private String unlocked_displayname;
     private int unlocked_custom_model_data;
@@ -91,16 +90,13 @@ public class Variant {
         SupremeTags plugin = SupremeTags.getInstance();
         int defaultSpeed = plugin.getConfig().getInt("settings.animated-tag-speed");
 
-        // Get the tag-specific speed, if present
         ConfigurationSection tagConfig = plugin.getTagManager().getTagConfig().getConfigurationSection("tags." + identifier);
         int animationSpeed = (tagConfig != null) ? tagConfig.getInt("animated-tag-speed", defaultSpeed) : defaultSpeed;
 
-        // Validate speed
         if (animationSpeed <= 0 || animationSpeed > 9999) {
             return;
         }
 
-        // Stop previous animation
         stopAnimation();
 
         Runnable animationTaskRunnable = new Runnable() {
@@ -114,7 +110,7 @@ public class Variant {
         };
 
         if (!plugin.isFoliaFound()) {
-            // Use BukkitRunnable for non-Folia environments
+
             animationTask = new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -122,7 +118,7 @@ public class Variant {
                 }
             }.runTaskTimerAsynchronously(plugin, 0L, animationSpeed);
         } else {
-            // Folia scheduler via reflection
+
             try {
                 Object server = Bukkit.getServer();
                 Method getScheduler = server.getClass().getMethod("getGlobalRegionScheduler");
@@ -134,7 +130,7 @@ public class Variant {
 
                 runAtFixedRate.invoke(scheduler, plugin, animationTaskRunnable, 0L, animationSpeed);
             } catch (Exception e) {
-                //plugin.getLogger().warning("Folia scheduler not found: " + e.getMessage());
+
             }
         }
     }

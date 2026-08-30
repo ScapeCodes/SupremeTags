@@ -1,7 +1,8 @@
 package net.noscape.project.supremetags.guis.configeditor;
 
+import net.noscape.project.supremetags.utils.ItemData;
+
 import com.cryptomorin.xseries.XMaterial;
-import de.tr7zw.nbtapi.NBTItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -61,11 +62,11 @@ public class ConfigEditor extends Paged {
             return;
 
         Player player = (Player) e.getWhoClicked();
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("configPath")) {
+        if (ItemData.has(nbt, "configPath")) {
 
-            String path = nbt.getString("configPath");
+            String path = ItemData.getString(nbt, "configPath");
             Object value = config.get(path);
 
             if (value instanceof Boolean bool) {
@@ -97,7 +98,7 @@ public class ConfigEditor extends Paged {
                 return;
             }
 
-        } else if (nbt.hasTag("configSectionBack")) {
+        } else if (ItemData.has(nbt, "configSectionBack")) {
             player.closeInventory();
             if (sectionPath.isEmpty()) {
                 return;
@@ -107,8 +108,8 @@ public class ConfigEditor extends Paged {
                     : "";
             new ConfigEditor(SupremeTags.getMenuUtil(player), parentPath).open();
             return;
-        } else if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+        } else if (ItemData.has(nbt, "name")) {
+            String name = ItemData.getString(nbt, "name");
 
             if (name.equalsIgnoreCase("close")) {
                 e.getWhoClicked().closeInventory();
@@ -273,13 +274,14 @@ public class ConfigEditor extends Paged {
 
         }
 
+        lore.replaceAll(component -> component.decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
         item.setItemMeta(meta);
 
-        NBTItem nbt = new NBTItem(item);
-        nbt.setString("configPath", path);
+        ItemStack nbt = item;
+        ItemData.setString(nbt, "configPath", path);
 
-        return nbt.getItem();
+        return nbt;
     }
 
     private void addSectionBackButton() {
@@ -296,14 +298,15 @@ public class ConfigEditor extends Paged {
         List<Component> backLore = new ArrayList<>();
         backLore.add(Component.text("Go back to parent section")
                 .color(NamedTextColor.GRAY));
+        backLore.replaceAll(component -> component.decoration(TextDecoration.ITALIC, false));
         backMeta.lore(backLore);
 
         backItem.setItemMeta(backMeta);
 
-        NBTItem backNbt = new NBTItem(backItem);
-        backNbt.setString("configSectionBack", "true");
+        ItemStack backNbt = backItem;
+        ItemData.setString(backNbt, "configSectionBack", "true");
 
-        inventory.setItem(45, backNbt.getItem());
+        inventory.setItem(45, backNbt);
     }
 
     private ItemStack createInputItem(String currentValue) {
@@ -317,6 +320,7 @@ public class ConfigEditor extends Paged {
         List<Component> lore = new ArrayList<>();
         lore.add(Component.text("Type new value in the anvil")
                 .color(NamedTextColor.GRAY));
+        lore.replaceAll(component -> component.decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
 
         item.setItemMeta(meta);

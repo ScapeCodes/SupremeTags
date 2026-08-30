@@ -7,7 +7,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,26 +34,10 @@ public class PlayerConfig {
         return get(offlinePlayer.getUniqueId());
     }
 
-    public static void saveConfigOnly(UUID uuid) {
-        File file = new File(SupremeTags.getInstance().getDataFolder(), "data/" + uuid + ".yml");
-        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-        try {
-            configuration.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void saveConfigOnly(Player player) {
-        saveConfigOnly(player.getUniqueId());
-    }
-
     public static void save(UUID uuid) {
         File file = new File(SupremeTags.getInstance().getDataFolder(), "data/" + uuid + ".yml");
         FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
-        // Retrieve the tags from the player manager
         List<Tag> tags = SupremeTags.getInstance().getPlayerManager().getPlayerTags().get(uuid);
 
         if (tags != null && !tags.isEmpty()) {
@@ -69,10 +52,9 @@ public class PlayerConfig {
                     tagSection = tagsSection.createSection(tag.getIdentifier());
                 }
 
-                // Convert '§' color codes to '&' color codes before saving
                 String tagString = ChatColor.translateAlternateColorCodes('§', tag.getTag().get(0));
 
-                tagSection.set("tag", tagString); // Save the tag directly as a string, not a list
+                tagSection.set("tag", tagString);
                 tagSection.set("description", tag.getDescription());
             }
 
@@ -124,9 +106,8 @@ public class PlayerConfig {
         File file = new File(SupremeTags.getInstance().getDataFolder(), "data/" + uuid + ".yml");
 
         if (!folder.exists()) {
-            boolean created = folder.mkdir(); // or folder.mkdirs() if you want to create parent directories as well
+            boolean created = folder.mkdir();
             if (!created) {
-                // Handle the case when the folder couldn't be created
                 throw new RuntimeException("Failed to create the data folder.");
             }
         }
@@ -170,9 +151,4 @@ public class PlayerConfig {
             e.printStackTrace();
         }
     }
-
-    public static void resetTag(OfflinePlayer player, String identifier) {
-        resetTag(player.getUniqueId(), identifier);
-    }
-
 }

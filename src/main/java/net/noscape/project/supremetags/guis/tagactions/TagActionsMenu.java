@@ -1,6 +1,7 @@
 package net.noscape.project.supremetags.guis.tagactions;
 
-import de.tr7zw.nbtapi.NBTItem;
+import net.noscape.project.supremetags.utils.ItemData;
+
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.api.events.TagAssignEvent;
 import net.noscape.project.supremetags.api.events.TagBuyEvent;
@@ -67,10 +68,10 @@ public class TagActionsMenu extends Menu {
         if (e.getCurrentItem().getType().equals(Material.valueOf(Objects.requireNonNull(this.guis.getString("gui.items.glass.material")).toUpperCase())))
             e.setCancelled(true);
 
-        NBTItem nbt = new NBTItem(e.getCurrentItem());
+        ItemStack nbt = e.getCurrentItem();
 
-        if (nbt.hasTag("name")) {
-            String name = nbt.getString("name");
+        if (ItemData.has(nbt, "name")) {
+            String name = ItemData.getString(nbt, "name");
 
             if (name.equalsIgnoreCase("variants")) {
                 String id = menuUtil.getIdentifier();
@@ -131,7 +132,6 @@ public class TagActionsMenu extends Menu {
                     }
                 }
             }
-
 
             if (name.equalsIgnoreCase("withdraw-tag")) {
                 SupremeTags.getInstance().getVoucherManager().withdrawTag(player, menuUtil.getIdentifier());
@@ -236,8 +236,6 @@ public class TagActionsMenu extends Menu {
         for (String name : guis.getConfigurationSection("gui.tag-actions-menu.functions").getKeys(false)) {
             boolean enabled = guis.getBoolean("gui.tag-actions-menu.functions." + name + ".enable");
 
-            //if (!enabled) continue;
-
             Tag tag = SupremeTags.getInstance().getTagManager().getTag(menuUtil.getIdentifier());
 
             if (enabled && name.equalsIgnoreCase("variants")) {
@@ -249,24 +247,21 @@ public class TagActionsMenu extends Menu {
                 }
             }
 
-            // Handle assign-tag: permission or group should allow it always
             if (enabled && name.equalsIgnoreCase("assign-tag")) {
                 if (!Utils.hasTagAccess(menuUtil.getOwner(), tag))
                     continue;
             }
 
-            // Handle unassign-tag: only allow if they actually have an active tag
             if (enabled && name.equalsIgnoreCase("unassign-tag")) {
                 if (!UserData.getActive(menuUtil.getOwner().getUniqueId()).equalsIgnoreCase(menuUtil.getIdentifier()))
                     continue;
             }
 
-            // Handle purchase-tag: only if it's a cost tag, and they don't already have permission or group access
             if (enabled && name.equalsIgnoreCase("purchase-tag")) {
                 if (!tag.isCostTag())
                     continue;
                 if (Utils.hasTagAccess(menuUtil.getOwner(), tag))
-                    continue; // They already have it; don't offer purchase
+                    continue;
             }
 
             if (enabled && name.equalsIgnoreCase("editor-tag")) {
@@ -285,7 +280,7 @@ public class TagActionsMenu extends Menu {
             int item_custom_model_data = guis.getInt("gui.tag-actions-menu.functions." + name + ".custom-model-data");
             List<String> item_lore = guis.getStringList("gui.tag-actions-menu.functions." + name + ".lore");
 
-            int item_slot = guis.getInt("gui.tag-actions-menu.functions." + name + ".slot"); // Default slot
+            int item_slot = guis.getInt("gui.tag-actions-menu.functions." + name + ".slot");
             List<Integer> slots = new ArrayList<>();
             boolean isSlots = false;
 
@@ -296,7 +291,7 @@ public class TagActionsMenu extends Menu {
             ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
             ItemStack item = resolved.item();
             ItemMeta itemMeta = resolved.meta();
-            NBTItem nbt = new NBTItem(item);
+            ItemStack nbt = item;
 
             if (item_custom_model_data > 0) {
                 if (itemMeta != null) {
@@ -310,7 +305,7 @@ public class TagActionsMenu extends Menu {
                 }
             }
 
-            nbt.setString("name", name);
+            ItemData.setString(nbt, "name", name);
 
             item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
 
@@ -346,20 +341,20 @@ public class TagActionsMenu extends Menu {
                 ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
                 itemMeta.addItemFlags(hideDye);
             } catch (IllegalArgumentException ignored) {
-                // HIDE_DYE not available in this version — skip
+
             }
             itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
             itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
-            nbt.getItem().setItemMeta(itemMeta);
-            nbt.setString("name", name);
+            nbt.setItemMeta(itemMeta);
+            ItemData.setString(nbt, "name", name);
 
             if (!isSlots) {
-                inventory.setItem(item_slot, nbt.getItem());
+                inventory.setItem(item_slot, nbt);
             } else {
                 for (int slot : slots) {
-                    inventory.setItem(slot, nbt.getItem());
+                    inventory.setItem(slot, nbt);
                 }
             }
         }

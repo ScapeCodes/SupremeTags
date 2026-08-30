@@ -7,6 +7,7 @@ import net.noscape.project.supremetags.handlers.TagFormatter;
 import net.noscape.project.supremetags.handlers.Variant;
 import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
+import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -55,7 +56,6 @@ public class PAPI extends PlaceholderExpansion {
         UUID uuid = player.getUniqueId();
         String activeTagId = UserData.getActive(uuid);
 
-        // Basic placeholder checks
         switch (params.toLowerCase()) {
             case "hastag_selected":
                 return String.valueOf(
@@ -85,21 +85,28 @@ public class PAPI extends PlaceholderExpansion {
             case "tags_total":
                 return String.valueOf(SupremeTags.getInstance().getTagManager().getTags().size());
 
-            // Tag display placeholders
+            case "credits":
+            case "tag_credits":
+                return String.valueOf(UserData.getTagCredits(player.getUniqueId()));
+
+            case "credits_creation_cost":
+            case "tag_credits_creation_cost":
+                return String.valueOf(SupremeTags.getInstance().getConfig()
+                        .getInt("settings.personal-tags.credits.creation-cost", 0));
+
             case "tag":
-                return TagFormatter.getFormattedTag(player.getPlayer(), TagFormatter.Context.TAG);
+                return TagFormatter.getFormattedTagPlaceholder(player.getPlayer(), TagFormatter.Context.TAG);
 
             case "chattag":
-                return TagFormatter.getFormattedTag(player.getPlayer(), TagFormatter.Context.CHAT);
+                return TagFormatter.getFormattedTagPlaceholder(player.getPlayer(), TagFormatter.Context.CHAT);
 
             case "tabtag":
-                return TagFormatter.getFormattedTag(player.getPlayer(), TagFormatter.Context.TAB);
+                return TagFormatter.getFormattedTagPlaceholder(player.getPlayer(), TagFormatter.Context.TAB);
 
             case "scoreboardtag":
-                return TagFormatter.getFormattedTag(player.getPlayer(), TagFormatter.Context.SCOREBOARD);
+                return TagFormatter.getFormattedTagPlaceholder(player.getPlayer(), TagFormatter.Context.SCOREBOARD);
         }
 
-        // Dynamic placeholders
         if (params.startsWith("has_access_")) {
             String identifier = params.substring("has_access_".length());
             Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
@@ -137,7 +144,6 @@ public class PAPI extends PlaceholderExpansion {
                     : "";
         }
 
-        // Resolve tag for metadata placeholders
         Tag tag = tags.get(activeTagId);
 
         if (tag == null) {

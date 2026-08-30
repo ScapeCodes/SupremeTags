@@ -44,7 +44,6 @@ public class SetupListener implements Listener {
 
         int currentStage = setup.getStage();
 
-        // Convert the Component message to legacy String format
         String message = LegacyComponentSerializer.legacySection().serialize(event.message());
 
         if (currentStage == 1) {
@@ -129,7 +128,7 @@ public class SetupListener implements Listener {
                 setup.setTag(message);
                 handleTagComplete(player, setup);
             } else {
-                // If the player hasn't set the identifier yet, request it again
+
                 String stage_2 = messages.getString("messages.stages.stage-2").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix")));
 
                 stage_2 = stage_2.replaceAll("%identifier%", setup.getIdentifier());
@@ -155,7 +154,6 @@ public class SetupListener implements Listener {
 
         tagList.add(replace_tag);
 
-        // Save the tag and perform any necessary actions
         Tag tag = new Tag(setup.getIdentifier(), tagList, new ArrayList<>());
         SupremeTags.getInstance().getPlayerManager().addTag(player, tag);
         PlayerConfig.save(player.getUniqueId());
@@ -199,12 +197,6 @@ public class SetupListener implements Listener {
 
         tagManager.getTags().values().forEach(t -> allTags.add(deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT)));
         tagManager.getVariants().forEach(v -> allTags.add(deformat(v.getTag().getFirst()).toLowerCase(Locale.ROOT)));
-
-        // OLD
-//        Arrays.stream(Bukkit.getOfflinePlayers())
-//                .flatMap(p -> playerManager.getPlayerTags(p.getUniqueId()).stream())
-//                .map(t -> deformat(t.getTag().getFirst()).toLowerCase(Locale.ROOT))
-//                .forEach(allTags::add);
 
         for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
             UUID uuid = player.getUniqueId();
@@ -295,13 +287,11 @@ public class SetupListener implements Listener {
                 .getConfig("messages.yml")
                 .get();
 
-        // Empty checks
         if (identifier.isEmpty() || tag.isEmpty()) {
             msgPlayer(player, "&cBoth fields must be filled in.");
             return;
         }
 
-        // Identifier bad words
         for (String word : bannedWords.getStringList("banned-words")) {
             if (isWordBlocked(identifier, word)) {
                 msgPlayer(player,
@@ -311,7 +301,6 @@ public class SetupListener implements Listener {
             }
         }
 
-        // Tag bad words
         for (String word : bannedWords.getStringList("banned-words")) {
             if (isWordBlocked(tag, word)) {
                 msgPlayer(player,
@@ -321,7 +310,6 @@ public class SetupListener implements Listener {
             }
         }
 
-        // Placeholder check
         if (!player.hasPermission(TPermissions.ADMIN) && containsPlaceholders(tag)) {
             msgPlayer(player,
                     messages.getString("messages.placeholder-error")

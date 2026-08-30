@@ -1,0 +1,11 @@
+# SupremeTags statistics storage.
+# This file is automatically updated by the plugin.
+# You normally do not need to edit this manually.
+#
+# Stored data includes:
+# - total tag selections
+# - per-tag selections
+# - per-tag unique users
+# - per-tag active users
+# - first/last selected timestamps
+# - per-player tag usage

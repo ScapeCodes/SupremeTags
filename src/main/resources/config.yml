@@ -12,17 +12,15 @@ settings:
     aliases:
       - tag
   no-permission-menu-action: true # set true, if the player doesn't have permission to the argument like "/tags reload" it will just open the tags' menu.
-  messaging-platform: 'bungeecord' # 'bungeecord' or 'velocity'
-  bungee-messaging: false # when set to true, this will sync all tags across all servers, without having to manually do this.
+  proxy-file-syncing: false # syncs tag files across all proxy servers when tags are created, edited, deleted, or reloaded.
+  db-only-tags: false # stores global tags in the configured database instead of tags/*.yml files. Recommended for multi-server MySQL/MariaDB setups.
+  db-tags-refresh-interval: 5 # seconds between automatic database tag refreshes when db-only-tags is enabled.
   default-tag: 'none' # set 'none' players start with no tag.
   forced-tag: false # this will make it force players to have a tag, they won't beable to take the tag off.
   categories: false # should supremetags use the category system?
   default-category: 'default' # used to set the tags category value when creating a new tag with the '/tag create' command
   default-tag-file: 'countries.yml' # used to set the default file location when creating a new tag with the '/tags create' command
   update-check: true # the plugin will check if there is an update available.
-  color-formatting:
-    legacy-hex-format: true # allow legacy hex color formatting.
-    cmi-color-support: true # allow CMI color format support.
   auto-merge: false # auto merges all tags from deluxetags into supremetags (DeluxeTags is required on the server)
   active-tag-glow: true # adds a hidden enchantment to the tag item that is active for the player.
   tag-command-in-disabled-worlds: true # should /tags command be disabled in 'disabled-worlds'.
@@ -32,8 +30,8 @@ settings:
   cost-system: false # set true if tags should require an economy cost to unlock.
   use-global-lore: false # set true if tags should use global tag lore settings.
   auto-apply:
-    displayname: false # automatically apply the selected tag to the player's display name.
-    tab: false # automatically apply the selected tag to the player's tab list name.
+    displayname: true # automatically apply the selected tag to the player's display name.
+    tab: true # automatically apply the selected tag to the player's tab list name.
     displayname-format: '%displayname% %tag%'
     tab-format: '%playerlistname% %tag%'
   gui-messages: true # setting this to true, will enable 'tag-select-message' & 'reset-message'
@@ -41,13 +39,28 @@ settings:
   personal-tags:
     enable: true # this setting allows players to make and access their own tags.
     use-creation-dialogs: true # 1.21.8+ ONLY!
+    credits:
+      enable: true # built-in personal tag currency used to create personal tags.
+      starting-balance: 0
+      creation-cost: 10
+      how-to-earn:
+        - '<reset><gray>You can earn Tag Credits from server rewards.'
+        - '<reset><gray>Common earning methods:'
+        - '<reset><dark_gray>• <reset><white>Vote rewards'
+        - '<reset><dark_gray>• <reset><white>Crates'
+        - '<reset><dark_gray>• <reset><white>Events'
+        - '<reset><dark_gray>• <reset><white>Playtime rewards'
     limits:
-      # permission limits: supremetags.mytags.limit.<group>
+      # permission limits: supremetags.mytags.limit.\<group>
       ## example: supremetags.mytags.limit.default
       default: 10
       ## example: supremetags.mytags.limit.vip
       vip: 20
     format-replace: '%tag%' # strict format replacer.
+    create-requirements:
+      # Supported time formats: m = minutes, hr = hours, d = days. Set to 0m to disable a requirement.
+      min-server-age: 0m # examples: 1m, 1hr or 1d
+      min-playtime: 2hr # examples: 2m, 2hr or 2d
   # layout types: [FULL, BORDER]
   # FULL - 36 tags
   # BORDER - 28 tags
@@ -56,10 +69,16 @@ settings:
   tag-vouchers: true # should tag vouchers withdraw be enabled?
   prioritise-selected-tag: true # set false if you don't want selected tag to force at first slot.
   voucher-redeem-permission: true # set false if you don't want permission 'supremetags.voucher.[identifier]' applying to tag vouchers.
+  voucher-redeem-confirmation: true # set false if you don't want players to confirm before redeeming tag vouchers.
+  tag-purchase-confirmation: true # set false if you don't want players to confirm before purchasing cost tags.
+  tag-select-confirmation: false # set false if you don't want players to confirm before selecting tags.
   deactivate-click: true # set false if you don't want function where if you click the active tag item in gui, it will deactivate.
   only-show-player-access-tags: false # if true, the tag menus will only show the tags that the player has access to.
   search-type: 'DIALOG' # either 'SIGN', 'ANVIL' or 'DIALOG'(1.21.8+ ONLY!)
   update-unlocked-cache: 300 # time in seconds (300 = 5 mins)
+
+statistics:
+  enabled: true # tracks tag selections, unique users, active users and per-player usage in statistics.yml.
 
 ############################################################
 # +------------------------------------------------------+ #
@@ -69,36 +88,43 @@ settings:
 
 placeholders:
   # %supremetags_tag%
-  # & {tag} / {TAG} / {supremetags_tag}
+  # Supported aliases: {tag} / {TAG} / {supremetags_tag}
   tag:
     none-output: ''
     format: '%tag%'
+    # Output mode: minimessage
+    # SupremeTags configs use MiniMessage formatting exclusively.
+    output: 'minimessage'
   # %supremetags_chattag%
   # is used for other built in placeholders as well.
   chat:
     none-output: ''
     format: '%tag%'
+    # Output mode: minimessage
+    # SupremeTags configs use MiniMessage formatting exclusively.
+    output: 'minimessage'
   # %supremetags_scorebardtag%
   scoreboard:
     none-output: ''
     format: '%tag%'
+    # Output mode: minimessage
+    output: 'minimessage'
   # %supremetags_tabtag%
   tab:
     none-output: ''
     format: '%tag%'
+    # Output mode: minimessage
+    output: 'minimessage'
 
 ############################################################
 # +------------------------------------------------------+ #
 # |                       Sounds                         | #
 # +------------------------------------------------------+ #
 ############################################################
-# These default generated sounds are for 1.19+, make sure to look up your versions sounds:
-# latest: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
-# 1.19: https://helpch.at/docs/1.19/org/bukkit/Sound.html
-# 1.12: https://helpch.at/docs/1.12.2/org/bukkit/Sound.html
-# 1.8: https://helpch.at/docs/1.8.8/org/bukkit/Sound.html
+# These default generated sounds use modern Bukkit names:
+# https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
 #
-# Google search: "spigot sounds <version>".
+# Google search: "spigot sounds \<version>".
 
 sounds:
   open-menus:
@@ -131,3 +157,9 @@ sounds:
     sound: 'block.composter.fill_success'
     volume: 0.9
     pitch: 1.0
+
+editor:
+  frontend-url: 'https://supremetags.net/editor/'
+  api-url: 'https://supremetags-editor-api.noscapedev.workers.dev'
+  latest-version-fallback: '3.0.0'
+  session-expire-minutes: 1440

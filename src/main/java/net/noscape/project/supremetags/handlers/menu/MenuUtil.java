@@ -9,16 +9,8 @@ public class MenuUtil {
     private String category;
     private String searchResult;
 
-    /*
-     * - all
-     * - players
-     * - category:name
-     */
     private String filter;
 
-    /*
-     * - rarities
-     */
     private String sort;
 
     public MenuUtil(Player owner, String identifier, String category) {
@@ -46,9 +38,6 @@ public class MenuUtil {
 
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
-
-        // WIP for 2.0.12?
-        //addTagDisplayName(owner, identifier);
     }
 
     public String getCategory() {

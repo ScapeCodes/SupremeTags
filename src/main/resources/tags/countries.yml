@@ -11,12 +11,12 @@
 #   vipplus_blue:
 #     enabled: true
 #     tag:
-#       - '&a[VIP&b+&a]'
+#       - '<reset><green>[VIP<reset><aqua>+<reset><green>]'
 #     permission: 'supremetags.tag.vip.blue'
 #   vipplus_red:
 #     enabled: true
 #     tag:
-#       - '&a[VIP&c+&a]'
+#       - '<reset><green>[VIP<reset><red>+<reset><green>]'
 #     permission: 'supremetags.tag.vip.red'
 #
 # groups: []
@@ -32,31 +32,31 @@
 tags:
   unitedkingdom:
     tag:
-      - '&8[&#012169&lU&#11307A&ln&#214093&li&#3150AC&lt&#4160C5&le&#5170DE&ld&#6180F7&lK&#7188F8&li&#8190F9&ln&#9198FA&lg&#A1A0FB&ld&#B1A8FC&lo&#C1B0FD&lm&8]'
+      - '<reset><dark_gray>[<#012169><bold>U<#11307A><bold>n<#214093><bold>i<#3150AC><bold>t<#4160C5><bold>e<#5170DE><bold>d<#6180F7><bold>K<#7188F8><bold>i<#8190F9><bold>n<#9198FA><bold>g<#A1A0FB><bold>d<#B1A8FC><bold>o<#C1B0FD><bold>m<reset><dark_gray>]'
     permission: supremetags.tag.unitedkingdom
     groups: []
     description:
-      - '&7Country Tag'
+      - '<reset><gray>Country Tag'
     custom-placeholders:
-      nopermission: '&cYou do not have permission.'
-      wheretofind: '&eObtain from the Countries Collection.'
+      nopermission: '<reset><red>You do not have permission.'
+      wheretofind: '<reset><yellow>Obtain from the Countries Collection.'
     category: countries
     order: 1
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[United Kingdom] &f&lVoucher'
+      displayname: '<reset><dark_gray>[United Kingdom] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -64,31 +64,31 @@ tags:
       amount: 0
   germany:
     tag:
-      - '&8[&#000000&lG&#221100&le&#442200&lr&#663300&lm&#884400&la&#AA5500&ln&#CC6600&ly&8]'
+      - '<reset><dark_gray>[<#000000><bold>G<#221100><bold>e<#442200><bold>r<#663300><bold>m<#884400><bold>a<#AA5500><bold>n<#CC6600><bold>y<reset><dark_gray>]'
     permission: supremetags.tag.germany
     groups: []
     description:
-      - '&7Country Tag'
+      - '<reset><gray>Country Tag'
     custom-placeholders:
-      nopermission: '&cYou do not have permission.'
-      wheretofind: '&eObtain from the Countries Collection.'
+      nopermission: '<reset><red>You do not have permission.'
+      wheretofind: '<reset><yellow>Obtain from the Countries Collection.'
     category: countries
     order: 2
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[Germany] &f&lVoucher'
+      displayname: '<reset><dark_gray>[Germany] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to equip!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to equip!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -96,31 +96,31 @@ tags:
       amount: 0
   france:
     tag:
-      - '&8[&#0055A4&lF&#336FBF&lr&#6688DA&la&#99A2F5&ln&#FFFFFF&lc&#FFB3B3&le&#EF4135&l]&8]'
+      - '<reset><dark_gray>[<#0055A4><bold>F<#336FBF><bold>r<#6688DA><bold>a<#99A2F5><bold>n<#FFFFFF><bold>c<#FFB3B3><bold>e<#EF4135><bold><reset><dark_gray>]'
     permission: supremetags.tag.france
     groups: []
     description:
-      - '&7Represent France!'
+      - '<reset><gray>Represent France!'
     custom-placeholders:
-      nopermission: '&cYou do not have permission to use &8[&#0055A4&lF&#336FBF&lr&#6688DA&la&#99A2F5&ln&#FFFFFF&lc&#FFB3B3&le&#EF4135&l]&8]'
-      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+      nopermission: '<reset><red>You do not have permission to use <reset><dark_gray>[<#0055A4><bold>F<#336FBF><bold>r<#6688DA><bold>a<#99A2F5><bold>n<#FFFFFF><bold>c<#FFB3B3><bold>e<#EF4135><bold>]<reset><dark_gray>]'
+      wheretofind: '<reset><yellow>Available in the <reset><aqua>Countries Collection<reset><yellow>!'
     category: countries
     order: 3
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[France] &f&lVoucher'
+      displayname: '<reset><dark_gray>[France] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to unlock this tag!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to unlock this tag!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -128,31 +128,31 @@ tags:
       amount: 0
   spain:
     tag:
-      - '&8[&#AA151B&lS&#C83C1D&lp&#E66320&la&#F1BF00&li&#E66320&ln&#C83C1D&l]&8]'
+      - '<reset><dark_gray>[<#AA151B><bold>S<#C83C1D><bold>p<#E66320><bold>a<#F1BF00><bold>i<#E66320><bold>n<#C83C1D><bold><reset><dark_gray>]'
     permission: supremetags.tag.spain
     groups: []
     description:
-      - '&7Represent Spain!'
+      - '<reset><gray>Represent Spain!'
     custom-placeholders:
-      nopermission: '&cYou do not have permission to use this tag.'
-      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+      nopermission: '<reset><red>You do not have permission to use this tag.'
+      wheretofind: '<reset><yellow>Available in the <reset><aqua>Countries Collection<reset><yellow>!'
     category: countries
     order: 4
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[Spain] &f&lVoucher'
+      displayname: '<reset><dark_gray>[Spain] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to unlock this tag!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to unlock this tag!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -160,31 +160,31 @@ tags:
       amount: 0
   italy:
     tag:
-      - '&8[&#009246&lI&#2EA35F&lt&#5CC478&la&#FFFFFF&ll&#F18686&ly&#CE2B37&l]&8]'
+      - '<reset><dark_gray>[<#009246><bold>I<#2EA35F><bold>t<#5CC478><bold>a<#FFFFFF><bold>l<#F18686><bold>y<#CE2B37><bold><reset><dark_gray>]'
     permission: supremetags.tag.italy
     groups: []
     description:
-      - '&7Represent Italy!'
+      - '<reset><gray>Represent Italy!'
     custom-placeholders:
-      nopermission: '&cYou do not have permission to use this tag.'
-      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+      nopermission: '<reset><red>You do not have permission to use this tag.'
+      wheretofind: '<reset><yellow>Available in the <reset><aqua>Countries Collection<reset><yellow>!'
     category: countries
     order: 5
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[Italy] &f&lVoucher'
+      displayname: '<reset><dark_gray>[Italy] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to unlock this tag!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to unlock this tag!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -192,31 +192,31 @@ tags:
       amount: 0
   portugal:
     tag:
-      - '&8[&#006600&lP&#0F7A14&lo&#239027&lr&#37A63A&lt&#4BBC4D&lu&#D62612&lg&#FF0000&la&#E63333&ll&8]'
+      - '<reset><dark_gray>[<#006600><bold>P<#0F7A14><bold>o<#239027><bold>r<#37A63A><bold>t<#4BBC4D><bold>u<#D62612><bold>g<#FF0000><bold>a<#E63333><bold>l<reset><dark_gray>]'
     permission: supremetags.tag.portugal
     groups: []
     description:
-      - '&7Represent Portugal!'
+      - '<reset><gray>Represent Portugal!'
     custom-placeholders:
-      nopermission: '&cYou do not have permission to use this tag.'
-      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+      nopermission: '<reset><red>You do not have permission to use this tag.'
+      wheretofind: '<reset><yellow>Available in the <reset><aqua>Countries Collection<reset><yellow>!'
     category: countries
     order: 6
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[Portugal] &f&lVoucher'
+      displayname: '<reset><dark_gray>[Portugal] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to unlock this tag!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to unlock this tag!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false
@@ -224,31 +224,31 @@ tags:
       amount: 0
   netherlands:
     tag:
-      - '&8[&#AE1C28&lN&#C94A52&le&#E5787D&lt&#FFFFFF&lh&#8CB4E8&le&#21468B&lr&#4166A8&ll&#5F86C5&la&#7DA6E2&ln&#9BC6FF&ld&#B6D7FF&ls&8]'
+      - '<reset><dark_gray>[<#AE1C28><bold>N<#C94A52><bold>e<#E5787D><bold>t<#FFFFFF><bold>h<#8CB4E8><bold>e<#21468B><bold>r<#4166A8><bold>l<#5F86C5><bold>a<#7DA6E2><bold>n<#9BC6FF><bold>d<#B6D7FF><bold>s<reset><dark_gray>]'
     permission: supremetags.tag.netherlands
     groups: []
     description:
-      - '&7Represent the Netherlands!'
+      - '<reset><gray>Represent the Netherlands!'
     custom-placeholders:
-      nopermission: '&cYou do not have permission to use this tag.'
-      wheretofind: '&eAvailable in the &bCountries Collection&e!'
+      nopermission: '<reset><red>You do not have permission to use this tag.'
+      wheretofind: '<reset><yellow>Available in the <reset><aqua>Countries Collection<reset><yellow>!'
     category: countries
     order: 7
     withdrawable: true
-    displayname: '&7Tag: %tag%'
+    displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
     variants: []
     effects: []
     voucher-item:
       material: NAME_TAG
-      displayname: '&8[Netherlands] &f&lVoucher'
+      displayname: '<reset><dark_gray>[Netherlands] <reset><white><bold>Voucher'
       custom-model-data: 0
       glow: true
       lore:
-        - '&7&m-----------------------------'
-        - '&eClick to unlock this tag!'
-        - '&7&m-----------------------------'
+        - '<reset><gray><strikethrough>-----------------------------'
+        - '<reset><yellow>Click to unlock this tag!'
+        - '<reset><gray><strikethrough>-----------------------------'
     rarity: common
     economy:
       enabled: false

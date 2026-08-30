@@ -8,28 +8,28 @@ rarities:
   common:
     enable: true
     order: 1
-    displayname: '&7Common'
+    displayname: '<reset><gray>Common'
     filter-labels:
-      selected: '&7&lCOMMON'
-      unselected: '&7Common'
+      selected: '<reset><gray><bold>COMMON'
+      unselected: '<reset><gray>Common'
   uncommon:
     enable: true
     order: 2
-    displayname: '&7UnCommon'
+    displayname: '<reset><gray>UnCommon'
     filter-labels:
-      selected: '&f&lUNCOMMON'
-      unselected: '&7UnCommon'
+      selected: '<reset><white><bold>UNCOMMON'
+      unselected: '<reset><gray>UnCommon'
   rare:
     enable: true
     order: 3
-    displayname: '&7Rare'
+    displayname: '<reset><gray>Rare'
     filter-labels:
-      selected: '&9&lRARE'
-      unselected: '&7Rare'
+      selected: '<reset><blue><bold>RARE'
+      unselected: '<reset><gray>Rare'
   legendary:
     enable: true
     order: 4
-    displayname: '&7Legendary'
+    displayname: '<reset><gray>Legendary'
     filter-labels:
-      selected: '&6&lLEGENDARY'
-      unselected: '&7Legendary'
+      selected: '<reset><gold><bold>LEGENDARY'
+      unselected: '<reset><gray>Legendary'

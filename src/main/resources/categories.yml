@@ -8,62 +8,62 @@ categories-menu-fill-empty: false # set this to true if you want to fill empty s
 
 categories:
   default:
-    title: '&8Menu > &lDefault Tags' # title of the category gui.
+    title: '<bold>Default Tags <reset><dark_gray>(%page%/%max_pages%)' # title of the category gui.
     material: 'NAME_TAG' # item material.
     custom-model-data: 0
     cost-category: false
     glow: false
-    id_display: '&7&lDefault Tags' # item displayname.
+    id_display: '<reset><gray><bold>Default Tags' # item displayname.
     slot: 11 # slot this item will be in the main menu.
     lore:
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
       - ''
-      - '&7Default tags: &7%tags_amount%'
+      - '<reset><gray>Default tags: <reset><gray>%tags_amount%'
       - ''
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
     filter-labels:
-      selected: '&7&lDEFAULT'
-      unselected: '&7Default'
+      selected: '<reset><gray><bold>DEFAULT'
+      unselected: '<reset><gray>Default'
     permission: 'supremetags.category.default' # permission players will need to open this menu
-    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.<category>` they will not see it.
-    no-permission-message: '%prefix% &cYou have no permission to open the &7Default &cCategory!'
+    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.\<category>` they will not see it.
+    no-permission-message: '%prefix% <reset><red>You have no permission to open the <reset><gray>Default <reset><red>Category!'
   countries:
-    title: '&8Menu > &lCountry Tags' # title of the category gui.
+    title: '<bold>Country Tags <reset><dark_gray>(%page%/%max_pages%)' # title of the category gui.
     material: 'NAME_TAG' # item material.
     custom-model-data: 0
     cost-category: false
     glow: false
-    id_display: '&f&lCountry Tags' # item displayname.
+    id_display: '<reset><white><bold>Country Tags' # item displayname.
     slot: 13 # slot this item will be in the main menu.
     lore:
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
       - ''
-      - '&fCountry tags: &7%tags_amount%'
+      - '<reset><white>Country tags: <reset><gray>%tags_amount%'
       - ''
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
     filter-labels:
-      selected: '&f&lCOUNTRIES'
-      unselected: '&7Countries'
+      selected: '<reset><white><bold>COUNTRIES'
+      unselected: '<reset><gray>Countries'
     permission: 'supremetags.category.countries' # permission players will need to open this menu
-    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.<category>` they will not see it.
-    no-permission-message: '%prefix% &cYou have no permission to open the &7Holiday &cCategory!'
+    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.\<category>` they will not see it.
+    no-permission-message: '%prefix% <reset><red>You have no permission to open the <reset><gray>Holiday <reset><red>Category!'
   holiday:
-    title: '&8Menu > &lHoliday Tags' # title of the category gui.
+    title: '<bold>Holiday Tags <reset><dark_gray>(%page%/%max_pages%)' # title of the category gui.
     material: 'NAME_TAG' # item material.
     custom-model-data: 0
     cost-category: false
     glow: false
-    id_display: '&c&lHoliday Tags' # item displayname.
+    id_display: '<reset><red><bold>Holiday Tags' # item displayname.
     slot: 15 # slot this item will be in the main menu.
     lore:
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
       - ''
-      - '&cHoliday tags: &7%tags_amount%'
+      - '<reset><red>Holiday tags: <reset><gray>%tags_amount%'
       - ''
-      - '&8&m-----------------------------'
+      - '<reset><dark_gray><strikethrough>-----------------------------'
     filter-labels:
-      selected: '&f&lHOLIDAY'
-      unselected: '&7Holiday'
+      selected: '<reset><white><bold>HOLIDAY'
+      unselected: '<reset><gray>Holiday'
     permission: 'supremetags.category.holiday' # permission players will need to open this menu
-    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.<category>` they will not see it.
-    no-permission-message: '%prefix% &cYou have no permission to open the &7Holiday &cCategory!'
+    permission-see-category: false # if set true and if player doesn't have the permission `supremetags.category.\<category>` they will not see it.
+    no-permission-message: '%prefix% <reset><red>You have no permission to open the <reset><gray>Holiday <reset><red>Category!'

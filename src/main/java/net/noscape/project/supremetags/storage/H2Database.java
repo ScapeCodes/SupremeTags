@@ -46,7 +46,6 @@ public class H2Database {
                 return;
             }
 
-            // USERS TABLE
             String userTable = "CREATE TABLE IF NOT EXISTS users (" +
                     "Name VARCHAR(255) NOT NULL, " +
                     "UUID VARCHAR(255) NOT NULL, " +
@@ -59,7 +58,6 @@ public class H2Database {
             ensureActiveColumn(connection);
             ensureCTColumn(connection);
 
-            // SINGLE TAGS TABLE
             String tagsTable = "CREATE TABLE IF NOT EXISTS tags (" +
                     "identifier VARCHAR(255) PRIMARY KEY, " +
                     "tag_text TEXT, " +

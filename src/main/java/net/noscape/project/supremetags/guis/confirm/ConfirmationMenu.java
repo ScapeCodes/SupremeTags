@@ -66,7 +66,6 @@ public class ConfirmationMenu extends Menu {
     public void setMenuItems() {
         Player player = menuUtil.getOwner();
 
-        // Accept item
         String acceptPath = "gui.confirmation-menu.items.accept.";
         ItemResolver.ResolvedItem acceptResolved =
                 ItemResolver.resolveCustomItem(player, config.getString(acceptPath + "material"));
@@ -80,7 +79,6 @@ public class ConfirmationMenu extends Menu {
 
         this.inventory.setItem(config.getInt(acceptPath + "slot"), accept);
 
-        // Deny item
         String denyPath = "gui.confirmation-menu.items.deny.";
         ItemResolver.ResolvedItem denyResolved =
                 ItemResolver.resolveCustomItem(player, config.getString(denyPath + "material"));

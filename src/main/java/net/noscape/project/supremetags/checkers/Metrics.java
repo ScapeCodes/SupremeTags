@@ -4,6 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import dev.faststats.ErrorTracker;
+import dev.faststats.bukkit.BukkitContext;
+import dev.faststats.data.Metric;
+import net.noscape.project.supremetags.SupremeTags;
+import net.noscape.project.supremetags.handlers.Tag;
+import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -19,6 +25,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
@@ -29,6 +36,9 @@ import java.util.zip.GZIPOutputStream;
  */
 @SuppressWarnings({"WeakerAccess"})
 public class Metrics {
+
+    private static final String FAST_STATS_TOKEN = "6833fc7b81e69ae8445dafd5940a8366";
+    private static final ErrorTracker ERROR_TRACKER = ErrorTracker.contextAware();
 
     static {
         // You can use the property to disable the check in your test environment
@@ -74,6 +84,9 @@ public class Metrics {
     // A list with all custom charts
     private final List<CustomChart> charts = new ArrayList<>();
 
+    private BukkitContext fastStatsContext;
+    private final AtomicInteger maxLoadedTagCount = new AtomicInteger();
+
     /**
      * Class constructor.
      *
@@ -87,6 +100,7 @@ public class Metrics {
         }
         this.plugin = plugin;
         this.pluginId = pluginId;
+        startFastStats();
 
         // Get the config file
         File bStatsFolder = new File(plugin.getDataFolder().getParentFile(), "bStats");
@@ -147,6 +161,107 @@ public class Metrics {
         }
     }
 
+    private void startFastStats() {
+        fastStatsContext = new BukkitContext.Factory(plugin, FAST_STATS_TOKEN)
+                .errorTrackerService(ERROR_TRACKER)
+                .metrics(factory -> factory
+                        .addMetric(Metric.number("loaded_tags", this::getLoadedTagCount))
+                        .addMetric(Metric.number("max_loaded_tags", this::getMaxLoadedTagCount))
+                        .addMetric(Metric.number("loaded_variants", this::getLoadedVariantCount))
+                        .addMetric(Metric.number("loaded_categories", this::getLoadedCategoryCount))
+                        .addMetric(Metric.number("animated_tags", this::getAnimatedTagCount))
+                        .addMetric(Metric.number("economy_tags", this::getEconomyTagCount))
+                        .addMetric(Metric.string("largest_category", this::getLargestCategoryName))
+                        .create())
+                .create();
+        fastStatsContext.ready();
+    }
+
+    public int getLoadedTagCount() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getTagManager() == null) {
+            return 0;
+        }
+        int loadedTagCount = supremeTags.getTagManager().getTags().size();
+        maxLoadedTagCount.updateAndGet(currentMax -> Math.max(currentMax, loadedTagCount));
+        return loadedTagCount;
+    }
+
+    public int getMaxLoadedTagCount() {
+        int loadedTagCount = getLoadedTagCount();
+        return Math.max(maxLoadedTagCount.get(), loadedTagCount);
+    }
+
+    public int getLoadedVariantCount() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getTagManager() == null) {
+            return 0;
+        }
+        return supremeTags.getTagManager().getVariants().size();
+    }
+
+    public int getLoadedCategoryCount() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getCategoryManager() == null) {
+            return 0;
+        }
+        return supremeTags.getCategoryManager().getCatorgies().size();
+    }
+
+    public int getAnimatedTagCount() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getTagManager() == null) {
+            return 0;
+        }
+
+        int animatedTags = 0;
+        for (Tag tag : supremeTags.getTagManager().getTags().values()) {
+            if (tag.getTag() != null && tag.getTag().size() > 1) {
+                animatedTags++;
+            }
+        }
+        return animatedTags;
+    }
+
+    public int getEconomyTagCount() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getTagManager() == null) {
+            return 0;
+        }
+
+        int economyTags = 0;
+        for (Tag tag : supremeTags.getTagManager().getTags().values()) {
+            if (tag.getEconomy() != null && tag.getEconomy().isEnabled()) {
+                economyTags++;
+            }
+        }
+        return economyTags;
+    }
+
+    public String getLargestCategoryName() {
+        SupremeTags supremeTags = SupremeTags.getInstance();
+        if (supremeTags == null || supremeTags.getCategoryManager() == null) {
+            return "none";
+        }
+
+        Map<String, Integer> categories = supremeTags.getCategoryManager().getCatorgiesTags();
+        if (categories.isEmpty()) {
+            return "none";
+        }
+
+        return categories.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("none");
+    }
+
+    public void shutdown() {
+        if (fastStatsContext != null) {
+            fastStatsContext.shutdown();
+            fastStatsContext = null;
+        }
+    }
+
     /**
      * Checks if bStats is enabled.
      *
@@ -180,9 +295,9 @@ public class Metrics {
                     timer.cancel();
                     return;
                 }
-                // Nevertheless we want our code to run in the Bukkit main thread, so we have to use the Bukkit scheduler
+                // Nevertheless we want our code to run in the Bukkit main thread, so we have to use the scheduler
                 // Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
-                Bukkit.getScheduler().runTask(plugin, () -> submitData());
+                Utils.runMain(() -> submitData());
             }
         }, 1000 * 60 * 5, 1000 * 60 * 30);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start

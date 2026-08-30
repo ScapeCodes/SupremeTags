@@ -40,7 +40,7 @@ public class PersonalTagEditorMenu extends Menu {
     @Override
     public int getSlots() {
         if (guis.isConfigurationSection("gui.personal-tags.size"))
-            return guis.getInt("gui.personal-tags.size"); // Added 2.1.6-d12
+            return guis.getInt("gui.personal-tags.size");
 
         return 27;
     }

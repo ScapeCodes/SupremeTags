@@ -4,70 +4,69 @@ import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.Tag;
 
 import java.sql.SQLException;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TagData {
 
-    // -------------------------------------------------------
-    // CREATE TAG
-    // -------------------------------------------------------
     public static void createTag(Tag tag) {
         if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
             SupremeTags.getInstance().getMySQLTags().saveTag(tag);
         } else if (SupremeTags.getInstance().isSQLite()) {
             SupremeTags.getInstance().getSqLiteTags().saveTag(tag);
         }
+        if (SupremeTags.getInstance().getRedisUpdateService() != null) {
+            SupremeTags.getInstance().getRedisUpdateService().publishTagCreated(tag);
+        }
     }
 
-    // -------------------------------------------------------
-    // DELETE TAG
-    // -------------------------------------------------------
     public static void deleteTag(String identifier) {
         if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
-            SupremeTags.getInstance().getSqLiteTags().deleteTag(identifier);
+            SupremeTags.getInstance().getMySQLTags().deleteTag(identifier);
         } else if (SupremeTags.getInstance().isSQLite()) {
             SupremeTags.getInstance().getSqLiteTags().deleteTag(identifier);
         }
+        if (SupremeTags.getInstance().getRedisUpdateService() != null) {
+            SupremeTags.getInstance().getRedisUpdateService().publishTagDeleted(identifier);
+        }
     }
 
-    // -------------------------------------------------------
-    // UPDATE TAG
-    // -------------------------------------------------------
     public static void updateTag(Tag tag) {
         if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
-            SupremeTags.getInstance().getSqLiteTags().updateTag(tag);
+            SupremeTags.getInstance().getMySQLTags().updateTag(tag);
         } else if (SupremeTags.getInstance().isSQLite()) {
             SupremeTags.getInstance().getSqLiteTags().updateTag(tag);
         }
+        if (SupremeTags.getInstance().getRedisUpdateService() != null) {
+            SupremeTags.getInstance().getRedisUpdateService().publishTagUpdated(tag);
+        }
     }
 
-    // -------------------------------------------------------
-    // GET TAG (ONE)
-    // -------------------------------------------------------
     public static Tag getTag(String identifier) {
-        //if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
-        //    return SupremeTags.getInstance().getSqLiteTags().getTag(identifier);
-        //} else if (SupremeTags.getInstance().isSQLite()) {
-        //    return SupremeTags.getInstance().getSqLiteTags().getTag(identifier);
-        //}
 
         return null;
     }
 
-    // -------------------------------------------------------
-    // GET ALL TAGS
-    // -------------------------------------------------------
-    public static void getAllTags() {
+    public static Map<String, Tag> getAllTags() {
         if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
-            SupremeTags.getInstance().getTagManager().setTagsMap(SupremeTags.getInstance().getMySQLTags().loadTags());
+            return SupremeTags.getInstance().getMySQLTags().loadTags();
         } else if (SupremeTags.getInstance().isSQLite()) {
-            SupremeTags.getInstance().getTagManager().setTagsMap(SupremeTags.getInstance().getSqLiteTags().loadTags());
+            return SupremeTags.getInstance().getSqLiteTags().loadTags();
         }
+
+        return new LinkedHashMap<>();
     }
 
-    // -------------------------------------------------------
-    // IS CONNECTED
-    // -------------------------------------------------------
+    public static long getTagDataVersion() {
+        if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {
+            return SupremeTags.getInstance().getMySQLTags().getDataVersion();
+        } else if (SupremeTags.getInstance().isSQLite()) {
+            return SupremeTags.getInstance().getSqLiteTags().getDataVersion();
+        }
+
+        return 0L;
+    }
+
     public static boolean isConnected() {
         try {
             if (SupremeTags.getInstance().isMySQL() || SupremeTags.getInstance().isMaria()) {

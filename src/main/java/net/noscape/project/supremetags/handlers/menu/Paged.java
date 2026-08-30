@@ -1,10 +1,12 @@
 package net.noscape.project.supremetags.handlers.menu;
 
+import net.noscape.project.supremetags.utils.ItemData;
+
 import com.cryptomorin.xseries.XEnchantment;
+import com.cryptomorin.xseries.XItemFlag;
 import com.cryptomorin.xseries.XMaterial;
 import de.rapha149.signgui.SignGUI;
 import de.rapha149.signgui.exception.SignGUIVersionException;
-import de.tr7zw.nbtapi.NBTItem;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -21,6 +23,8 @@ import net.noscape.project.supremetags.guis.search.SearchResultMenu;
 import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.TagFormatter;
 import net.noscape.project.supremetags.handlers.Variant;
+import net.noscape.project.supremetags.handlers.requirements.RequirementEvaluator;
+import net.noscape.project.supremetags.managers.TagManager;
 import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.ItemResolver;
 import net.noscape.project.supremetags.utils.SkullUtil;
@@ -33,9 +37,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -47,6 +51,8 @@ import static net.noscape.project.supremetags.utils.Utils.globalPlaceholders;
 
 public abstract class Paged extends Menu {
 
+    private static final Pattern CUSTOM_PLACEHOLDER_PATTERN = Pattern.compile("%custom-placeholder_(.*?)%");
+
     private final FileConfiguration guis = SupremeTags.getInstance().getConfigManager().getConfig("guis.yml").get();
     private final FileConfiguration messages = SupremeTags.getInstance().getConfigManager().getConfig("messages.yml").get();
     private final FileConfiguration Cat_Config = SupremeTags.getInstance().getConfigManager().getConfig("categories.yml").get();
@@ -56,7 +62,7 @@ public abstract class Paged extends Menu {
     protected int maxItems = guis.getInt("gui.tag-menu.tags-per-page");
     protected int index = 0;
     private final int tagsCount;
-    public static int currentItemsOnPage = 0;
+    protected int currentItemsOnPage = 0;
     protected boolean isLast;
     protected int totalItems;
 
@@ -100,7 +106,6 @@ public abstract class Paged extends Menu {
             inventory.setItem(next_slot, createCustomItem(nextMaterial, next, nextCmd, next_lore));
         }
 
-        // Apply border layout consistent with other menus
         String layout = SupremeTags.getInstance().getLayout();
         if (layout == null) {
             return;
@@ -173,7 +178,12 @@ public abstract class Paged extends Menu {
             }
         }
 
-        for (String str : guis.getConfigurationSection("gui.items").getKeys(false)) {
+        ConfigurationSection guiItemsSection = guis.getConfigurationSection("gui.items");
+        if (guiItemsSection == null) {
+            return;
+        }
+
+        for (String str : guiItemsSection.getKeys(false)) {
             boolean enabled = guis.getBoolean("gui.items." + str + ".enable");
             if (enabled && !str.equalsIgnoreCase("glass")) {
 
@@ -187,9 +197,13 @@ public abstract class Paged extends Menu {
                 if (showcaseMenu && str.equalsIgnoreCase("filter")) continue;
 
                 if (!ptags && str.equalsIgnoreCase("create-tag")) continue;
+                if (!ptags && str.equalsIgnoreCase("tag-credits")) continue;
+                if (!ptags && str.equalsIgnoreCase("tag-credits-help")) continue;
                 if (variantsMenu && str.equalsIgnoreCase("personal-tags")) continue;
                 if (ptags && str.equalsIgnoreCase("personal-tags")) continue;
                 if (variantsMenu && str.equalsIgnoreCase("create-tag")) continue;
+                if (variantsMenu && str.equalsIgnoreCase("tag-credits")) continue;
+                if (variantsMenu && str.equalsIgnoreCase("tag-credits-help")) continue;
 
                 if (!SupremeTags.getInstance().getConfig().getBoolean("settings.personal-tags.enable") && str.equalsIgnoreCase("personal-tags"))
                     continue;
@@ -200,7 +214,7 @@ public abstract class Paged extends Menu {
                 }
 
                 if (!ptags && !categories && !variantsMenu) {
-                    if (!(page > 0)) {
+                    if (!(page > 0) && !shouldShowBackOnFirstPage()) {
                         if (str.equalsIgnoreCase("back")) {
                             continue;
                         }
@@ -220,7 +234,7 @@ public abstract class Paged extends Menu {
                 int item_custom_model_data = guis.getInt("gui.items." + str + ".custom-model-data");
                 List<String> item_lore = guis.getStringList("gui.items." + str + ".lore");
 
-                int item_slot = guis.getInt("gui.items." + str + ".slot"); // Default slot
+                int item_slot = guis.getInt("gui.items." + str + ".slot");
                 List<Integer> slots = new ArrayList<>();
                 boolean isSlots = false;
 
@@ -238,7 +252,7 @@ public abstract class Paged extends Menu {
                 ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
                 ItemStack item = resolved.item();
                 ItemMeta itemMeta = resolved.meta();
-                NBTItem nbt = new NBTItem(item);
+                ItemStack nbt = item;
 
                 if (item_custom_model_data > 0) {
                     if (itemMeta != null) {
@@ -252,31 +266,21 @@ public abstract class Paged extends Menu {
                     }
                 }
 
-                nbt.setString("name", str);
+                ItemData.setString(nbt, "name", str);
 
                 item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
-
-                if (menuUtil.getFilter() == null) {
-                    item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.all-tags"));
-                } else {
-                    if (menuUtil.getFilter().startsWith("category:")) {
-                        item_displayname = item_displayname.replace("%filter%", menuUtil.getFilter().replace("category:", ""));
-                    } else if (menuUtil.getFilter().equalsIgnoreCase("players")) {
-                        item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.your-tags"));
-                    } else {
-                        item_displayname = item_displayname.replace("%filter%", guis.getString("gui.items.filter.filters.replacements.all-tags"));
-                    }
+                if (item_displayname.contains("%tag_credits%")) {
+                    item_displayname = item_displayname.replace("%tag_credits%", String.valueOf(UserData.getDisplayTagCredits(menuUtil.getOwner().getUniqueId())));
+                }
+                if (item_displayname.contains("%tag_credits_creation_cost%")) {
+                    item_displayname = item_displayname.replace("%tag_credits_creation_cost%", String.valueOf(SupremeTags.getInstance().getConfig().getLong("settings.personal-tags.credits.creation-cost", 0L)));
                 }
 
-                if (menuUtil.getSort() == null) {
-                    item_displayname = item_displayname.replace("%sort%", guis.getString("gui.items.sort.sorts.replacements.no-filter"));
-                } else {
-                    if (menuUtil.getSort().startsWith("rarity:")) {
-                        item_displayname = item_displayname.replace("%sort%", menuUtil.getSort().replace("rarity:", "").toUpperCase());
-                    } else {
-                        item_displayname = item_displayname.replace("%sort%", guis.getString("gui.items.sort.sorts.replacements.no-filter"));
-                    }
-                }
+                String filterDisplay = getCurrentFilterDisplay();
+                String sortDisplay = getCurrentSortDisplay();
+
+                item_displayname = item_displayname.replace("%filter%", filterDisplay);
+                item_displayname = item_displayname.replace("%sort%", sortDisplay);
 
                 String identifier = UserData.getActive(menuUtil.getOwner().getUniqueId());
 
@@ -302,6 +306,10 @@ public abstract class Paged extends Menu {
                 item_displayname = globalPlaceholders(menuUtil.getOwner(), item_displayname);
 
                 if (item_lore != null || !item_lore.isEmpty()) {
+                    if (ptags && str.equalsIgnoreCase("tag-credits-help")) {
+                        item_lore = new ArrayList<>(SupremeTags.getInstance().getConfig().getStringList("settings.personal-tags.credits.how-to-earn"));
+                    }
+
                     String identifier_lore = UserData.getActive(menuUtil.getOwner().getUniqueId());
 
                     if (identifier_lore.equalsIgnoreCase("none")) {
@@ -310,9 +318,19 @@ public abstract class Paged extends Menu {
 
                     String finalIdentifier_lore = identifier_lore;
                     item_lore.replaceAll(s -> s.replace("%identifier%", finalIdentifier_lore));
+                    item_lore.replaceAll(s -> s.replace("%filter%", filterDisplay));
+                    item_lore.replaceAll(s -> s.replace("%sort%", sortDisplay));
 
                     String displayTag = TagFormatter.getFormattedTag(menuUtil.getOwner(), TagFormatter.Context.TAG);
                     item_lore.replaceAll(s -> s.replace("%tag%", displayTag));
+                    if (item_lore.stream().anyMatch(s -> s.contains("%tag_credits%"))) {
+                        String tagCredits = String.valueOf(UserData.getDisplayTagCredits(menuUtil.getOwner().getUniqueId()));
+                        item_lore.replaceAll(s -> s.replace("%tag_credits%", tagCredits));
+                    }
+                    if (item_lore.stream().anyMatch(s -> s.contains("%tag_credits_creation_cost%"))) {
+                        String creationCost = String.valueOf(SupremeTags.getInstance().getConfig().getLong("settings.personal-tags.credits.creation-cost", 0L));
+                        item_lore.replaceAll(s -> s.replace("%tag_credits_creation_cost%", creationCost));
+                    }
 
                     item_lore.replaceAll(s -> globalPlaceholders(menuUtil.getOwner(), s));
                 } else {
@@ -332,14 +350,14 @@ public abstract class Paged extends Menu {
                     int amountYourTags = getTypeAmount(player, "yourtags");
 
                     if (filter.equalsIgnoreCase("players")) {
-                        newLore.add(format(guis.getString(unselectedKey + "all-tags") + " (" + amountAll + ")"));
-                        newLore.add(format(guis.getString(selectedKey + "your-tags") + " (" + amountYourTags + ")"));
+                        addConfiguredLoreLine(newLore, unselectedKey + "all-tags", amountAll);
+                        addConfiguredLoreLine(newLore, selectedKey + "your-tags", amountYourTags);
                     } else if (filter.equalsIgnoreCase("all")) {
-                        newLore.add(format(guis.getString(selectedKey + "all-tags") + " (" + amountAll + ")"));
-                        newLore.add(format(guis.getString(unselectedKey + "your-tags") + " (" + amountYourTags + ")"));
+                        addConfiguredLoreLine(newLore, selectedKey + "all-tags", amountAll);
+                        addConfiguredLoreLine(newLore, unselectedKey + "your-tags", amountYourTags);
                     } else {
-                        newLore.add(format(guis.getString(unselectedKey + "all-tags") + " (" + amountAll + ")"));
-                        newLore.add(format(guis.getString(unselectedKey + "your-tags") + " (" + amountYourTags + ")"));
+                        addConfiguredLoreLine(newLore, unselectedKey + "all-tags", amountAll);
+                        addConfiguredLoreLine(newLore, unselectedKey + "your-tags", amountYourTags);
                     }
 
                     ConfigurationSection cat_sec = this.Cat_Config.getConfigurationSection("categories");
@@ -349,7 +367,7 @@ public abstract class Paged extends Menu {
                             boolean isSelected = filter.equalsIgnoreCase("category:" + category);
                             int amountCategory = getTypeAmount(player, "category:" + category);
 
-                            String label = category.toUpperCase(); // fallback
+                            String label = category.toUpperCase();
                             if (cat_sec != null && cat_sec.isConfigurationSection(category)) {
                                 ConfigurationSection categorySection = cat_sec.getConfigurationSection(category);
                                 ConfigurationSection labelsSection = categorySection.getConfigurationSection("filter-labels");
@@ -365,6 +383,9 @@ public abstract class Paged extends Menu {
 
                             String formatKey = isSelected ? selectedKey + "category" : unselectedKey + "category";
                             String formatTemplate = guis.getString(formatKey);
+                            if (formatTemplate == null || formatTemplate.isBlank()) {
+                                continue;
+                            }
                             String formatted = formatTemplate.replace("%category%", label) + " (" + amountCategory + ")";
                             newLore.add(format(formatted));
                         }
@@ -375,7 +396,9 @@ public abstract class Paged extends Menu {
                         if (line.contains("%filter_lore%")) {
                             finalLore.addAll(color(newLore));
                         } else {
-                            finalLore.add(format(line));
+                            finalLore.add(format(line
+                                    .replace("%filter%", filterDisplay)
+                                    .replace("%sort%", sortDisplay)));
                         }
                     }
                     item_lore = finalLore;
@@ -390,12 +413,11 @@ public abstract class Paged extends Menu {
                     String selectedKey = "gui.items.sort.sorts.selected.rarity";
                     String unselectedKey = "gui.items.sort.sorts.unselected.rarity";
 
-                    // Handle "none" option (no filter)
                     String noneLabel;
                     if (sort.equalsIgnoreCase("none")) {
-                        noneLabel = guis.getString("gui.items.sort.sorts.selected.no-filter", "&7None");
+                        noneLabel = guis.getString("gui.items.sort.sorts.selected.no-filter");
                     } else {
-                        noneLabel = guis.getString("gui.items.sort.sorts.unselected.no-filter", "&7None");
+                        noneLabel = guis.getString("gui.items.sort.sorts.unselected.no-filter");
                     }
                     int amountAll = 0;
 
@@ -405,7 +427,12 @@ public abstract class Paged extends Menu {
                         amountAll = getVariantTypeAmount(player, "all");
                     }
 
-                    newLore.add(format(noneLabel + " (" + amountAll + ")"));
+                    if (noneLabel != null && !noneLabel.isBlank()) {
+                        newLore.add(format(noneLabel + " (" + amountAll + ")"));
+                    }
+
+                    addConfiguredLoreLine(newLore, "gui.items.sort.sorts." + (sort.equalsIgnoreCase("popularity") ? "selected" : "unselected") + ".popularity", amountAll);
+                    addConfiguredLoreLine(newLore, "gui.items.sort.sorts." + (sort.equalsIgnoreCase("recently-used") ? "selected" : "unselected") + ".recently-used", amountAll);
 
                     for (String rarity : rarities) {
                         boolean isSelected = sort.equalsIgnoreCase("rarity:" + rarity);
@@ -418,9 +445,8 @@ public abstract class Paged extends Menu {
                             amountByRarity = getVariantTypeAmount(player, "rarity:" + rarity);
                         }
 
-                        String label = deformat(rarity); // fallback label
+                        String label = deformat(rarity);
 
-                        // Try to get label from rarities.yml
                         ConfigurationSection raritySection = rarityConfig.getConfigurationSection("rarities." + rarity);
                         if (raritySection != null && raritySection.isConfigurationSection("filter-labels")) {
                             ConfigurationSection labels = raritySection.getConfigurationSection("filter-labels");
@@ -429,53 +455,51 @@ public abstract class Paged extends Menu {
                             }
                         }
 
-                        // Get format template from GUI config
                         String template = guis.getString(isSelected ? selectedKey : unselectedKey);
+                        if (template == null || template.isBlank()) {
+                            continue;
+                        }
                         String formatted = template.replace("%rarity%", label) + " (" + amountByRarity + ")";
 
                         newLore.add(format(formatted));
                     }
 
-                    // Replace %sort_lore% in lore with newLore
                     List<String> finalLore = new ArrayList<>();
                     for (String line : item_lore) {
                         if (line.contains("%sort_lore%")) {
                             finalLore.addAll(color(newLore));
                         } else {
-                            finalLore.add(format(line));
+                            finalLore.add(format(line
+                                    .replace("%filter%", filterDisplay)
+                                    .replace("%sort%", sortDisplay)));
                         }
                     }
                     item_lore = finalLore;
                 }
 
-
                 itemMeta.setLore(color(item_lore));
 
                 itemMeta.setDisplayName(format(item_displayname));
-                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                try {
-                    ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                    itemMeta.addItemFlags(hideDye);
-                } catch (IllegalArgumentException ignored) {
-                    // HIDE_DYE not available in this version — skip
-                }
-                itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+                addItemFlags(itemMeta, XItemFlag.HIDE_ATTRIBUTES, XItemFlag.HIDE_DYE, XItemFlag.HIDE_DESTROYS, XItemFlag.HIDE_ENCHANTS, XItemFlag.HIDE_UNBREAKABLE);
 
-                nbt.getItem().setItemMeta(itemMeta);
-                nbt.setString("name", str);
+                nbt.setItemMeta(itemMeta);
+                ItemData.setString(nbt, "name", str);
 
                 if (!isSlots) {
-                    inventory.setItem(item_slot, nbt.getItem());
+                    inventory.setItem(item_slot, nbt);
                 } else {
                     for (int slot : slots) {
-                        inventory.setItem(slot, nbt.getItem());
+                        inventory.setItem(slot, nbt);
                     }
                 }
             }
 
-            for (String cSTR : guis.getConfigurationSection("gui.tag-menu.custom-items").getKeys(false)) {
+            ConfigurationSection customItemsSection = guis.getConfigurationSection("gui.tag-menu.custom-items");
+            if (customItemsSection == null) {
+                return;
+            }
+
+            for (String cSTR : customItemsSection.getKeys(false)) {
                 boolean cEnable = guis.getBoolean("gui.tag-menu.custom-items." + cSTR + ".enable");
 
                 if (showcaseMenu) continue;
@@ -491,36 +515,29 @@ public abstract class Paged extends Menu {
                     boolean isSlots = false;
                     List<Integer> slots = new ArrayList<>();
 
-                    // Handle slots
                     if (guis.contains("gui.tag-menu.custom-items." + cSTR + ".slots")) {
                         slots = guis.getIntegerList("gui.tag-menu.custom-items." + cSTR + ".slots");
                         isSlots = true;
                     }
 
-                    // Handle single slot if slots not defined
                     if (!isSlots && guis.contains("gui.tag-menu.custom-items." + cSTR + ".slot")) {
                         item_slot = guis.getInt("gui.tag-menu.custom-items." + cSTR + ".slot");
                     }
 
-                    // Lore
                     List<String> item_lore = guis.getStringList("gui.tag-menu.custom-items." + cSTR + ".lore");
 
-                    // Resolve item
                     ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(menuUtil.getOwner(), item_material);
                     ItemStack item = resolved.item();
                     ItemMeta itemMeta = resolved.meta();
 
-                    // Custom model data
                     if (item_custom_model_data > 0 && itemMeta != null) {
                         itemMeta.setCustomModelData(item_custom_model_data);
                     }
 
-                    // Hide tooltip
                     if (isPaperVersionAtLeast(1, 21, 5) && hideToolTip) {
                         itemMeta.setHideTooltip(true);
                     }
 
-                    // Replace placeholders in display name
                     item_displayname = item_displayname.replace("%player%", menuUtil.getOwner().getName());
                     String identifier = UserData.getActive(menuUtil.getOwner().getUniqueId());
 
@@ -546,7 +563,6 @@ public abstract class Paged extends Menu {
 
                     item_displayname = globalPlaceholders(menuUtil.getOwner(), item_displayname);
 
-                    // Lore placeholders
                     if (item_lore != null && !item_lore.isEmpty()) {
                         item_lore.replaceAll(s -> s.replace("%identifier%", identifier));
                         if (SupremeTags.getInstance().getTagManager().getTag(identifier) != null) {
@@ -565,34 +581,22 @@ public abstract class Paged extends Menu {
                         item_lore = new ArrayList<>();
                     }
 
-                    // Apply meta
                     itemMeta.setLore(color(item_lore));
                     itemMeta.setDisplayName(format(item_displayname));
 
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                    try {
-                        ItemFlag hideDye = ItemFlag.valueOf("HIDE_DYE");
-                        itemMeta.addItemFlags(hideDye);
-                    } catch (IllegalArgumentException ignored) {
-                        // Not supported in this version
-                    }
-                    itemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+                    addItemFlags(itemMeta, XItemFlag.HIDE_ATTRIBUTES, XItemFlag.HIDE_DYE, XItemFlag.HIDE_DESTROYS, XItemFlag.HIDE_ENCHANTS, XItemFlag.HIDE_UNBREAKABLE);
 
                     item.setItemMeta(itemMeta);
 
-                    // Add NBT identifier so we know which custom item it is
-                    NBTItem nbt = new NBTItem(item);
-                    nbt.setString("custom-item", cSTR);
-                    item = nbt.getItem();
+            ItemStack nbt = item;
+                    ItemData.setString(nbt, "custom-item", cSTR);
+                    item = nbt;
 
-                    // Place item in inventory
                     if (!isSlots) {
                         inventory.setItem(item_slot, item);
                     } else {
                         for (int slot : slots) {
-                            inventory.setItem(slot, item.clone()); // clone so each slot is independent
+                            inventory.setItem(slot, item.clone());
                         }
                     }
                 }
@@ -602,6 +606,20 @@ public abstract class Paged extends Menu {
 
     protected int getPage() {
         return page + 1;
+    }
+
+    protected String applyPagePlaceholders(String title, int totalItems) {
+        return title
+                .replace("%page%", String.valueOf(this.getPage()))
+                .replace("%max_pages%", String.valueOf(this.getMaxPages(totalItems)));
+    }
+
+    protected int getMaxPages(int totalItems) {
+        if (maxItems <= 0) {
+            return 1;
+        }
+
+        return Math.max(1, (int) Math.ceil((double) totalItems / maxItems));
     }
 
     public int getMaxItems() {
@@ -642,10 +660,6 @@ public abstract class Paged extends Menu {
         }
     }
 
-    public FileConfiguration getTagConfig() {
-        return SupremeTags.getInstance().getConfigManager().getConfig("tags.yml").get();
-    }
-
     public int getCurrentItemsOnPage() {
         return currentItemsOnPage;
     }
@@ -660,7 +674,8 @@ public abstract class Paged extends Menu {
         } else if (search.equalsIgnoreCase("DIALOG")) {
             openDialogSearch(player);
         } else {
-            msgPlayer(player, "&cInvalid Search type, use SIGN, ANVIL or DIALOG.");
+            msgPlayer(player, messages.getString("messages.invalid-search-type", "%prefix% &cInvalid Search type, use SIGN, ANVIL or DIALOG.")
+                    .replace("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix", ""))));
         }
     }
 
@@ -669,12 +684,13 @@ public abstract class Paged extends Menu {
         try {
             gui = SignGUI.builder()
                     .setLines(format(messages.getString("messages.sign-line-top")), null, null)
+                    .callHandlerSynchronously(SupremeTags.getInstance())
                     .setColor(DyeColor.YELLOW)
 
                     .setHandler((p, result) -> {
                         String text = result.getLineWithoutColor(1);
 
-                        if (!text.isEmpty()) {
+                        if (text != null && !text.isEmpty()) {
                             if (SupremeTags.getInstance().getCategoryManager().isCategoryNearName(text)
                                     || SupremeTags.getInstance().getTagManager().tagExistsNearName(text)) {
 
@@ -752,19 +768,23 @@ public abstract class Paged extends Menu {
                                 ).width(300).build()
                         ))
                         .build())
-                .type(DialogType.confirmation(
-                        ActionButton.create(
-                                Component.text("Search"),
-                                Component.empty(),
-                                100,
-                                DialogAction.customClick(Key.key("supremetags:search"), null)
+                .type(DialogType.multiAction(
+                        List.of(
+                                ActionButton.create(
+                                        Component.text("Search"),
+                                        Component.empty(),
+                                        150,
+                                        DialogAction.customClick(Key.key("supremetags:search"), null)
+                                ),
+                                ActionButton.create(
+                                        Component.text("Cancel"),
+                                        Component.empty(),
+                                        150,
+                                        null
+                                )
                         ),
-                        ActionButton.create(
-                                Component.text("Cancel"),
-                                Component.empty(),
-                                100,
-                                null
-                        )
+                        null,
+                        2
                 ))
         );
 
@@ -785,9 +805,8 @@ public abstract class Paged extends Menu {
                     format("&aClick the output to search!")
             ));
 
-            // Optional examples
             meta.addEnchant(XEnchantment.MENDING.get(), 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            addItemFlags(meta, XItemFlag.HIDE_ENCHANTS);
 
             item.setItemMeta(meta);
         }
@@ -795,24 +814,87 @@ public abstract class Paged extends Menu {
         return item;
     }
 
+    protected boolean shouldShowBackOnFirstPage() {
+        return false;
+    }
+
+    private void addConfiguredLoreLine(List<String> lore, String path, int amount) {
+        String template = guis.getString(path);
+        if (template == null || template.isBlank()) {
+            return;
+        }
+
+        lore.add(format(template + " (" + amount + ")"));
+    }
+
+    private String getCurrentFilterDisplay() {
+        String filter = menuUtil.getFilter();
+        if (filter == null || filter.equalsIgnoreCase("all")) {
+            return guis.getString("gui.items.filter.filters.replacements.all-tags", "All Tags");
+        }
+
+        if (filter.startsWith("category:")) {
+            return filter.replace("category:", "");
+        }
+
+        if (filter.equalsIgnoreCase("players")) {
+            return guis.getString("gui.items.filter.filters.replacements.your-tags", "Your Tags");
+        }
+
+        return guis.getString("gui.items.filter.filters.replacements.all-tags", "All Tags");
+    }
+
+    private String getCurrentSortDisplay() {
+        String sort = menuUtil.getSort();
+        if (sort == null || sort.equalsIgnoreCase("none")) {
+            return guis.getString("gui.items.sort.sorts.replacements.no-filter", "&7No Filter");
+        }
+
+        if (sort.startsWith("rarity:")) {
+            return sort.replace("rarity:", "").toUpperCase(Locale.ROOT);
+        }
+
+        if (sort.equalsIgnoreCase("popularity")) {
+            return guis.getString("gui.items.sort.sorts.replacements.popularity", "&7Most Popular");
+        }
+
+        if (sort.equalsIgnoreCase("recently-used")) {
+            return guis.getString("gui.items.sort.sorts.replacements.recently-used", "&7Recently Used");
+        }
+
+        return guis.getString("gui.items.sort.sorts.replacements.no-filter", "&7No Filter");
+    }
+
     protected Comparator<Tag> getTagComparator(boolean prioritiseSelectedTag, MenuUtil menuUtil) {
         return (tag1, tag2) -> {
 
-            // 3. Then check permission
+            String sort = menuUtil.getSort() == null ? "none" : menuUtil.getSort().toLowerCase(Locale.ROOT);
+            if (sort.equalsIgnoreCase("popularity")) {
+                int popularity = Integer.compare(
+                        SupremeTags.getInstance().getTagStatisticsManager().getTagSelections(tag2.getIdentifier()),
+                        SupremeTags.getInstance().getTagStatisticsManager().getTagSelections(tag1.getIdentifier())
+                );
+                if (popularity != 0) return popularity;
+            } else if (sort.equalsIgnoreCase("recently-used")) {
+                int recent = Long.compare(
+                        SupremeTags.getInstance().getTagStatisticsManager().getPlayerTagLastSelected(menuUtil.getOwner().getUniqueId(), tag2.getIdentifier()),
+                        SupremeTags.getInstance().getTagStatisticsManager().getPlayerTagLastSelected(menuUtil.getOwner().getUniqueId(), tag1.getIdentifier())
+                );
+                if (recent != 0) return recent;
+            }
+
             boolean hasPermission1 = menuUtil.getOwner().hasPermission(tag1.getPermission());
             boolean hasPermission2 = menuUtil.getOwner().hasPermission(tag2.getPermission());
 
             if (hasPermission1 != hasPermission2) {
-                return Boolean.compare(hasPermission2, hasPermission1); // Permission priority
+                return Boolean.compare(hasPermission2, hasPermission1);
             }
 
-            // 1. Compare by order first
             int orderComparison = Integer.compare(tag1.getOrder(), tag2.getOrder());
             if (orderComparison != 0) {
                 return orderComparison;
             }
 
-            // 2. Optionally prioritize selected tag
             if (prioritiseSelectedTag) {
                 boolean isActiveUserTag1 = Objects.equals(
                         UserData.getActive(menuUtil.getOwner().getUniqueId()), tag1.getIdentifier()
@@ -822,15 +904,13 @@ public abstract class Paged extends Menu {
                 );
 
                 if (isActiveUserTag1 != isActiveUserTag2) {
-                    return Boolean.compare(isActiveUserTag2, isActiveUserTag1); // Active tag first
+                    return Boolean.compare(isActiveUserTag2, isActiveUserTag1);
                 }
             }
 
-            // 4. Finally, alphabetical by identifier
             return tag1.getIdentifier().compareTo(tag2.getIdentifier());
         };
     }
-
 
     public ItemStack createCustomItem(String materialKey, String displayName, int customModelData, List<String> lore) {
         ItemStack item;
@@ -864,15 +944,150 @@ public abstract class Paged extends Menu {
 
             itemMeta.setDisplayName(format(displayName));
             itemMeta.setLore(color(lore));
-            itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
-            if (!isVersionLessThan("1.16")) {
-                itemMeta.addItemFlags(ItemFlag.HIDE_DYE);
-            }
+            addItemFlags(itemMeta, XItemFlag.HIDE_ATTRIBUTES, XItemFlag.HIDE_ENCHANTS, XItemFlag.HIDE_UNBREAKABLE, XItemFlag.HIDE_DYE);
 
             item.setItemMeta(itemMeta);
         }
 
         return item;
+    }
+
+    protected ItemStack buildMenuTagItem(Tag t, String permission, String loreMenuType) {
+        Player owner = menuUtil.getOwner();
+        String identifier = t.getIdentifier();
+        boolean hasAccess = Utils.hasTagAccess(owner, t);
+        boolean isActive = UserData.getActive(owner.getUniqueId()).equalsIgnoreCase(identifier);
+        FileConfiguration tagConfig = SupremeTags.getInstance().getTagManager().getConfigForTag(identifier);
+        String tagPath = "tags." + identifier;
+        String currentTag = t.getCurrentTag() != null ? t.getCurrentTag() : t.getTag().getFirst();
+
+        String displayname;
+        if (hasAccess) {
+            String configuredDisplayName = tagConfig.getString(tagPath + ".displayname");
+            displayname = configuredDisplayName != null ? configuredDisplayName.replace("%tag%", currentTag) : format("&7Tag: " + currentTag);
+        } else {
+            String lockedDisplayName = guis.getString("gui.tag-menu.global-locked-tag.displayname");
+            String configuredDisplayName = tagConfig.getString(tagPath + ".displayname");
+            displayname = (lockedDisplayName != null ? lockedDisplayName : Objects.requireNonNull(configuredDisplayName)).replace("%tag%", currentTag);
+        }
+
+        displayname = globalPlaceholders(owner, displayname);
+
+        String material = hasAccess
+                ? tagConfig.getString(tagPath + ".display-item", "NAME_TAG")
+                : guis.getString("gui.tag-menu.global-locked-tag.display-item", "NAME_TAG");
+
+        ItemResolver.ResolvedItem resolved = ItemResolver.resolveCustomItem(owner, material);
+        ItemStack tagItem = resolved.item();
+        ItemMeta tagMeta = resolved.meta();
+        ItemStack nbt = tagItem;
+
+        ItemData.setString(nbt, "identifier", identifier);
+
+        int modelData = hasAccess ? tagConfig.getInt(tagPath + ".custom-model-data") : guis.getInt("gui.tag-menu.global-locked-tag.custom-model-data");
+        if (modelData > 0 && tagMeta != null) {
+            tagMeta.setCustomModelData(modelData);
+        }
+
+        assert tagMeta != null;
+
+        if (isActive && SupremeTags.getInstance().getConfig().getBoolean("settings.active-tag-glow")) {
+            tagMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
+        }
+
+        tagMeta.setDisplayName(format(displayname));
+        addItemFlags(tagMeta, XItemFlag.HIDE_ATTRIBUTES, XItemFlag.HIDE_DYE, XItemFlag.HIDE_DESTROYS, XItemFlag.HIDE_ENCHANTS, XItemFlag.HIDE_UNBREAKABLE);
+
+        List<String> lore = getFormattedLore(t, permission, loreMenuType);
+        String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
+        String joinedEffects;
+        String effectsList;
+
+        if (!t.getEffects().isEmpty()) {
+            String formatEffectTemplate = messages.getString("messages.effects-replace-style");
+
+            joinedEffects = t.getEffects().keySet().stream()
+                    .map(PotionEffectType::getName)
+                    .map(Utils::format)
+                    .map(effect -> formatEffectTemplate.replace("%effect%", effect))
+                    .collect(Collectors.joining("\n"));
+
+            effectsList = t.getEffects().keySet().stream()
+                    .map(effect -> effect.getKey().getKey().toUpperCase(Locale.ROOT))
+                    .collect(Collectors.joining(", "));
+        } else {
+            joinedEffects = format(messages.getString("messages.no-effects"));
+            effectsList = joinedEffects;
+        }
+
+        for (int l = 0; l < lore.size(); l++) {
+            String line = lore.get(l);
+
+            Matcher matcher = CUSTOM_PLACEHOLDER_PATTERN.matcher(line);
+            while (matcher.find()) {
+                String dynamicPart = matcher.group(1);
+                line = line.replace(matcher.group(0), t.getCustomPlaceholder(identifier, dynamicPart));
+            }
+
+            if (line.contains("%description%")) {
+                if (line.trim().equals("%description%")) {
+                    List<String> descriptionLines = Arrays.asList(joinedDescription.split("\n"));
+                    lore.remove(l);
+                    lore.addAll(l, descriptionLines);
+                    l += descriptionLines.size() - 1;
+                    continue;
+                } else {
+                    line = line.replace("%description%", joinedDescription.replace("\n", " "));
+                }
+            }
+
+            if (line.contains("%effects%")) {
+                if (line.trim().equals("%effects%")) {
+                    List<String> effectLines = Arrays.asList(joinedEffects.split("\n"));
+                    lore.remove(l);
+                    lore.addAll(l, effectLines);
+                    l += effectLines.size() - 1;
+                    continue;
+                } else {
+                    line = line.replace("%effects%", joinedEffects.replace("\n", " "));
+                }
+            }
+
+            String requirements = RequirementEvaluator.formatStatus(owner, t);
+            if (line.contains("%requirements%")) {
+                if (line.trim().equals("%requirements%")) {
+                    List<String> requirementLines = requirements.isEmpty() ? new ArrayList<>() : Arrays.asList(requirements.split("\n"));
+                    lore.remove(l);
+                    lore.addAll(l, requirementLines);
+                    l += requirementLines.size() - 1;
+                    continue;
+                } else {
+                    line = line.replace("%requirements%", requirements.replace("\n", " "));
+                }
+            }
+
+            line = line.replace("%identifier%", identifier);
+            line = line.replace("%tag%", currentTag);
+            line = line.replace("%cost_formatted%", "$" + formatNumber(t.getEconomy().getAmount()));
+            line = line.replace("%cost_formatted_raw%", formatNumber(t.getEconomy().getAmount()));
+            line = line.replace("%cost%", String.valueOf(t.getEconomy().getAmount()));
+            line = line.replace("%variants%", String.valueOf(t.getVariants().size()));
+            line = line.replace("%order%", String.valueOf(t.getOrder()));
+            line = line.replace("%track_unlocked%", String.valueOf(TagManager.tagUnlockCounts.getOrDefault(identifier, 0)));
+            line = line.replace("%category%", t.getCategory());
+            line = line.replace("%rarity%", SupremeTags.getInstance().getRarityManager().getRarity(t.getRarity()).getDisplayname());
+            line = line.replace("%effects_list%", effectsList);
+            line = SupremeTags.getInstance().getTagStatisticsManager().replaceTagPlaceholders(owner, line, identifier);
+            line = globalPlaceholders(owner, line);
+
+            lore.set(l, line);
+        }
+
+        tagMeta.setLore(color(lore));
+        nbt.setItemMeta(tagMeta);
+        ItemData.setString(nbt, "identifier", identifier);
+
+        return nbt;
     }
 
     protected void sendLockedMessage(Player player) {
@@ -882,6 +1097,20 @@ public abstract class Paged extends Menu {
             locked = replacePlaceholders(menuUtil.getOwner(), locked);
             msgPlayer(player, locked);
         }
+    }
+
+    protected void sendLockedMessage(Player player, Tag tag) {
+        if (!SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
+            return;
+        }
+
+        String requirementMessage = Utils.getTagRequirementMessage(player, tag);
+        if (requirementMessage != null && !requirementMessage.isBlank()) {
+            msgPlayer(player, replacePlaceholders(player, requirementMessage));
+            return;
+        }
+
+        sendLockedMessage(player);
     }
 
     protected void handleTagAssign(Player player, String identifier, Tag t) {
@@ -903,12 +1132,12 @@ public abstract class Paged extends Menu {
         if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
             String prefix = messages.getString("messages.prefix");
             if (prefix == null) {
-                prefix = "&e[SupremeTags]"; // fallback value
+                prefix = "&e[SupremeTags]";
             }
 
             String select = messages.getString("messages.tag-select-message");
             if (select == null) {
-                select = "&aYou have selected the tag %tag%"; // fallback value
+                select = "&aYou have selected the tag %tag%";
             }
 
             select = select.replace("%prefix%", prefix);

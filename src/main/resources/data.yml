@@ -36,3 +36,15 @@ data:
       idle: 870000000
       connection: 870000000
       max-lifetime: 870000000
+
+  # Optional Redis Pub/Sub support for fast cross-server cache synchronization.
+  # Redis does not replace the database. The configured database remains the source of truth.
+  redis:
+    enabled: false
+    host: 'localhost'
+    port: 6379
+    username: ''
+    password: ''
+    database: 0
+    ssl: false
+    channel: 'supremetags:updates'

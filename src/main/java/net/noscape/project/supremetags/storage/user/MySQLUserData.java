@@ -44,25 +44,25 @@ public class MySQLUserData {
 
         Connection connection = null;
         PreparedStatement preparedStatement = null;
+        long startingCredits = SupremeTags.getInstance().getConfig().getLong("settings.personal-tags.credits.starting-balance", 0L);
 
-        String query = "INSERT INTO users (Name, UUID, Active) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Name = ?, Active = ?";
+        String query = "INSERT INTO users (Name, UUID, Active, TagCredits) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE Name = ?, Active = ?";
 
         try {
             connection = SupremeTags.getMysql().getConnection();
 
             preparedStatement = connection.prepareStatement(query);
 
-            // Set parameters
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getUniqueId().toString());
             preparedStatement.setString(3, defaultTag);
-            preparedStatement.setString(4, player.getName());
-            preparedStatement.setString(5, defaultTag);
+            preparedStatement.setLong(4, startingCredits);
+            preparedStatement.setString(5, player.getName());
+            preparedStatement.setString(6, defaultTag);
 
-            // Execute the update
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected == 0) {
-                // No rows were affected, handle this scenario if needed
+
             }
 
             if (SupremeTags.getInstance().isDataCache()) {
@@ -76,8 +76,6 @@ public class MySQLUserData {
         }
     }
 
-
-
     public static void setActive(OfflinePlayer player, String identifier) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -89,20 +87,17 @@ public class MySQLUserData {
 
             preparedStatement = connection.prepareStatement(query);
 
-            // Set parameters
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getUniqueId().toString());
             preparedStatement.setString(3, identifier);
             preparedStatement.setString(4, player.getName());
             preparedStatement.setString(5, identifier);
 
-            // Execute the update
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected == 0) {
-                // No rows were affected, handle this scenario if needed
+
             }
 
-            // Update cache after successful DB write
             if (SupremeTags.getInstance().isDataCache()) {
                 SupremeTags.getInstance().getDataCache().removeFromCache(player.getUniqueId().toString());
                 SupremeTags.getInstance().getDataCache().cacheData(player.getUniqueId().toString(), identifier);
@@ -126,17 +121,15 @@ public class MySQLUserData {
 
             preparedStatement = connection.prepareStatement(query);
 
-            // Set parameters
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getUniqueId().toString());
             preparedStatement.setString(3, identifier);
             preparedStatement.setString(4, player.getName());
             preparedStatement.setString(5, identifier);
 
-            // Execute the update
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected == 0) {
-                // No rows were affected, handle this scenario if needed
+
             }
 
         } catch (SQLException e) {
@@ -252,7 +245,6 @@ public class MySQLUserData {
         return value;
     }
 
-
     public static List<String> getFavourites(UUID uuid) {
         if (SupremeTags.getInstance().isDataCache()) {
             String cachedData = SupremeTags.getInstance().getDataCache().getCachedData("favourites_" + uuid.toString());
@@ -304,17 +296,15 @@ public class MySQLUserData {
 
             preparedStatement = connection.prepareStatement(query);
 
-            // Set parameters
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getUniqueId().toString());
             preparedStatement.setString(3, UserData.getActive(player.getUniqueId()));
             preparedStatement.setString(4, favouritesData);
             preparedStatement.setString(5, favouritesData);
 
-            // Execute the update
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected == 0) {
-                // No rows were affected, handle this scenario if needed
+
             }
 
             if (SupremeTags.getInstance().isDataCache()) {
@@ -329,14 +319,160 @@ public class MySQLUserData {
         }
     }
 
-    private static String serializeFavourites(List<String> favourites) {
-        if (favourites == null || favourites.isEmpty()) {
-            return "";
+    public static List<String> getUnlockedTags(UUID uuid) {
+        if (SupremeTags.getInstance().isDataCache()) {
+            String cachedData = SupremeTags.getInstance().getDataCache().getCachedData("unlockedtags_" + uuid);
+
+            if (cachedData != null) {
+                return deserializeList(cachedData);
+            }
         }
-        return String.join(",", favourites);
+
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        String query = "SELECT UnlockedTags FROM users WHERE UUID=?";
+        String value = "";
+
+        try {
+            connection = SupremeTags.getMysql().getConnection();
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, uuid.toString());
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                value = resultSet.getString("UnlockedTags");
+
+                if (SupremeTags.getInstance().isDataCache()) {
+                    SupremeTags.getInstance().getDataCache().cacheData("unlockedtags_" + uuid, value != null ? value : "");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            SupremeTags.getMysql().closeConnections(preparedStatement, connection, resultSet);
+        }
+
+        return deserializeList(value);
+    }
+
+    public static void setUnlockedTags(OfflinePlayer player, List<String> unlockedTags) {
+        String unlockedTagsData = serializeList(unlockedTags);
+        String query = "INSERT INTO users (Name, UUID, Active, UnlockedTags) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE UnlockedTags = ?";
+
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = SupremeTags.getMysql().getConnection();
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, player.getName());
+            preparedStatement.setString(2, player.getUniqueId().toString());
+            preparedStatement.setString(3, UserData.getActive(player.getUniqueId()));
+            preparedStatement.setString(4, unlockedTagsData);
+            preparedStatement.setString(5, unlockedTagsData);
+            preparedStatement.executeUpdate();
+
+            if (SupremeTags.getInstance().isDataCache()) {
+                SupremeTags.getInstance().getDataCache().removeFromCache("unlockedtags_" + player.getUniqueId());
+                SupremeTags.getInstance().getDataCache().cacheData("unlockedtags_" + player.getUniqueId(), unlockedTagsData);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            SupremeTags.getMysql().closeConnections(preparedStatement, connection, null);
+        }
+    }
+
+    public static long getTagCredits(UUID uuid) {
+        if (SupremeTags.getInstance().isDataCache()) {
+            String cachedData = SupremeTags.getInstance().getDataCache().getCachedData("tagcredits_" + uuid);
+
+            if (cachedData != null) {
+                try {
+                    return Long.parseLong(cachedData);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        String query = "SELECT TagCredits FROM users WHERE UUID=?";
+        long value = 0L;
+
+        try {
+            connection = SupremeTags.getMysql().getConnection();
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, uuid.toString());
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                value = resultSet.getLong("TagCredits");
+
+                if (SupremeTags.getInstance().isDataCache()) {
+                    SupremeTags.getInstance().getDataCache().cacheData("tagcredits_" + uuid, String.valueOf(value));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            SupremeTags.getMysql().closeConnections(preparedStatement, connection, resultSet);
+        }
+
+        return value;
+    }
+
+    public static void setTagCredits(OfflinePlayer player, long credits) {
+        String query = "INSERT INTO users (Name, UUID, Active, TagCredits) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE TagCredits = ?";
+
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = SupremeTags.getMysql().getConnection();
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, player.getName());
+            preparedStatement.setString(2, player.getUniqueId().toString());
+            preparedStatement.setString(3, UserData.getActive(player.getUniqueId()));
+            preparedStatement.setLong(4, credits);
+            preparedStatement.setLong(5, credits);
+            preparedStatement.executeUpdate();
+
+            if (SupremeTags.getInstance().isDataCache()) {
+                SupremeTags.getInstance().getDataCache().removeFromCache("tagcredits_" + player.getUniqueId());
+                SupremeTags.getInstance().getDataCache().cacheData("tagcredits_" + player.getUniqueId(), String.valueOf(credits));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            SupremeTags.getMysql().closeConnections(preparedStatement, connection, null);
+        }
+    }
+
+    private static String serializeFavourites(List<String> favourites) {
+        return serializeList(favourites);
     }
 
     private static List<String> deserializeFavourites(String data) {
+        return deserializeList(data);
+    }
+
+    private static String serializeList(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
+        return String.join(",", values);
+    }
+
+    private static List<String> deserializeList(String data) {
         if (data == null || data.isEmpty()) {
             return new ArrayList<>();
         }
