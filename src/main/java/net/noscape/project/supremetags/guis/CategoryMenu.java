@@ -3,8 +3,6 @@ package net.noscape.project.supremetags.guis;
 import net.noscape.project.supremetags.SupremeTags;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
 
-import java.util.Objects;
-
 public class CategoryMenu extends BaseTagsMenu {
 
     public CategoryMenu(MenuUtil menuUtil) {
@@ -18,9 +16,18 @@ public class CategoryMenu extends BaseTagsMenu {
 
     @Override
     protected String getRawTitle() {
-        return Objects.requireNonNull(SupremeTags.getInstance()
+        String category = menuUtil.getCategory();
+        if (category == null || category.isBlank()) {
+            return SupremeTags.getInstance()
+                    .getConfigManager()
+                    .getConfig("guis.yml")
+                    .get()
+                    .getString("gui.tag-menu.title", "<bold>Tags <reset><dark_gray>(%page%/%max_pages%)");
+        }
+
+        return SupremeTags.getInstance()
                 .getCategoryManager()
                 .getCatConfig()
-                .getString("categories." + menuUtil.getCategory() + ".title"));
+                .getString("categories." + category + ".title", "<bold>" + category + " <reset><dark_gray>(%page%/%max_pages%)");
     }
 }

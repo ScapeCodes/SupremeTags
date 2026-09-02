@@ -338,7 +338,9 @@ public final class SupremeTags extends JavaPlugin {
         UUID uuid = player.getUniqueId();
 
         if (menuUtilMap.containsKey(uuid)) {
-            return menuUtilMap.get(uuid);
+            menuUtil = menuUtilMap.get(uuid);
+            menuUtil.setOwner(player);
+            return menuUtil;
         } else {
             menuUtil = new MenuUtil(player, UserData.getActive(uuid));
             menuUtil.setFilter("all");
@@ -354,7 +356,10 @@ public final class SupremeTags extends JavaPlugin {
         UUID uuid = player.getUniqueId();
 
         if (menuUtilMap.containsKey(uuid)) {
-            return menuUtilMap.get(uuid);
+            menuUtil = menuUtilMap.get(uuid);
+            menuUtil.setOwner(player);
+            menuUtil.setIdentifier(identifier);
+            return menuUtil;
         } else {
             menuUtil = new MenuUtil(player, identifier);
             menuUtil.setFilter("all");
@@ -370,7 +375,10 @@ public final class SupremeTags extends JavaPlugin {
         UUID uuid = player.getUniqueId();
 
         if (menuUtilMap.containsKey(uuid)) {
-            return menuUtilMap.get(uuid);
+            menuUtil = menuUtilMap.get(uuid);
+            menuUtil.setOwner(player);
+            menuUtil.setCategory(category);
+            return menuUtil;
         } else {
             menuUtil = new MenuUtil(player, UserData.getActive(uuid), category);
             menuUtil.setFilter("all");
@@ -513,9 +521,17 @@ public final class SupremeTags extends JavaPlugin {
         }
 
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
-            setupEconomy();
-            setupPermissions();
             logger.info("> Vault: Found!");
+            if (setupEconomy()) {
+                logger.info("> Vault Economy: Found!");
+            } else {
+                logger.warning("> Vault Economy: No economy provider found. Vault economy support disabled.");
+            }
+            if (setupPermissions()) {
+                logger.info("> Vault Permissions: Found!");
+            } else {
+                logger.warning("> Vault Permissions: No permission provider found. Vault permission support disabled.");
+            }
         } else {
             logger.info("> Vault: Not Found!");
         }
@@ -625,6 +641,7 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     private boolean setupEconomy() {
+        econ = null;
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return false;
         }
@@ -641,7 +658,14 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     private boolean setupPermissions() {
+        perms = null;
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
         RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+        if (rsp == null) {
+            return false;
+        }
         perms = rsp.getProvider();
         return perms != null;
     }
@@ -652,6 +676,14 @@ public final class SupremeTags extends JavaPlugin {
 
     public static Permission getPermissions() {
         return perms;
+    }
+
+    public boolean hasVaultEconomy() {
+        return econ != null;
+    }
+
+    public boolean hasVaultPermissions() {
+        return perms != null;
     }
 
     public static SupremeTagsAPI getTagAPI() {

@@ -59,10 +59,15 @@ public final class ItemData {
         String normalized = requireRegistered(key);
         PersistentDataContainer container = meta.getPersistentDataContainer();
 
-        String value = container.get(key(normalized), PersistentDataType.STRING);
+        NamespacedKey namespacedKey = key(normalized);
+        String value = container.has(namespacedKey, PersistentDataType.STRING)
+                ? container.get(namespacedKey, PersistentDataType.STRING)
+                : null;
         if (value != null && verify(normalized, value, container)) return true;
 
-        Byte bool = container.get(key(normalized), PersistentDataType.BYTE);
+        Byte bool = container.has(namespacedKey, PersistentDataType.BYTE)
+                ? container.get(namespacedKey, PersistentDataType.BYTE)
+                : null;
         return bool != null && verify(normalized, Boolean.toString(bool == 1), container);
     }
 
@@ -72,7 +77,10 @@ public final class ItemData {
 
         String normalized = requireRegistered(key);
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        String value = container.get(key(normalized), PersistentDataType.STRING);
+        NamespacedKey namespacedKey = key(normalized);
+        String value = container.has(namespacedKey, PersistentDataType.STRING)
+                ? container.get(namespacedKey, PersistentDataType.STRING)
+                : null;
 
         if (value == null || !verify(normalized, value, container)) {
             return "";
@@ -102,7 +110,10 @@ public final class ItemData {
 
         String normalized = requireRegistered(key);
         PersistentDataContainer container = meta.getPersistentDataContainer();
-        Byte value = container.get(key(normalized), PersistentDataType.BYTE);
+        NamespacedKey namespacedKey = key(normalized);
+        Byte value = container.has(namespacedKey, PersistentDataType.BYTE)
+                ? container.get(namespacedKey, PersistentDataType.BYTE)
+                : null;
 
         return value != null
                 && verify(normalized, Boolean.toString(value == 1), container)
