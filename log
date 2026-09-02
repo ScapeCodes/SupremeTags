@@ -1,0 +1,11 @@
+3.0.2:
+
+# SupremeTags v3.0.2
+
+## Fixed
+- Legacy/external item-data type crashes in menus.
+- Inventory close crashes during chunk unloads.
+- Empty economy editor prompt values.
+- Invalid cost input crashing chat edits.
+- Category menu back-navigation state gets lost.
+- Vault skips missing economy/permission providers.
