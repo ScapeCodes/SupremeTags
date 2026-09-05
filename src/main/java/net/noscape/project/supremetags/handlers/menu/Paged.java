@@ -1077,6 +1077,11 @@ public abstract class Paged extends Menu {
             line = line.replace("%category%", t.getCategory());
             line = line.replace("%rarity%", SupremeTags.getInstance().getRarityManager().getRarity(t.getRarity()).getDisplayname());
             line = line.replace("%effects_list%", effectsList);
+            if (t.isNameWrapperEnabled()) {
+                line = line.replace("%wrapped_name%", t.getNameWrapperFormat());
+            } else {
+                line = line.replace("%wrapped_name%", menuUtil.getOwner().getName());
+            }
             line = SupremeTags.getInstance().getTagStatisticsManager().replaceTagPlaceholders(owner, line, identifier);
             line = globalPlaceholders(owner, line);
 

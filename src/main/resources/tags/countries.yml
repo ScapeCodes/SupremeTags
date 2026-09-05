@@ -46,6 +46,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>unitedkingdom- <reset><white>%player_name% <reset><yellow>-unitedkingdom'
     variants: []
     effects: []
     voucher-item:
@@ -78,6 +81,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>germany- <reset><white>%player_name% <reset><yellow>-germany'
     variants: []
     effects: []
     voucher-item:
@@ -110,6 +116,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>france- <reset><white>%player_name% <reset><yellow>-france'
     variants: []
     effects: []
     voucher-item:
@@ -142,6 +151,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>spain- <reset><white>%player_name% <reset><yellow>-spain'
     variants: []
     effects: []
     voucher-item:
@@ -174,6 +186,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>italy- <reset><white>%player_name% <reset><yellow>-italy'
     variants: []
     effects: []
     voucher-item:
@@ -206,6 +221,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>portugal- <reset><white>%player_name% <reset><yellow>-portugal'
     variants: []
     effects: []
     voucher-item:
@@ -238,6 +256,9 @@ tags:
     displayname: '<reset><gray>Tag: %tag%'
     custom-model-data: 0
     display-item: NAME_TAG
+    name-wrapper:
+      enabled: false
+      format: '<reset><yellow>netherlands- <reset><white>%player_name% <reset><yellow>-netherlands'
     variants: []
     effects: []
     voucher-item:

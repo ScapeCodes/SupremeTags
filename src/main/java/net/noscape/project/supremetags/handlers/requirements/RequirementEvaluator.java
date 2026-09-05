@@ -49,7 +49,7 @@ public final class RequirementEvaluator {
 
         boolean success = requirements.getMode() == TagRequirements.Mode.ANY
                 ? passed > 0
-                : failedMessages.isEmpty();
+                : passed == requirements.getRequirements().size();
 
         if (success) {
             if (requirements.isPersistUnlock()) {

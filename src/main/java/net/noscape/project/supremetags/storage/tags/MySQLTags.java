@@ -260,6 +260,9 @@ public class MySQLTags {
         metadata.put("voucherCustomModelData", tag.getVoucherCustomModelData());
         metadata.put("voucherGlow", tag.isVoucherGlow());
         metadata.put("customPlaceholders", tag.getCustomPlaceholders());
+        metadata.put("nameWrapperEnabled", tag.isNameWrapperEnabled());
+        metadata.put("nameWrapperOnly", tag.isNameWrapperOnly());
+        metadata.put("nameWrapperFormat", tag.getNameWrapperFormat());
         return metadata;
     }
 
@@ -276,6 +279,9 @@ public class MySQLTags {
             if (metadata.get("voucherLore") instanceof List<?> rawLore) tag.setVoucherLore(rawLore.stream().map(String::valueOf).toList());
             if (metadata.get("voucherCustomModelData") instanceof Number number) tag.setVoucherCustomModelData(number.intValue());
             if (metadata.get("voucherGlow") instanceof Boolean glow) tag.setVoucherGlow(glow);
+            if (metadata.get("nameWrapperEnabled") instanceof Boolean enabled) tag.setNameWrapperEnabled(enabled);
+            if (metadata.get("nameWrapperOnly") instanceof Boolean wrapperOnly) tag.setNameWrapperOnly(wrapperOnly);
+            if (metadata.get("nameWrapperFormat") != null) tag.setNameWrapperFormat(String.valueOf(metadata.get("nameWrapperFormat")));
             if (metadata.get("customPlaceholders") instanceof Map<?, ?> raw) {
                 Map<String, String> placeholders = new LinkedHashMap<>();
                 raw.forEach((key, value) -> placeholders.put(String.valueOf(key), value == null ? "" : String.valueOf(value)));

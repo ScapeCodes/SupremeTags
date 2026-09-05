@@ -19,11 +19,9 @@ public class ConfigManager {
     private File tagsFolder;
     private File countriesTagsFile;
     private YamlConfiguration customTagsConfig;
-    private final boolean firstInstall;
 
     public ConfigManager(JavaPlugin plugin, boolean firstInstall) {
         this.plugin = plugin;
-        this.firstInstall = firstInstall;
 
         loadConfig("statistics.yml");
         loadConfig("rarities.yml");
@@ -42,10 +40,8 @@ public class ConfigManager {
             tagsFolder.mkdirs();
         }
 
-        if (firstInstall) {
-            saveBundledTagResource("tags/default.yml");
-            saveBundledTagResource("tags/countries.yml");
-        }
+        saveBundledTagResourceIfMissing("tags/default.yml");
+        saveBundledTagResourceIfMissing("tags/countries.yml");
 
         countriesTagsFile = new File(tagsFolder, "countries.yml");
 
@@ -58,6 +54,15 @@ public class ConfigManager {
         } catch (IllegalArgumentException e) {
             plugin.getLogger().warning("[SupremeTags] Could not save default " + resourcePath + ": " + e.getMessage());
         }
+    }
+
+    private void saveBundledTagResourceIfMissing(String resourcePath) {
+        File file = new File(plugin.getDataFolder(), resourcePath);
+        if (file.exists()) {
+            return;
+        }
+
+        saveBundledTagResource(resourcePath);
     }
 
     public void reloadTagConfigs() {

@@ -160,7 +160,7 @@ public class TagShowcaseMenu extends Paged {
                     displayname = format("&7Tag: " + (t.getCurrentTag() != null ? t.getCurrentTag() : t.getTag().get(0)));
                 }
 
-                displayname = globalPlaceholders(menuUtil.getOwner(), displayname);
+                displayname = globalPlaceholders(menuUtil.getOwner(), displayname, t);
 
                 String material;
                 if (SupremeTags.getInstance().getTagManager().getTagConfig().getString("tags." + t.getIdentifier() + ".display-item") != null) {
@@ -271,13 +271,18 @@ public class TagShowcaseMenu extends Paged {
                     } else {
                         line = line.replace(tagPlaceholder, t.getTag().getFirst());
                     }
+                    String wrappedName = Utils.getWrappedName(menuUtil.getOwner(), t);
+                    line = line.replace("%wrapped_name%", wrappedName);
+                    line = line.replace("%supremetags_wrapped_name%", wrappedName);
+                    line = line.replace("{wrapped_name}", wrappedName);
+                    line = line.replace("{supremetags_wrapped_name}", wrappedName);
                     line = line.replace(variantsPlaceholder, String.valueOf(t.getVariants().size()));
                     line = line.replace(orderPlaceholder, String.valueOf(t.getOrder()));
                     line = line.replace(trackPlaceholder, String.valueOf(TagManager.tagUnlockCounts.getOrDefault(t.getIdentifier(), 0)));
                     line = line.replace(categoryPlaceholder, t.getCategory());
                     line = line.replace(rarityPlaceholder, SupremeTags.getInstance().getRarityManager().getRarity(t.getRarity()).getDisplayname());
                     line = line.replace(effectsListPlaceholder, effects_list);
-                    line = globalPlaceholders(menuUtil.getOwner(), line);
+                    line = globalPlaceholders(menuUtil.getOwner(), line, t);
 
                     lore.set(l, line);
                 }

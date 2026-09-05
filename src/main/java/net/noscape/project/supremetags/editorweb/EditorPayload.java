@@ -44,6 +44,9 @@ public class EditorPayload {
         public String displayName;
         public String displayItem;
         public int customModelData;
+        public boolean nameWrapperEnabled;
+        public boolean nameWrapperOnly;
+        public String nameWrapperFormat;
         public List<String> effects = new ArrayList<>();
         public List<String> abilities = new ArrayList<>();
         public Map<String, String> customPlaceholders = new LinkedHashMap<>();

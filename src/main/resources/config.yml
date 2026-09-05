@@ -115,6 +115,8 @@ placeholders:
     format: '%tag%'
     # Output mode: minimessage
     output: 'minimessage'
+  # %supremetags_wrapped_name%
+  # Uses the selected tag's per-tag name-wrapper format.
 
 ############################################################
 # +------------------------------------------------------+ #

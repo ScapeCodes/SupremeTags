@@ -78,6 +78,13 @@ public class TagEditorValidationService {
         if (tag.customModelData < 0) {
             result.error("Tag '" + tag.identifier + "' has negative custom model data.");
         }
+        tag.nameWrapperFormat = defaultString(tag.nameWrapperFormat, "%player_name%");
+        if (tag.nameWrapperEnabled && !tag.nameWrapperFormat.contains("%player_name%")
+                && !tag.nameWrapperFormat.contains("%player%")
+                && !tag.nameWrapperFormat.contains("{player_name}")
+                && !tag.nameWrapperFormat.contains("{player}")) {
+            result.warning("Tag '" + tag.identifier + "' has an enabled name wrapper without a player placeholder.");
+        }
         validateMaterial(tag.identifier, "display item", tag.displayItem, result);
         if (tag.voucher != null) {
             validateMaterial(tag.identifier, "voucher material", tag.voucher.material, result);

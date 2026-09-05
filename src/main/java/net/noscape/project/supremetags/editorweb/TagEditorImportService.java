@@ -196,6 +196,15 @@ public class TagEditorImportService {
         if (existing.isWithdrawable() != edited.withdrawable) {
             changes.add("&e" + id + " &7withdrawable: &f" + existing.isWithdrawable() + " &7-> &f" + edited.withdrawable);
         }
+        if (existing.isNameWrapperEnabled() != edited.nameWrapperEnabled) {
+            changes.add("&e" + id + " &7name wrapper enabled: &f" + existing.isNameWrapperEnabled() + " &7-> &f" + edited.nameWrapperEnabled);
+        }
+        if (existing.isNameWrapperOnly() != edited.nameWrapperOnly) {
+            changes.add("&e" + id + " &7name wrapper only: &f" + existing.isNameWrapperOnly() + " &7-> &f" + edited.nameWrapperOnly);
+        }
+        if (!same(existing.getNameWrapperFormat(), edited.nameWrapperFormat)) {
+            changes.add("&e" + id + " &7name wrapper format changed");
+        }
         if (edited.economy != null) {
             if (existing.getEconomy().isEnabled() != edited.economy.enabled) {
                 changes.add("&e" + id + " &7economy enabled: &f" + existing.getEconomy().isEnabled() + " &7-> &f" + edited.economy.enabled);
@@ -256,6 +265,9 @@ public class TagEditorImportService {
         if (!same(existing.getDisplayName(), edited.displayName)) return true;
         if (!same(existing.getDisplayItem(), edited.displayItem)) return true;
         if (existing.getCustomModelData() != edited.customModelData) return true;
+        if (existing.isNameWrapperEnabled() != edited.nameWrapperEnabled) return true;
+        if (existing.isNameWrapperOnly() != edited.nameWrapperOnly) return true;
+        if (!same(existing.getNameWrapperFormat(), edited.nameWrapperFormat)) return true;
         if (!existing.getEffects().equals(TagManager.parseEffects(copy(edited.effects)))) return true;
         if (!existing.getAbilities().equals(copy(edited.abilities))) return true;
         if (!existing.getCustomPlaceholders().equals(edited.customPlaceholders == null ? new LinkedHashMap<>() : new LinkedHashMap<>(edited.customPlaceholders))) return true;
@@ -299,6 +311,9 @@ public class TagEditorImportService {
         tag.setDisplayName(dto.displayName);
         tag.setDisplayItem(dto.displayItem);
         tag.setCustomModelData(dto.customModelData);
+        tag.setNameWrapperEnabled(dto.nameWrapperEnabled);
+        tag.setNameWrapperOnly(dto.nameWrapperOnly);
+        tag.setNameWrapperFormat(defaultString(dto.nameWrapperFormat, "%player_name%"));
         tag.getEffects().clear();
         tag.getEffects().putAll(TagManager.parseEffects(copy(dto.effects)));
         tag.setAbilities(copy(dto.abilities));

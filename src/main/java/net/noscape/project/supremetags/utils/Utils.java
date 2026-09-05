@@ -288,13 +288,14 @@ public class Utils {
     }
 
     public static boolean hasTagAccess(Player player, Tag tag) {
-        if (player.hasPermission(tag.getPermission()) || tag.getPermission().equalsIgnoreCase("none")) {
-            return true;
-        }
-        return hasGroupAccess(player, tag.getGroups());
+        return hasBaseTagAccess(player, tag) && hasTagRequirements(player, tag);
     }
 
     public static boolean hasAmount(Player player, String economyType, double cost, String tag) {
+        if (economyType == null || economyType.isBlank()) {
+            economyType = "VAULT";
+        }
+
         if (economyType.equalsIgnoreCase("VAULT")) {
             return SupremeTags.getEconomy().has(player, cost);
         } else if (economyType.equalsIgnoreCase("PLAYERPOINTS")) {
@@ -387,7 +388,22 @@ public class Utils {
     }
 
     public static String replaceInternalPlaceholders(Player user, String message) {
+        return replaceInternalPlaceholders(user, message, null);
+    }
+
+    public static String replaceInternalPlaceholders(Player user, String message, Tag wrapperTag) {
         if (message == null || message.isEmpty()) return "";
+
+        if (message.contains("%supremetags_tag%")
+                || message.contains("%supremetags_chattag%")
+                || message.contains("%supremetags_tabtag%")
+                || message.contains("%supremetags_scoreboardtag%")) {
+            message = message
+                    .replace("%supremetags_tag%", net.noscape.project.supremetags.handlers.TagFormatter.getFormattedTagPlaceholder(user, net.noscape.project.supremetags.handlers.TagFormatter.Context.TAG))
+                    .replace("%supremetags_chattag%", net.noscape.project.supremetags.handlers.TagFormatter.getFormattedTagPlaceholder(user, net.noscape.project.supremetags.handlers.TagFormatter.Context.CHAT))
+                    .replace("%supremetags_tabtag%", net.noscape.project.supremetags.handlers.TagFormatter.getFormattedTagPlaceholder(user, net.noscape.project.supremetags.handlers.TagFormatter.Context.TAB))
+                    .replace("%supremetags_scoreboardtag%", net.noscape.project.supremetags.handlers.TagFormatter.getFormattedTagPlaceholder(user, net.noscape.project.supremetags.handlers.TagFormatter.Context.SCOREBOARD));
+        }
 
         if (message.contains("%tag_credits%")) {
             long credits = user != null ? UserData.getDisplayTagCredits(user.getUniqueId()) : 0;
@@ -403,6 +419,55 @@ public class Utils {
         return message;
     }
 
+    public static String getWrappedName(Player player) {
+        return getWrappedName(player, getActiveWrapperTag(player));
+    }
+
+    public static String getWrappedName(Player player, Tag tag) {
+        if (player == null) return "";
+
+        String playerName = replacePlaceholders(player, "%player_name%");
+        if (tag == null || !tag.isNameWrapperEnabled()) {
+            return playerName;
+        }
+
+        String format = tag.getNameWrapperFormat();
+        if (!format.contains("%player_name%")
+                && !format.contains("%player%")
+                && !format.contains("{player_name}")
+                && !format.contains("{player}")) {
+            return playerName;
+        }
+
+        return format
+                .replace("%player_name%", playerName)
+                .replace("%player%", playerName)
+                .replace("{player_name}", playerName)
+                .replace("{player}", playerName);
+    }
+
+    private static Tag getActiveWrapperTag(Player player) {
+        if (player == null) return null;
+
+        String active = UserData.getActive(player.getUniqueId());
+        if (active == null || active.isBlank() || active.equalsIgnoreCase("None")) {
+            return null;
+        }
+
+        Tag tag = SupremeTags.getInstance().getTagManager().getTag(active);
+        if (tag != null) {
+            return tag;
+        }
+
+        tag = SupremeTags.getInstance().getPlayerManager().loadAllPlayerTags(player.getUniqueId()).get(active);
+        if (tag != null) {
+            return tag;
+        }
+
+        Variant variant = SupremeTags.getInstance().getTagManager().getVariant(active);
+        return variant == null ? null : variant.getSisterTag();
+    }
+
     public static List<String> replaceInternalPlaceholders(Player user, List<String> lore) {
         if (lore == null) return Collections.emptyList();
         return lore.stream()
@@ -412,6 +477,16 @@ public class Utils {
 
     public static String globalPlaceholders(Player user, String message) {
         message = replaceInternalPlaceholders(user, message);
+        message = replacePlaceholders(user, message);
+        if (Bukkit.getServer().getPluginManager().getPlugin("ItemsAdder") != null) {
+            message = FontImageWrapper.replaceFontImages(message);
+        }
+
+        return message;
+    }
+
+    public static String globalPlaceholders(Player user, String message, Tag wrapperTag) {
+        message = replaceInternalPlaceholders(user, message, wrapperTag);
         message = replacePlaceholders(user, message);
         if (Bukkit.getServer().getPluginManager().getPlugin("ItemsAdder") != null) {
             message = FontImageWrapper.replaceFontImages(message);
@@ -520,6 +595,9 @@ public class Utils {
     }
 
     public static boolean hasBaseTagAccess(Player player, Tag tag) {
+        if (player == null || tag == null) {
+            return false;
+        }
         if (player.hasPermission(tag.getPermission()) || tag.getPermission().equalsIgnoreCase("none"))
             return true;
         return hasGroupAccess(player, tag.getGroups());

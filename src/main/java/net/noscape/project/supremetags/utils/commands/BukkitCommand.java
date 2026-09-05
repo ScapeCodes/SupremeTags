@@ -14,11 +14,19 @@ public class BukkitCommand extends Command {
     private Plugin ownerPlugin;
     private CommandExecutor executor;
 
-    protected BukkitCommand(String label, CommandExecutor executor, Plugin owner) {
+    public BukkitCommand(String label, CommandExecutor executor, Plugin owner) {
         super(label);
         this.executor = executor;
         this.ownerPlugin = owner;
         this.usageMessage = "";
+    }
+
+    public Plugin getOwnerPlugin() {
+        return ownerPlugin;
+    }
+
+    public CommandExecutor getExecutor() {
+        return executor;
     }
 
     @Override

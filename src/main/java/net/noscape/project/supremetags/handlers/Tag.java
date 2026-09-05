@@ -60,6 +60,9 @@ public class Tag {
     private int voucherCustomModelData;
     private boolean voucherGlow = true;
     private Map<String, String> customPlaceholders;
+    private boolean nameWrapperEnabled;
+    private boolean nameWrapperOnly;
+    private String nameWrapperFormat;
 
     public Tag(String identifier, List<String> tag, String category, String permission, List<String> description, int order, boolean isWithdrawable, String rarity, Map<PotionEffectType, Integer> effects, TagEconomy economy, List<String> groups) {
         this.identifier = identifier;
@@ -290,7 +293,7 @@ public class Tag {
 
     public String getCustomPlaceholder(String identifier, String placeholder) {
         org.bukkit.configuration.file.FileConfiguration tagConfig = SupremeTags.getInstance().getTagManager().getConfigForTag(identifier);
-        if (!tagConfig.isSet("tags." + identifier + ".custom-placeholders." + placeholder)) {
+        if (tagConfig == null || !tagConfig.isSet("tags." + identifier + ".custom-placeholders." + placeholder)) {
             return SupremeTags.getInstance().getTagManager().getMessages().getString("invalid-custom-placeholder", "&cUnknown Placeholder");
         }
 
@@ -487,5 +490,29 @@ public class Tag {
 
     public void setCustomPlaceholders(Map<String, String> customPlaceholders) {
         this.customPlaceholders = customPlaceholders == null ? new HashMap<>() : customPlaceholders;
+    }
+
+    public boolean isNameWrapperEnabled() {
+        return nameWrapperEnabled;
+    }
+
+    public void setNameWrapperEnabled(boolean nameWrapperEnabled) {
+        this.nameWrapperEnabled = nameWrapperEnabled;
+    }
+
+    public boolean isNameWrapperOnly() {
+        return nameWrapperOnly;
+    }
+
+    public void setNameWrapperOnly(boolean nameWrapperOnly) {
+        this.nameWrapperOnly = nameWrapperOnly;
+    }
+
+    public String getNameWrapperFormat() {
+        return nameWrapperFormat == null || nameWrapperFormat.isBlank() ? "%player_name%" : nameWrapperFormat;
+    }
+
+    public void setNameWrapperFormat(String nameWrapperFormat) {
+        this.nameWrapperFormat = nameWrapperFormat;
     }
 }

@@ -4,6 +4,7 @@ import net.essentialsx.api.v2.events.chat.GlobalChatEvent;
 import net.essentialsx.api.v2.events.chat.LocalChatEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.noscape.project.supremetags.handlers.TagFormatter;
+import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -45,11 +46,15 @@ public class EssentialsChatListener implements Listener {
         if (player == null) return text;
 
         String tag = LEGACY_SECTION.serialize(TagFormatter.getFormattedTagComponent(player, TagFormatter.Context.CHAT));
+        String wrappedName = LEGACY_SECTION.serialize(Utils.formatComponent(Utils.getWrappedName(player)));
 
         return text
                 .replace("{tag}", tag)
                 .replace("{TAG}", tag)
-                .replace("{supremetags_tag}", tag);
+                .replace("{supremetags_tag}", tag)
+                .replace("{wrapped_name}", wrappedName)
+                .replace("{WRAPPED_NAME}", wrappedName)
+                .replace("{supremetags_wrapped_name}", wrappedName);
     }
 
     private String escapeLiteralPercents(String text) {

@@ -117,10 +117,16 @@ public class TagManager {
         config.set("tags." + id + ".displayname", "\u00267Tag: %tag%");
         config.set("tags." + id + ".custom-model-data", modelData);
         config.set("tags." + id + ".display-item", material);
+        config.set("tags." + id + ".name-wrapper.enabled", false);
+        config.set("tags." + id + ".name-wrapper.wrapper-only", false);
+        config.set("tags." + id + ".name-wrapper.format", "%player_name%");
 
         tag.setDisplayName("\u00267Tag: %tag%");
         tag.setCustomModelData(modelData);
         tag.setDisplayItem(material);
+        tag.setNameWrapperEnabled(false);
+        tag.setNameWrapperOnly(false);
+        tag.setNameWrapperFormat("%player_name%");
         tag.setVoucherDisplayName(tagText + " \u0026f\u0026lVoucher");
         tag.setVoucherMaterial("NAME_TAG");
         tag.setVoucherLore(voucherLore);
@@ -370,14 +376,17 @@ public class TagManager {
                 String displayName = tagConfig.getString("tags." + identifier + ".displayname", "&7Tag: %tag%");
                 String displayItem = tagConfig.getString("tags." + identifier + ".display-item", "NAME_TAG");
                 int customModelData = tagConfig.getInt("tags." + identifier + ".custom-model-data", 0);
+                boolean nameWrapperEnabled = tagConfig.getBoolean("tags." + identifier + ".name-wrapper.enabled", false);
+                boolean nameWrapperOnly = tagConfig.getBoolean("tags." + identifier + ".name-wrapper.wrapper-only", false);
+                String nameWrapperFormat = tagConfig.getString("tags." + identifier + ".name-wrapper.format", "%player_name%");
                 String voucherDisplayName = tagConfig.getString("tags." + identifier + ".voucher-item.displayname", "%tag% &f&lVoucher");
                 String voucherMaterial = tagConfig.getString("tags." + identifier + ".voucher-item.material", "NAME_TAG");
                 List<String> voucherLore = tagConfig.getStringList("tags." + identifier + ".voucher-item.lore");
                 int voucherCustomModelData = tagConfig.getInt("tags." + identifier + ".voucher-item.custom-model-data", 0);
                 boolean voucherGlow = tagConfig.getBoolean("tags." + identifier + ".voucher-item.glow", true);
 
-                String ecoType = tagConfig.getString("tags." + identifier + ".economy.type");
-                double ecoAmount = tagConfig.getInt("tags." + identifier + ".economy.amount");
+                String ecoType = tagConfig.getString("tags." + identifier + ".economy.type", "VAULT");
+                double ecoAmount = tagConfig.getDouble("tags." + identifier + ".economy.amount", 0.0D);
                 boolean ecoEnabled = false;
                 if (tagConfig.isSet("tags." + identifier + ".economy.enable")) {
                     ecoEnabled = tagConfig.getBoolean("tags." + identifier + ".economy.enable");
@@ -410,6 +419,9 @@ public class TagManager {
                 t.setDisplayName(displayName);
                 t.setDisplayItem(displayItem);
                 t.setCustomModelData(customModelData);
+                t.setNameWrapperEnabled(nameWrapperEnabled);
+                t.setNameWrapperOnly(nameWrapperOnly);
+                t.setNameWrapperFormat(nameWrapperFormat);
                 t.setVoucherDisplayName(voucherDisplayName);
                 t.setVoucherMaterial(voucherMaterial);
                 t.setVoucherLore(voucherLore);
@@ -498,6 +510,14 @@ public class TagManager {
 
                 if (!cfg.isSet(basePath + ".custom-model-data")) {
                     cfg.set(basePath + ".custom-model-data", 0);
+                }
+
+                if (!cfg.isSet(basePath + ".name-wrapper.enabled")) {
+                    cfg.set(basePath + ".name-wrapper.enabled", false);
+                }
+
+                if (!cfg.isSet(basePath + ".name-wrapper.format")) {
+                    cfg.set(basePath + ".name-wrapper.format", "%player_name%");
                 }
 
                 if (!cfg.isSet(basePath + ".description")) {
@@ -639,6 +659,9 @@ public class TagManager {
             cfg.set("tags." + identifier + ".displayname", tag.getDisplayName());
             cfg.set("tags." + identifier + ".display-item", tag.getDisplayItem());
             cfg.set("tags." + identifier + ".custom-model-data", tag.getCustomModelData());
+            cfg.set("tags." + identifier + ".name-wrapper.enabled", tag.isNameWrapperEnabled());
+            cfg.set("tags." + identifier + ".name-wrapper.wrapper-only", tag.isNameWrapperOnly());
+            cfg.set("tags." + identifier + ".name-wrapper.format", tag.getNameWrapperFormat());
             cfg.set("tags." + identifier + ".voucher-item.material", tag.getVoucherMaterial());
             cfg.set("tags." + identifier + ".voucher-item.displayname", tag.getVoucherDisplayName());
             cfg.set("tags." + identifier + ".voucher-item.lore", tag.getVoucherLore());
@@ -951,6 +974,9 @@ public class TagManager {
         config.set(basePath + ".displayname", tag.getDisplayName());
         config.set(basePath + ".display-item", tag.getDisplayItem());
         config.set(basePath + ".custom-model-data", tag.getCustomModelData());
+        config.set(basePath + ".name-wrapper.enabled", tag.isNameWrapperEnabled());
+        config.set(basePath + ".name-wrapper.wrapper-only", tag.isNameWrapperOnly());
+        config.set(basePath + ".name-wrapper.format", tag.getNameWrapperFormat());
         config.set(basePath + ".custom-placeholders", tag.getCustomPlaceholders());
         config.set(basePath + ".voucher-item.material", tag.getVoucherMaterial());
         config.set(basePath + ".voucher-item.displayname", tag.getVoucherDisplayName());

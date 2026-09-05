@@ -84,6 +84,12 @@ public final class TagFormatter {
         Tag tag = plugin.getTagManager().getTag(active);
 
         if (tag != null) {
+            if (tag.isNameWrapperOnly()) {
+                return replacePlaceholders(player, plugin.getConfig().getString(
+                        "placeholders." + context.getPath() + ".none-output",
+                        ""
+                ));
+            }
             tagText = tag.getCurrentTag() != null
                     ? tag.getCurrentTag()
                     : tag.getTag().getFirst();

@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,7 +69,7 @@ public class PAPI extends PlaceholderExpansion {
                 int count = 0;
                 if (!player.isOp()) {
                     for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values()) {
-                        if (Objects.requireNonNull(player.getPlayer()).hasPermission(tag.getPermission())) {
+                        if (Utils.hasTagAccess(Objects.requireNonNull(player.getPlayer()), tag)) {
                             count++;
                         }
                     }
@@ -105,13 +106,17 @@ public class PAPI extends PlaceholderExpansion {
 
             case "scoreboardtag":
                 return TagFormatter.getFormattedTagPlaceholder(player.getPlayer(), TagFormatter.Context.SCOREBOARD);
+
+            case "wrapped_name":
+            case "wrappedname":
+                return Utils.getWrappedName(player.getPlayer());
         }
 
         if (params.startsWith("has_access_")) {
             String identifier = params.substring("has_access_".length());
             Tag tag = SupremeTags.getInstance().getTagManager().getTag(identifier);
             return tag != null
-                    ? String.valueOf(Objects.requireNonNull(player.getPlayer()).hasPermission(tag.getPermission()))
+                    ? String.valueOf(Utils.hasTagAccess(Objects.requireNonNull(player.getPlayer()), tag))
                     : "false";
         }
 
@@ -122,6 +127,11 @@ public class PAPI extends PlaceholderExpansion {
 
         if (params.startsWith("tag_custom-placeholder_")) {
             String placeholder = params.substring("tag_custom-placeholder_".length());
+            Tag explicitTag = resolveExplicitCustomPlaceholderTag(placeholder);
+            if (explicitTag != null) {
+                String prefix = explicitTag.getIdentifier() + "_";
+                return explicitTag.getCustomPlaceholder(explicitTag.getIdentifier(), placeholder.substring(prefix.length()));
+            }
 
             Tag tag = tags.get(activeTagId);
 
@@ -204,10 +214,27 @@ public class PAPI extends PlaceholderExpansion {
 
     public boolean hasTags(Player player) {
         for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values()) {
-            if (player.hasPermission(tag.getPermission())) {
+            if (Utils.hasTagAccess(player, tag)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private Tag resolveExplicitCustomPlaceholderTag(String placeholder) {
+        if (placeholder == null) {
+            return null;
+        }
+
+        for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values().stream()
+                .sorted(Comparator.comparingInt((Tag tag) -> tag.getIdentifier().length()).reversed())
+                .toList()) {
+            String prefix = tag.getIdentifier() + "_";
+            if (placeholder.startsWith(prefix)) {
+                return tag;
+            }
+        }
+
+        return null;
     }
 }

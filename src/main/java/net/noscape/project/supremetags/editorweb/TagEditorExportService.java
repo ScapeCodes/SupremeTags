@@ -64,6 +64,9 @@ public class TagEditorExportService {
         dto.displayName = tag.getDisplayName();
         dto.displayItem = tag.getDisplayItem();
         dto.customModelData = tag.getCustomModelData();
+        dto.nameWrapperEnabled = tag.isNameWrapperEnabled();
+        dto.nameWrapperOnly = tag.isNameWrapperOnly();
+        dto.nameWrapperFormat = tag.getNameWrapperFormat();
 
         for (Map.Entry<PotionEffectType, Integer> entry : tag.getEffects().entrySet()) {
             dto.effects.add(entry.getKey().getKey().getKey().toUpperCase(Locale.ROOT) + ":" + entry.getValue());

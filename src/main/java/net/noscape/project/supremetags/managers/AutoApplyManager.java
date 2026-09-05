@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static net.noscape.project.supremetags.utils.Utils.format;
+import static net.noscape.project.supremetags.utils.Utils.getWrappedName;
 
 public class AutoApplyManager {
 
@@ -123,6 +124,8 @@ public class AutoApplyManager {
                 .replace("%player%", player.getName())
                 .replace("%identifier%", identifier == null ? "None" : identifier)
                 .replace("%tag%", tagText)
+                .replace("%wrapped_name%", getWrappedName(player))
+                .replace("{wrapped_name}", getWrappedName(player))
                 .replace(tab ? "%playerlistname%" : "%displayname%", baseName)
                 .replace("%playerlistname%", originalTabNames.getOrDefault(player.getUniqueId(), player.getName()))
                 .replace("%displayname%", originalDisplayNames.getOrDefault(player.getUniqueId(), player.getName()));
@@ -135,6 +138,9 @@ public class AutoApplyManager {
 
         Tag tag = plugin.getTagManager().getTag(identifier);
         if (tag != null) {
+            if (tag.isNameWrapperOnly()) {
+                return "";
+            }
             return tag.getCurrentTag();
         }
 

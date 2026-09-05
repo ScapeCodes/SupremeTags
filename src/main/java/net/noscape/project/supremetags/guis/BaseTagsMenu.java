@@ -549,7 +549,7 @@ public abstract class BaseTagsMenu extends Paged {
             displayname = (lockedDisplayName != null ? lockedDisplayName : Objects.requireNonNull(configuredDisplayName)).replace("%tag%", currentTag);
         }
 
-        displayname = globalPlaceholders(owner, displayname);
+        displayname = globalPlaceholders(owner, displayname, t);
 
         String material = hasAccess ? tagConfig.getString(tagPath + ".display-item", "NAME_TAG") : guis.getString("gui.tag-menu.global-locked-tag.display-item", "NAME_TAG");
 
@@ -602,7 +602,7 @@ public abstract class BaseTagsMenu extends Paged {
             Matcher matcher = CUSTOM_PLACEHOLDER_PATTERN.matcher(line);
             while (matcher.find()) {
                 String dynamicPart = matcher.group(1);
-                line = line.replace(matcher.group(0), t.getCustomPlaceholder(identifier, dynamicPart));
+                line = line.replace(matcher.group(0), resolveCustomPlaceholder(t, dynamicPart));
             }
 
             if (line.contains("%description%")) {
@@ -644,6 +644,11 @@ public abstract class BaseTagsMenu extends Paged {
 
             line = line.replace("%identifier%", identifier);
             line = line.replace("%tag%", currentTag);
+            String wrappedName = Utils.getWrappedName(owner, t);
+            line = line.replace("%wrapped_name%", wrappedName);
+            line = line.replace("%supremetags_wrapped_name%", wrappedName);
+            line = line.replace("{wrapped_name}", wrappedName);
+            line = line.replace("{supremetags_wrapped_name}", wrappedName);
             line = line.replace("%cost_formatted%", "$" + formatNumber(t.getEconomy().getAmount()));
             line = line.replace("%cost_formatted_raw%", formatNumber(t.getEconomy().getAmount()));
             line = line.replace("%cost%", String.valueOf(t.getEconomy().getAmount()));
@@ -654,7 +659,7 @@ public abstract class BaseTagsMenu extends Paged {
             line = line.replace("%rarity%", SupremeTags.getInstance().getRarityManager().getRarity(t.getRarity()).getDisplayname());
             line = line.replace("%effects_list%", effectsList);
             line = SupremeTags.getInstance().getTagStatisticsManager().replaceTagPlaceholders(owner, line, identifier);
-            line = globalPlaceholders(owner, line);
+            line = globalPlaceholders(owner, line, t);
 
             lore.set(l, line);
         }
@@ -664,5 +669,22 @@ public abstract class BaseTagsMenu extends Paged {
         ItemData.setString(nbt, "identifier", identifier);
 
         return nbt;
+    }
+
+    private String resolveCustomPlaceholder(Tag selectedTag, String dynamicPart) {
+        if (dynamicPart == null) {
+            return "";
+        }
+
+        for (Tag tag : SupremeTags.getInstance().getTagManager().getTags().values().stream()
+                .sorted(Comparator.comparingInt((Tag tag) -> tag.getIdentifier().length()).reversed())
+                .toList()) {
+            String prefix = tag.getIdentifier() + "_";
+            if (dynamicPart.startsWith(prefix)) {
+                return tag.getCustomPlaceholder(tag.getIdentifier(), dynamicPart.substring(prefix.length()));
+            }
+        }
+
+        return selectedTag.getCustomPlaceholder(selectedTag.getIdentifier(), dynamicPart);
     }
 }

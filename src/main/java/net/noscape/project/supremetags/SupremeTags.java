@@ -24,11 +24,13 @@ import net.noscape.project.supremetags.storage.user.PlayerConfig;
 import net.noscape.project.supremetags.storage.user.SQLiteUserData;
 import net.noscape.project.supremetags.utils.BungeeMessaging;
 import net.noscape.project.supremetags.utils.ClassRegistrationUtils;
+import net.noscape.project.supremetags.utils.commands.BukkitCommand;
 import net.noscape.project.supremetags.utils.commands.CommandFramework;
 import org.black_ixx.playerpoints.PlayerPoints;
 import org.black_ixx.playerpoints.PlayerPointsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -38,6 +40,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -191,17 +194,121 @@ public final class SupremeTags extends JavaPlugin {
     }
 
     private void registerCommand(String mainCommand, List<String> aliases) {
+        TagsCommand tagsCommand = new TagsCommand();
+        PluginCommand declaredCommand = getCommand("tags");
 
-        PluginCommand command = getCommand(mainCommand);
-
-        if (command == null) {
-            getLogger().severe("Could not find command: " + mainCommand + ". Please check your plugin.yml file.");
+        if (declaredCommand == null) {
+            getLogger().severe("Could not find command: tags. Please check your plugin.yml file.");
             return;
         }
 
-        command.setExecutor(new TagsCommand());
-        command.setTabCompleter(new TagsCommand());
-        command.setAliases(aliases);
+        Set<String> configuredLabels = getConfiguredCommandLabels(mainCommand, aliases);
+        List<String> configuredAliases = configuredLabels.stream()
+                .filter(label -> !label.equalsIgnoreCase(normalizeCommandLabel(mainCommand, "tags")))
+                .toList();
+
+        declaredCommand.setExecutor(tagsCommand);
+        declaredCommand.setTabCompleter(tagsCommand);
+        declaredCommand.setAliases(configuredAliases);
+
+        CommandMap commandMap = Bukkit.getCommandMap();
+        unregisterStaleConfiguredCommands(commandMap, declaredCommand, configuredLabels);
+
+        for (String label : configuredLabels) {
+            org.bukkit.command.Command existingCommand = commandMap.getCommand(label);
+            if (existingCommand == declaredCommand) {
+                continue;
+            }
+
+            if (existingCommand != null && !(existingCommand instanceof BukkitCommand)) {
+                getLogger().warning("Could not register configured command /" + label + " because another plugin already owns it.");
+                continue;
+            }
+
+            commandMap.register(getName(), new BukkitCommand(label, tagsCommand, this));
+        }
+    }
+
+    private Set<String> getConfiguredCommandLabels(String mainCommand, List<String> aliases) {
+        Set<String> labels = new LinkedHashSet<>();
+        labels.add(normalizeCommandLabel(mainCommand, "tags"));
+
+        if (aliases != null) {
+            for (String alias : aliases) {
+                String normalizedAlias = normalizeCommandLabel(alias, null);
+                if (normalizedAlias != null) {
+                    labels.add(normalizedAlias);
+                }
+            }
+        }
+
+        return labels;
+    }
+
+    private String normalizeCommandLabel(String label, String fallback) {
+        if (label == null || label.isBlank()) {
+            return fallback;
+        }
+
+        String normalized = label.trim().toLowerCase(Locale.ROOT);
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+
+        if (!normalized.matches("[a-z0-9][a-z0-9_-]*")) {
+            getLogger().warning("Ignoring invalid command label in settings.commands: " + label);
+            return fallback;
+        }
+
+        return normalized;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void unregisterStaleConfiguredCommands(CommandMap commandMap, PluginCommand declaredCommand, Set<String> configuredLabels) {
+        try {
+            Field knownCommandsField = findKnownCommandsField(commandMap.getClass());
+            knownCommandsField.setAccessible(true);
+            Map<String, org.bukkit.command.Command> knownCommands = (Map<String, org.bukkit.command.Command>) knownCommandsField.get(commandMap);
+
+            List<String> staleCommandKeys = new ArrayList<>();
+            for (Map.Entry<String, org.bukkit.command.Command> entry : knownCommands.entrySet()) {
+                String key = entry.getKey().toLowerCase(Locale.ROOT);
+                String bareKey = key.replace(getName().toLowerCase(Locale.ROOT) + ":", "");
+
+                org.bukkit.command.Command command = entry.getValue();
+                if (command == declaredCommand) {
+                    if (!configuredLabels.contains(key) && !configuredLabels.contains(bareKey)) {
+                        staleCommandKeys.add(entry.getKey());
+                    }
+                    continue;
+                }
+
+                if (command instanceof BukkitCommand bukkitCommand) {
+                    if (bukkitCommand.getOwnerPlugin() == this && bukkitCommand.getExecutor() instanceof TagsCommand) {
+                        staleCommandKeys.add(entry.getKey());
+                    }
+                }
+            }
+
+            for (String key : staleCommandKeys) {
+                knownCommands.remove(key);
+            }
+        } catch (ReflectiveOperationException | ClassCastException | UnsupportedOperationException exception) {
+            getLogger().warning("Could not clean stale SupremeTags command aliases: " + exception.getMessage());
+        }
+    }
+
+    private Field findKnownCommandsField(Class<?> commandMapClass) throws NoSuchFieldException {
+        Class<?> currentClass = commandMapClass;
+        while (currentClass != null) {
+            try {
+                return currentClass.getDeclaredField("knownCommands");
+            } catch (NoSuchFieldException ignored) {
+                currentClass = currentClass.getSuperclass();
+            }
+        }
+
+        throw new NoSuchFieldException("knownCommands");
     }
 
     private void init() {
@@ -437,6 +544,10 @@ public final class SupremeTags extends JavaPlugin {
         layout = getConfig().getString("settings.layout-type", "BORDER");
         deactivateClick = getConfig().getBoolean("settings.deactivate-click");
         isDBTags = getConfig().getBoolean("settings.db-only-tags", false);
+        registerCommand(
+                getConfig().getString("settings.commands.main-command", "tags"),
+                getConfig().getStringList("settings.commands.aliases")
+        );
 
         rarityManager.unloadRarities();
         rarityManager.loadRarities();
