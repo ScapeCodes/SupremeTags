@@ -7,31 +7,130 @@ import net.noscape.project.supremetags.handlers.requirements.TagRequirements;
 
 import org.bukkit.entity.Player;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TagEditorSessionManager {
 
     private final Map<UUID, TagSnapshot> undoSnapshots = new ConcurrentHashMap<>();
-    private final Map<String, String> webApplyTokens = new ConcurrentHashMap<>();
+    private final Map<String, WebSession> webSessions = new ConcurrentHashMap<>();
 
     public void registerWebSession(String sessionId, String applyToken) {
+        registerWebSession(sessionId, applyToken, null);
+    }
+
+    public void registerWebSession(String sessionId, String applyToken, String expiresAt) {
         if (sessionId == null || sessionId.isBlank() || applyToken == null || applyToken.isBlank()) {
             return;
         }
 
-        webApplyTokens.put(sessionId, applyToken);
+        Instant expiry = Instant.now().plus(Duration.ofHours(1));
+        if (expiresAt != null && !expiresAt.isBlank()) {
+            try {
+                Instant remoteExpiry = Instant.parse(expiresAt);
+                if (remoteExpiry.isBefore(expiry)) {
+                    expiry = remoteExpiry;
+                }
+            } catch (DateTimeParseException ignored) {
+                // Older backends may omit a usable expiry; retain the one-hour initial limit.
+            }
+        }
+        webSessions.entrySet().removeIf(entry -> entry.getValue().isExpired());
+        webSessions.put(sessionId, new WebSession(applyToken, expiry));
     }
 
     public String getWebApplyToken(String sessionId) {
-        return webApplyTokens.get(sessionId);
+        WebSession session = getWebSession(sessionId);
+        return session == null ? null : session.getApplyToken();
+    }
+
+    public WebSession getWebSession(String sessionId) {
+        if (sessionId == null) {
+            return null;
+        }
+        WebSession session = webSessions.get(sessionId);
+        if (session != null && session.isExpired()) {
+            webSessions.remove(sessionId, session);
+            return null;
+        }
+        return session;
     }
 
     public void removeWebSession(String sessionId) {
-        webApplyTokens.remove(sessionId);
+        webSessions.remove(sessionId);
+    }
+
+    public enum ApplyStatus {
+        READY, BUSY, FORCE_REQUIRED, EXPIRED
+    }
+
+    public static final class WebSession {
+        private final String applyToken;
+        private final Instant initialExpiry;
+        private boolean applied;
+        private boolean applying;
+        private String pendingRevision;
+        private final Set<String> appliedRevisions = new HashSet<>();
+
+        private WebSession(String applyToken, Instant initialExpiry) {
+            this.applyToken = applyToken;
+            this.initialExpiry = initialExpiry;
+        }
+
+        public String getApplyToken() {
+            return applyToken;
+        }
+
+        public synchronized boolean isExpired() {
+            // An apply admitted before expiry must retain its state until the import finishes.
+            return !applied && !applying && !Instant.now().isBefore(initialExpiry);
+        }
+
+        public synchronized ApplyStatus beginApply(boolean force) {
+            if (applying) {
+                return ApplyStatus.BUSY;
+            }
+            if (isExpired()) {
+                return ApplyStatus.EXPIRED;
+            }
+            if (applied && !force) {
+                return ApplyStatus.FORCE_REQUIRED;
+            }
+            applying = true;
+            return ApplyStatus.READY;
+        }
+
+        public synchronized void finishApply() {
+            applying = false;
+        }
+
+        public synchronized void markApplied(String revision) {
+            applied = true;
+            pendingRevision = revision;
+            appliedRevisions.add(revision);
+        }
+
+        public synchronized Set<String> getAppliedRevisions() {
+            return Set.copyOf(appliedRevisions);
+        }
+
+        public synchronized String getPendingRevision() {
+            return pendingRevision;
+        }
+
+        public synchronized void acknowledge(String revision) {
+            if (revision != null && revision.equals(pendingRevision)) {
+                pendingRevision = null;
+            }
+        }
     }
 
     public void snapshot(Player player, Tag tag) {

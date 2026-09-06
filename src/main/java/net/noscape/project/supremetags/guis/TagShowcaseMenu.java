@@ -208,7 +208,10 @@ public class TagShowcaseMenu extends Paged {
                 String categoryPlaceholder = "%category%";
                 String rarityPlaceholder = "%rarity%";
                 String effectsListPlaceholder = "%effects_list%";
-                String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
+                String joinedDescription = t.getDescription().stream()
+                        .map(line -> globalPlaceholders(menuUtil.getOwner(), line, t))
+                        .map(Utils::format)
+                        .collect(Collectors.joining("\n"));
 
                 String joinedEffects;
                 String effects_list;

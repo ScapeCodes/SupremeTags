@@ -19,6 +19,7 @@ import net.noscape.project.supremetags.guis.confirm.ConfirmationMenu;
 import net.noscape.project.supremetags.guis.search.SearchResultMenu;
 import net.noscape.project.supremetags.guis.tageditor.EditorSelectorMenu;
 import net.noscape.project.supremetags.handlers.Tag;
+import net.noscape.project.supremetags.managers.TagEditorSessionManager;
 import net.noscape.project.supremetags.storage.UserData;
 import net.noscape.project.supremetags.utils.Utils;
 import org.bukkit.*;
@@ -614,20 +615,33 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleEditorApplyShort(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            msgPlayer(sender, msg("messages.editor.web.apply-usage", "%prefix% <reset><red>Usage: /tags editor apply <sessionId>"));
+        if (args.length < 3 || args.length > 4 || (args.length == 4 && !args[3].equalsIgnoreCase("--force"))) {
+            msgPlayer(sender, msg("messages.editor.web.apply-usage", "%prefix% <reset><red>Usage: /tags editor apply \\<sessionId> [--force]"));
             return;
         }
 
         String sessionId = args[2];
-        String applyToken = SupremeTags.getInstance().getTagEditorSessionManager().getWebApplyToken(sessionId);
-        if (applyToken == null) {
+        TagEditorSessionManager.WebSession session = SupremeTags.getInstance().getTagEditorSessionManager().getWebSession(sessionId);
+        if (session == null) {
             msgPlayer(sender, msg("messages.editor.web.session-expired", "%prefix% <reset><red>Unknown or expired editor session."));
             msgPlayer(sender, msg("messages.editor.web.create-new-session", "%prefix% <reset><gray>Create a new session with <reset><yellow>/tags editor web<reset><gray>."));
             return;
         }
 
-        handleEditorApplyStoredSession(sender, sessionId, applyToken);
+        boolean force = args.length == 4;
+        TagEditorSessionManager.ApplyStatus status = session.beginApply(force);
+        if (status == TagEditorSessionManager.ApplyStatus.FORCE_REQUIRED) {
+            msgPlayer(sender, msg("messages.editor.web.force-required", "%prefix% <reset><yellow>This session was already applied. To override server data, use %apply_command%")
+                    .replace("%apply_command%", "/tags editor apply " + sessionId + " --force"));
+            return;
+        }
+        if (status != TagEditorSessionManager.ApplyStatus.READY) {
+            msgPlayer(sender, status == TagEditorSessionManager.ApplyStatus.BUSY
+                    ? msg("messages.editor.web.apply-busy", "%prefix% <reset><yellow>This editor session is already being applied. Please wait.")
+                    : msg("messages.editor.web.session-expired", "%prefix% <reset><red>Unknown or expired editor session."));
+            return;
+        }
+        handleEditorApplyStoredSession(sender, sessionId, session, force);
     }
 
     private void handleEditorWeb(CommandSender sender) {
@@ -637,59 +651,116 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        runAsync(() -> {
+        // Snapshot plugin state on the server scheduler before making network calls.
+        final String json;
+        try {
+            json = new TagEditorExportService(SupremeTags.getInstance()).exportJson();
+        } catch (Exception exception) {
+            sendEditorFailure(sender, "create-failed", "Failed to create editor session", exception);
+            return;
+        }
+        runEditorAsync(() -> {
             try {
-                String json = new TagEditorExportService(SupremeTags.getInstance()).exportJson();
                 TagEditorSessionClient.CreateSessionResponse session = client.createSession(json);
-                SupremeTags.getInstance().getTagEditorSessionManager().registerWebSession(session.id, session.applyToken);
-                String editorUrl = client.buildEditorUrl(session.editToken);
+                SupremeTags.getInstance().getTagEditorSessionManager().registerWebSession(session.id, session.applyToken, session.expiresAt);
+                String editorUrl = client.buildEditorUrl(session.id, session.editToken);
                 if (editorUrl.isBlank()) {
                     editorUrl = session.editorUrl;
                 }
-                msgPlayer(sender, msg("messages.editor.web.session-created", "%prefix% <reset><green>Created editor session: <reset><white>%session_id%")
-                        .replace("%session_id%", session.id));
-                msgPlayer(sender, msg("messages.editor.web.open", "%prefix% <reset><gray>Open: <click:open_url:'%editor_url%'><hover:show_text:'<yellow>Click to open the web editor<newline><gray>%editor_url%'><aqua><underlined>Open editor</underlined></aqua></hover></click>")
-                        .replace("%editor_url%", editorUrl));
-                msgPlayer(sender, msg("messages.editor.web.apply-later", "%prefix% <reset><gray>Apply later: <click:suggest_command:'%apply_command%'><hover:show_text:'<yellow>Click to paste this command<newline><gray>%apply_command%'><white>%apply_command%</white></hover></click>")
-                        .replace("%session_id%", session.id)
-                        .replace("%apply_command%", "/tags editor apply " + session.id));
+                final String link = editorUrl;
+                runMain(() -> {
+                    msgPlayer(sender, msg("messages.editor.web.session-created", "%prefix% <reset><green>Created editor session: <reset><white>%session_id%")
+                            .replace("%session_id%", session.id));
+                    msgPlayer(sender, (sender instanceof Player
+                            ? msg("messages.editor.web.open", "%prefix% <reset><gray>Open: <click:open_url:'%editor_url%'><hover:show_text:'<yellow>Click to open the web editor<newline><gray>%editor_url%'><aqua><underlined>Open editor</underlined></aqua></hover></click>")
+                            : msg("messages.editor.web.open-console", "%prefix% <reset><gray>Open editor: <reset><white>%editor_url%"))
+                            .replace("%editor_url%", link));
+                    msgPlayer(sender, (sender instanceof Player
+                            ? msg("messages.editor.web.apply-later", "%prefix% <reset><gray>Apply later: <click:suggest_command:'%apply_command%'><hover:show_text:'<yellow>Click to paste this command<newline><gray>%apply_command%'><white>%apply_command%</white></hover></click>")
+                            : msg("messages.editor.web.apply-later-console", "%prefix% <reset><gray>Apply later: <reset><white>%apply_command%"))
+                            .replace("%session_id%", session.id)
+                            .replace("%apply_command%", "/tags editor apply " + session.id));
+                    msgPlayer(sender, msg("messages.editor.web.initial-expiry", "%prefix% <reset><gray>Apply within one hour. After a successful apply, this session stays open and further applies require --force."));
+                    });
             } catch (Exception exception) {
-                msgPlayer(sender, msg("messages.editor.web.create-failed", "%prefix% <reset><red>Failed to create editor session: <reset><white>%error%")
-                        .replace("%error%", exception.getMessage()));
+                if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
+                runMain(() -> sendEditorFailure(sender, "create-failed", "Failed to create editor session", exception));
             }
         });
     }
 
-    private void handleEditorApplyStoredSession(CommandSender sender, String sessionId, String applyToken) {
+    private void handleEditorApplyStoredSession(CommandSender sender, String sessionId, TagEditorSessionManager.WebSession session, boolean force) {
         TagEditorSessionClient client = new TagEditorSessionClient(SupremeTags.getInstance());
         if (!client.isConfigured()) {
+            session.finishApply();
             msgPlayer(sender, msg("messages.editor.web.api-not-configured-apply", "%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before applying web sessions."));
             return;
         }
 
-        runAsync(() -> {
+        runEditorAsync(() -> {
             try {
-                String json = client.fetchEditedPayload(sessionId, applyToken);
-                if (SupremeTags.getInstance().isDBTags()) {
-                    TagEditorImportService.ApplyResult result = new TagEditorImportService(SupremeTags.getInstance()).applyJson(json, sender);
-                    runMain(() -> {
-                        sendApplyResult(sender, result);
-                        SupremeTags.getInstance().getTagEditorSessionManager().removeWebSession(sessionId);
-                    });
-                } else {
-                    runMain(() -> {
-                        sendApplyResult(sender, new TagEditorImportService(SupremeTags.getInstance()).applyJson(json, sender));
-                        SupremeTags.getInstance().getTagEditorSessionManager().removeWebSession(sessionId);
-                    });
+                String pending = session.getPendingRevision();
+                if (pending != null) {
+                    client.markApplied(sessionId, session.getApplyToken(), pending);
+                    session.acknowledge(pending);
+                    session.finishApply();
+                    runMain(() -> msgPlayer(sender, msg("messages.editor.web.ack-recovered", "%prefix% <reset><green>Previous apply confirmed. <reset><gray>If you have saved more changes, run %apply_command% again to apply them.")
+                            .replace("%apply_command%", "/tags editor apply " + sessionId + " --force")));
+                    return;
                 }
-            } catch (Exception exception) {
+                TagEditorSessionClient.EditedResult edited = client.fetchEditedResult(sessionId, session.getApplyToken(), force, session.getAppliedRevisions());
                 runMain(() -> {
-                    msgPlayer(sender, msg("messages.editor.web.apply-failed", "%prefix% <reset><red>Failed to apply editor session: <reset><white>%error%")
-                            .replace("%error%", exception.getMessage()));
-                    msgPlayer(sender, msg("messages.editor.web.create-new-session-expired", "%prefix% <reset><gray>If the session expired, create a new one with <reset><yellow>/tags editor web<reset><gray>."));
+                    try {
+                        TagEditorImportService.ApplyResult result = new TagEditorImportService(SupremeTags.getInstance()).applyJson(edited.payloadJson, sender);
+                        if (result.isSuccess()) session.markApplied(edited.revision);
+                        sendApplyResult(sender, result);
+                        if (!result.isSuccess()) {
+                            session.finishApply();
+                            return;
+                        }
+                        runEditorAsync(() -> {
+                            try {
+                                client.markApplied(sessionId, session.getApplyToken(), edited.revision);
+                                session.acknowledge(edited.revision);
+                                runMain(() -> sendContinuousSession(sender, sessionId));
+                            } catch (Exception exception) {
+                                if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
+                                runMain(() -> msgPlayer(sender, msg("messages.editor.web.ack-failed", "%prefix% <reset><yellow>Data was applied, but the editor could not confirm it. Retry %apply_command% to finish confirming this session.")
+                                        .replace("%apply_command%", "/tags editor apply " + sessionId + " --force")));
+                            } finally {
+                                session.finishApply();
+                            }
+                        });
+                    } catch (Exception exception) {
+                        session.finishApply();
+                        sendEditorFailure(sender, "apply-failed", "Failed to apply editor session", exception);
+                    }
                 });
+            } catch (Exception exception) {
+                session.finishApply();
+                if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
+                runMain(() -> sendEditorFailure(sender, "apply-failed", "Failed to apply editor session", exception));
             }
         });
+    }
+
+    private void sendContinuousSession(CommandSender sender, String sessionId) {
+        msgPlayer(sender, msg("messages.editor.web.continuous", "%prefix% <reset><green>This editor session remains open. <reset><gray>Save more changes, then use %apply_command% to override the server data.")
+                .replace("%apply_command%", "/tags editor apply " + sessionId + " --force"));
+    }
+
+    private void sendEditorFailure(CommandSender sender, String key, String fallback, Exception exception) {
+        String error = exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
+        msgPlayer(sender, msg("messages.editor.web." + key, "%prefix% <reset><red>" + fallback + ": <reset><white>%error%")
+                .replace("%error%", error.replace("<", "\\<")));
+    }
+
+    private void runEditorAsync(Runnable task) {
+        if (SupremeTags.isFoliaFound()) {
+            Bukkit.getAsyncScheduler().runNow(SupremeTags.getInstance(), ignored -> task.run());
+        } else {
+            Bukkit.getScheduler().runTaskAsynchronously(SupremeTags.getInstance(), task);
+        }
     }
 
     private void sendApplyResult(CommandSender sender, TagEditorImportService.ApplyResult result) {
@@ -1408,7 +1479,9 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
             }
 
             else if (args.length == 4) {
-                if (args[0].equalsIgnoreCase("create")) {
+                if (args[0].equalsIgnoreCase("editor") && args[1].equalsIgnoreCase("apply")) {
+                    completions.add("--force");
+                } else if (args[0].equalsIgnoreCase("create")) {
                     List<String> tagFiles = SupremeTags.getInstance().getConfigManager().getTagFilePaths();
                     String partial = args[3].toLowerCase();
                     for (String file : tagFiles) {

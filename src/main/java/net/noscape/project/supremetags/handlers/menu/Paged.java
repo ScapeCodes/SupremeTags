@@ -999,7 +999,10 @@ public abstract class Paged extends Menu {
         addItemFlags(tagMeta, XItemFlag.HIDE_ATTRIBUTES, XItemFlag.HIDE_DYE, XItemFlag.HIDE_DESTROYS, XItemFlag.HIDE_ENCHANTS, XItemFlag.HIDE_UNBREAKABLE);
 
         List<String> lore = getFormattedLore(t, permission, loreMenuType);
-        String joinedDescription = t.getDescription().stream().map(Utils::format).collect(Collectors.joining("\n"));
+        String joinedDescription = t.getDescription().stream()
+                .map(line -> globalPlaceholders(owner, line, t))
+                .map(Utils::format)
+                .collect(Collectors.joining("\n"));
         String joinedEffects;
         String effectsList;
 

@@ -164,4 +164,5 @@ editor:
   frontend-url: 'https://supremetags.net/editor/'
   api-url: 'https://supremetags-editor-api.noscapedev.workers.dev'
   latest-version-fallback: '3.0.0'
-  session-expire-minutes: 1440
+  # The backend enforces a one-hour initial window. Successful sessions remain open.
+  session-expire-minutes: 60

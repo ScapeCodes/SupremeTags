@@ -313,6 +313,7 @@ public class TagVariantsMenu extends Paged {
             List<String> lore = getFormattedLore(var, var.getPermission());
 
             String joinedDescription = var.getDescription().stream()
+                    .map(line -> globalPlaceholders(menuUtil.getOwner(), line, tag))
                     .map(Utils::format)
                     .collect(Collectors.joining("\n"));
 
