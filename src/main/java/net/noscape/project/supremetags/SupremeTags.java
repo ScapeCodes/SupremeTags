@@ -10,6 +10,7 @@ import net.noscape.project.supremetags.commands.MyTags;
 import net.noscape.project.supremetags.commands.tags.TagsCommand;
 import net.noscape.project.supremetags.handlers.Editor;
 import net.noscape.project.supremetags.handlers.SetupTag;
+import net.noscape.project.supremetags.handlers.Tag;
 import net.noscape.project.supremetags.handlers.hooks.EssentialsChatListener;
 import net.noscape.project.supremetags.handlers.hooks.PAPI;
 import net.noscape.project.supremetags.handlers.menu.MenuUtil;
@@ -931,17 +932,24 @@ public final class SupremeTags extends JavaPlugin {
                 try {
                     long currentVersion = TagData.getTagDataVersion();
                     if (currentVersion > lastKnownTagDataVersion) {
-                        lastKnownTagDataVersion = currentVersion;
-                        tagManager.refreshDatabaseTags(false);
-                        if (categoryManager != null) {
-                            categoryManager.initCategories();
-                        }
+                        Map<String, Tag> loadedTags = tagManager.loadDatabaseTags();
+                        runMain(() -> {
+                            try {
+                                lastKnownTagDataVersion = currentVersion;
+                                tagManager.applyDatabaseTags(loadedTags, false);
+                                if (categoryManager != null) {
+                                    categoryManager.initCategories();
+                                }
+                            } finally {
+                                refreshingDatabaseTags = false;
+                            }
+                        });
+                        return;
                     }
                 } catch (Exception exception) {
                     getLogger().warning("[SupremeTags] Failed to refresh database tags: " + exception.getMessage());
-                } finally {
-                    refreshingDatabaseTags = false;
                 }
+                refreshingDatabaseTags = false;
             });
         };
 

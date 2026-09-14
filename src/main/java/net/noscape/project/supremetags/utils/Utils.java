@@ -329,7 +329,7 @@ public class Utils {
             player.setLevel((int) (player.getLevel() - cost));
         } else if (economyType.startsWith("EXCELLENTECONOMY-")) {
             String eco_name = economyType.replace("EXCELLENTECONOMY-", "");
-            SupremeTags.getExcellentEconomy().deposit(player, eco_name, cost);
+            SupremeTags.getExcellentEconomy().withdraw(player, eco_name, cost);
         } else if (economyType.equalsIgnoreCase("CUSTOM")) {
             TagEconomy eco = SupremeTags.getInstance().getTagManager().getTag(tag).getEconomy();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), eco.getTake_cmd().replace("%player%", player.getName()).replace("%amount%", String.valueOf(cost)));
@@ -768,7 +768,7 @@ public class Utils {
 
     public static void runAsync(Runnable task) {
         if (SupremeTags.getInstance().isFoliaFound()) {
-            Bukkit.getServer().getGlobalRegionScheduler().run(SupremeTags.getInstance(), (s) -> task.run());
+            Bukkit.getServer().getAsyncScheduler().runNow(SupremeTags.getInstance(), (s) -> task.run());
         } else {
             Bukkit.getScheduler().runTaskAsynchronously(SupremeTags.getInstance(), task);
         }

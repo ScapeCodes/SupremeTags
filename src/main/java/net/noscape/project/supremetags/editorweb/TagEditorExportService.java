@@ -34,7 +34,7 @@ public class TagEditorExportService {
         payload.exportedAt = Instant.now().toString();
         payload.plugin.name = "SupremeTags";
         payload.plugin.version = plugin.getDescription().getVersion();
-        payload.plugin.latestVersion = plugin.getConfig().getString("editor.latest-version-fallback", plugin.getDescription().getVersion());
+        payload.plugin.latestVersion = plugin.getDescription().getVersion();
         payload.plugin.serverVersion = Bukkit.getVersion();
         payload.plugin.storageMode = plugin.isDBTags() ? "DATABASE" : "FILE";
         payload.plugin.tagsLoaded = plugin.getTagManager().getTags().size();

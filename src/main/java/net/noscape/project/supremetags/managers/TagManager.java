@@ -461,7 +461,22 @@ public class TagManager {
             return;
         }
 
-        Map<String, Tag> loaded = TagData.getAllTags();
+        applyDatabaseTags(loadDatabaseTags(), logChanges);
+    }
+
+    public Map<String, Tag> loadDatabaseTags() {
+        if (!isDBTags()) {
+            return Collections.emptyMap();
+        }
+
+        return TagData.getAllTags();
+    }
+
+    public void applyDatabaseTags(Map<String, Tag> loaded, boolean logChanges) {
+        if (!isDBTags() || loaded == null) {
+            return;
+        }
+
         Set<String> before = new HashSet<>(tags.keySet());
         Set<String> after = new HashSet<>(loaded.keySet());
 

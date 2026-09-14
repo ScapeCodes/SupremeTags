@@ -11,31 +11,24 @@ import java.sql.SQLException;
 public class SQLiteDatabase {
 
     protected final String ConnectionURL;
-    private Connection connection;
-    private final Object connectionLock = new Object();
-
     public SQLiteDatabase(String ConnectionURL) {
         this.ConnectionURL = ConnectionURL;
         this.initialiseDatabase();
     }
 
     public Connection getConnection() {
-        synchronized (connectionLock) {
-            try {
-                if (connection == null || connection.isClosed()) {
-                    Class.forName("org.sqlite.JDBC");
-                    connection = DriverManager.getConnection(ConnectionURL);
-                }
-            } catch (SQLException | ClassNotFoundException throwables) {
-                throwables.printStackTrace();
-                SupremeTags.getInstance().getLogger().info("------------------------------");
-                SupremeTags.getInstance().getLogger().info("SQLite: Something wrong with connecting to SQLite database for SupremeTags, contact the developer if you see this.");
-                SupremeTags.getInstance().getLogger().info("------------------------------");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return connection;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            return DriverManager.getConnection(ConnectionURL);
+        } catch (SQLException | ClassNotFoundException throwables) {
+            throwables.printStackTrace();
+            SupremeTags.getInstance().getLogger().info("------------------------------");
+            SupremeTags.getInstance().getLogger().info("SQLite: Something wrong with connecting to SQLite database for SupremeTags, contact the developer if you see this.");
+            SupremeTags.getInstance().getLogger().info("------------------------------");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     public void initialiseDatabase() {
@@ -118,15 +111,7 @@ public class SQLiteDatabase {
     }
 
     public void disconnect() {
-        synchronized (connectionLock) {
-            try {
-                if (connection != null && !connection.isClosed()) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        // SQLite connections are opened per operation and closed by callers.
     }
 
     public String getConnectionURL() {

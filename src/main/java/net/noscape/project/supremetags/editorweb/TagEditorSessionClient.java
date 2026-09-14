@@ -21,6 +21,8 @@ import java.util.Set;
 
 public class TagEditorSessionClient {
     private static final Gson GSON = new Gson();
+    private static final String API_URL = "https://supremetags-editor-api.noscapedev.workers.dev";
+    private static final String FRONTEND_URL = "https://supremetags.net/editor/";
     // Avoid HTTP/2 negotiation problems with hosting proxies; certificate validation stays enabled.
     private static final HttpClient HTTP = newClient(false);
     private static final HttpClient TLS_COMPAT = newClient(true);
@@ -28,8 +30,7 @@ public class TagEditorSessionClient {
     private final String frontendUrl;
 
     public TagEditorSessionClient(SupremeTags plugin) {
-        this(plugin.getConfig().getString("editor.api-url", ""),
-                plugin.getConfig().getString("editor.frontend-url", ""));
+        this(API_URL, FRONTEND_URL);
     }
 
     TagEditorSessionClient(String apiUrl, String frontendUrl) {
@@ -120,7 +121,7 @@ public class TagEditorSessionClient {
             return HttpRequest.newBuilder(URI.create(apiUrl + path)).timeout(Duration.ofSeconds(30))
                     .header("Accept", "application/json").header("User-Agent", "SupremeTags-Editor/3");
         } catch (IllegalArgumentException exception) {
-            throw new IOException("Invalid editor.api-url in config.yml; use the HTTP(S) API base URL.", exception);
+            throw new IOException("Invalid editor API URL.", exception);
         }
     }
 
@@ -141,7 +142,7 @@ public class TagEditorSessionClient {
                 if (attempt == 2) {
                     String reason = exception instanceof SSLHandshakeException ? "TLS handshake failed"
                             : exception instanceof HttpTimeoutException ? "request timed out" : "connection failed";
-                    throw new IOException("Editor API " + reason + " after 3 attempts. Check editor.api-url, outbound HTTPS access, and the server Java installation.", exception);
+                    throw new IOException("Editor API " + reason + " after 3 attempts. Check outbound HTTPS access and the server Java installation.", exception);
                 }
             }
             Thread.sleep(500L * (attempt + 1));

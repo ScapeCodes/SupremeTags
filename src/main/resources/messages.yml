@@ -148,8 +148,8 @@ messages:
     web:
       unknown-action: '%prefix% <reset><red>Unknown editor action. Use <reset><yellow>web <reset><red>or <reset><yellow>apply<reset><red>.'
       apply-usage: '%prefix% <reset><red>Usage: /tags editor apply \<sessionId> [--force]'
-      api-not-configured: '%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before using web sessions.'
-      api-not-configured-apply: '%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before applying web sessions.'
+      api-not-configured: '%prefix% <reset><red>The web editor is not available in this build.'
+      api-not-configured-apply: '%prefix% <reset><red>The web editor is not available in this build.'
       session-created: '%prefix% <reset><green>Created editor session: <reset><white>%session_id%'
       open: '%prefix% <reset><gray>Open: <click:open_url:''%editor_url%''><hover:show_text:''<yellow>Click to open the web editor<newline><gray>%editor_url%''><aqua><underlined>Open editor</underlined></aqua></hover></click>'
       open-console: '%prefix% <reset><gray>Open editor: <reset><white>%editor_url%'

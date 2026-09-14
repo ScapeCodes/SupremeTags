@@ -391,7 +391,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
 
         TagEditorSessionClient client = new TagEditorSessionClient(SupremeTags.getInstance());
         if (!client.isConfigured()) {
-            msgPlayer(sender, msg("messages.dump.api-not-configured", "%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before creating dumps."));
+            msgPlayer(sender, msg("messages.dump.api-not-configured", "%prefix% <reset><red>The web editor is not available in this build."));
             return;
         }
 
@@ -647,7 +647,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
     private void handleEditorWeb(CommandSender sender) {
         TagEditorSessionClient client = new TagEditorSessionClient(SupremeTags.getInstance());
         if (!client.isConfigured()) {
-            msgPlayer(sender, msg("messages.editor.web.api-not-configured", "%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before using web sessions."));
+            msgPlayer(sender, msg("messages.editor.web.api-not-configured", "%prefix% <reset><red>The web editor is not available in this build."));
             return;
         }
 
@@ -693,7 +693,7 @@ public class TagsCommand implements CommandExecutor, TabCompleter {
         TagEditorSessionClient client = new TagEditorSessionClient(SupremeTags.getInstance());
         if (!client.isConfigured()) {
             session.finishApply();
-            msgPlayer(sender, msg("messages.editor.web.api-not-configured-apply", "%prefix% <reset><red>Set <reset><white>editor.api-url <reset><red>in config.yml before applying web sessions."));
+            msgPlayer(sender, msg("messages.editor.web.api-not-configured-apply", "%prefix% <reset><red>The web editor is not available in this build."));
             return;
         }
 
