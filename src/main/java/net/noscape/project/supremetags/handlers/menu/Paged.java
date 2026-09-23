@@ -1080,6 +1080,7 @@ public abstract class Paged extends Menu {
             line = line.replace("%category%", t.getCategory());
             line = line.replace("%rarity%", SupremeTags.getInstance().getRarityManager().getRarity(t.getRarity()).getDisplayname());
             line = line.replace("%effects_list%", effectsList);
+            line = line.replace("%tag_item%", tagConfig.getString(tagPath + ".display-item", "NAME_TAG"));
             if (t.isNameWrapperEnabled()) {
                 line = line.replace("%wrapped_name%", t.getNameWrapperFormat());
             } else {

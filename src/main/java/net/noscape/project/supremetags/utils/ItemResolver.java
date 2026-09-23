@@ -39,7 +39,7 @@ public class ItemResolver {
                 item = api.getItemHead(String.valueOf(id));
             } else if (material.startsWith("basehead-")) {
 
-                String base64 = material.replace("basehead-", "");
+                String base64 = material.substring("basehead-".length());
                 item = XSkull.createItem()
                         .profile(Profileable.of(ProfileInputType.BASE64, base64))
                         .apply();

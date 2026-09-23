@@ -106,6 +106,7 @@ public class TagVariantsMenu extends Paged {
                         select = replacePlaceholders(this.menuUtil.getOwner(), select);
                         msgPlayer(player, select.replace("%identifier%", var_identifier).replaceAll("%tag%", var.getTag().get(0)));
                     }
+                    playConfigSound(player, "selected-tag");
                 } else if (player.hasPermission(var.getPermission()) &&
                         UserData.getActive(player.getUniqueId()).equalsIgnoreCase(var_identifier) && var_identifier != null) {
                     TagResetEvent tagEvent = new TagResetEvent(player, false);
@@ -122,6 +123,7 @@ public class TagVariantsMenu extends Paged {
                     if (SupremeTags.getInstance().getConfig().getBoolean("settings.gui-messages")) {
                         msgPlayer(player, messages.getString("messages.reset-message").replaceAll("%prefix%", Objects.requireNonNull(messages.getString("messages.prefix"))));
                     }
+                    playConfigSound(player, "reset-tag");
                 }
             }
         }
