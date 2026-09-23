@@ -72,8 +72,8 @@ configurations.configureEach {
     resolutionStrategy.eachDependency {
         if (requested.group == 'org.spigotmc' &&
                 requested.name == 'spigot-api') {
-            useTarget 'io.papermc.paper:paper-api:26.2.build.+'
-            because 'Compile consistently against Paper 26.2'
+            useTarget 'io.papermc.paper:paper-api:26.3.build.+'
+            because 'Compile consistently against Paper 26.3'
         }
     }
 }
@@ -84,7 +84,7 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:26.2.build.+'
+    compileOnly 'io.papermc.paper:paper-api:26.3.build.+'
 
     compileOnly 'me.clip:placeholderapi:2.12.3'
     compileOnly 'net.milkbowl.vault:VaultUnlockedAPI:2.16'
