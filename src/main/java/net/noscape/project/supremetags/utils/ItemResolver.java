@@ -40,9 +40,13 @@ public class ItemResolver {
             } else if (material.startsWith("basehead-")) {
 
                 String base64 = material.substring("basehead-".length());
-                item = XSkull.createItem()
-                        .profile(Profileable.of(ProfileInputType.BASE64, base64))
-                        .apply();
+                if (base64.isEmpty()) {
+                    item = new ItemStack(Material.PLAYER_HEAD);
+                } else {
+                    item = XSkull.createItem()
+                            .profile(Profileable.of(ProfileInputType.BASE64, base64))
+                            .apply();
+                }
             } else if (material.startsWith("skull-")) {
 
                 String url = material.replace("skull-", "");
